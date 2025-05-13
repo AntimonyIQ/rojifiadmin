@@ -1,0 +1,720 @@
+import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm, useFieldArray } from "react-hook-form";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { 
+  Card, 
+  CardContent, 
+  CardFooter, 
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge"; 
+import { useToast } from "@/hooks/use-toast";
+import { 
+  CreditCard, 
+  ChevronDown,
+  ChevronUp, 
+  Wallet, 
+  Building,
+  Smartphone, 
+  CheckCircle,
+  PlusCircle,
+  Settings,
+  ArrowUpDown,
+  Download,
+  Upload
+} from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { savePaymentChannels } from "@/services/api";
+import { motion } from "framer-motion";
+import { 
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { 
+  PaymentChannelSettings
+} from "@/types";
+
+// Currency options
+const currencies = [
+  { value: "NGN", label: "Nigerian Naira (NGN)" },
+  { value: "USD", label: "US Dollar (USD)" },
+  { value: "EUR", label: "Euro (EUR)" },
+  { value: "GBP", label: "British Pound (GBP)" },
+  { value: "KES", label: "Kenyan Shilling (KES)" },
+  { value: "GHC", label: "Ghanaian Cedi (GHC)" },
+  { value: "RWF", label: "Rwandan Franc (RWF)" },
+  { value: "UGX", label: "Ugandan Shilling (UGX)" },
+  { value: "CAD", label: "Canadian Dollar (CAD)" },
+];
+
+// Channel options with associated icons
+const channels = [
+  { value: "bank_transfer", label: "Bank Transfer", icon: Building },
+  { value: "mobile_money", label: "Mobile Money", icon: Smartphone },
+  { value: "swap", label: "Swap", icon: ArrowUpDown },
+  { value: "withdrawal", label: "Withdrawal", icon: Download },
+  { value: "deposit", label: "Deposit", icon: Upload },
+];
+
+// Payment processor configurations
+const processorConfigs = [
+  {
+    id: "fincra",
+    name: "Fincra",
+    icon: Building,
+    description: "Connect to Fincra payment gateway for international payments",
+    webhookRequired: true,
+  },
+  {
+    id: "korapay",
+    name: "Korapay",
+    icon: Wallet,
+    description: "Connect to Korapay payment gateway for local transactions",
+    webhookRequired: true,
+  },
+  {
+    id: "paga",
+    name: "Paga",
+    icon: Smartphone,
+    description: "Connect to Paga payment gateway for mobile money transactions",
+    webhookRequired: true,
+  },
+  {
+    id: "paystack",
+    name: "Paystack",
+    icon: CreditCard,
+    description: "Connect to Paystack payment gateway for card payments",
+    webhookRequired: true,
+  },
+];
+
+// Currency schema
+const currencySchema = z.object({
+  code: z.string(),
+  name: z.string(),
+  enabled: z.boolean().default(false),
+});
+
+// Processor for a channel schema
+const processorForChannelSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  enabled: z.boolean().default(false),
+  apiKey: z.string().optional(),
+  secretKey: z.string().optional(),
+  webhookUrl: z.string().optional(),
+  testMode: z.boolean().default(true),
+  currencies: z.array(currencySchema)
+});
+
+// Channel schema
+const channelSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  enabled: z.boolean().default(true),
+  processors: z.array(processorForChannelSchema)
+});
+
+// Form schema
+const formSchema = z.object({
+  channels: z.array(channelSchema),
+});
+
+// Form values type
+type FormValues = {
+  channels: Array<{
+    id: string;
+    name: string;
+    enabled: boolean;
+    processors: Array<{
+      id: string;
+      name: string;
+      enabled: boolean;
+      apiKey?: string;
+      secretKey?: string;
+      webhookUrl?: string;
+      testMode: boolean;
+      currencies: Array<{
+        code: string;
+        name: string;
+        enabled: boolean;
+      }>;
+    }>;
+  }>;
+};
+
+export default function PaymentChannelsForm() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [expandedChannels, setExpandedChannels] = useState<string[]>(["bank_transfer", "mobile_money"]);
+  const [newChannelDialogOpen, setNewChannelDialogOpen] = useState(false);
+  const [newChannelName, setNewChannelName] = useState("");
+  const [newChannelId, setNewChannelId] = useState("");
+  const [selectedProcessors, setSelectedProcessors] = useState<Record<string, boolean>>({});
+  const [selectedCurrencies, setSelectedCurrencies] = useState<Record<string, boolean>>({});
+  const { toast } = useToast();
+
+  // Initialize form with channels and their processors (with currencies nested under processors)
+  const defaultValues: FormValues = {
+    channels: channels.map(channel => ({
+      id: channel.value,
+      name: channel.label,
+      enabled: true,
+      processors: processorConfigs.map(processor => ({
+        id: processor.id,
+        name: processor.name,
+        enabled: processor.id === "fincra", // Only Fincra enabled by default
+        apiKey: "",
+        secretKey: "",
+        webhookUrl: "",
+        testMode: true,
+        currencies: currencies.map(currency => ({
+          code: currency.value,
+          name: currency.label,
+          enabled: currency.value === "NGN", // NGN enabled by default
+        })),
+      })),
+    })),
+  };
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues,
+  });
+
+  const { fields } = useFieldArray({
+    control: form.control,
+    name: "channels",
+  });
+
+  const mutation = useMutation({
+    mutationFn: savePaymentChannels,
+    onSuccess: () => {
+      toast({
+        title: "Settings saved",
+        description: "Your payment channel settings have been updated successfully",
+      });
+      setIsLoading(false);
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Error saving settings",
+        description: "There was a problem saving your settings. Please try again.",
+      });
+      setIsLoading(false);
+    },
+  });
+
+  function onSubmit(data: FormValues) {
+    setIsLoading(true);
+    
+    // Convert the form data to the expected PaymentChannelSettings format
+    const paymentChannelSettings: PaymentChannelSettings = {
+      processors: processorConfigs.map(processor => {
+        const processorsInChannels = data.channels.map(channel => 
+          channel.processors.find(p => p.id === processor.id)
+        ).filter(Boolean) as any[];
+        
+        const enabledChannels = data.channels
+          .filter(channel => channel.processors.some(p => p.id === processor.id && p.enabled))
+          .map(channel => ({
+            id: channel.id,
+            name: channel.name,
+            enabled: true
+          }));
+          
+        // Get a union of all currencies from all processor instances
+        const enabledCurrencies = Array.from(
+          new Set(
+            processorsInChannels.flatMap(p => 
+              p.currencies
+                .filter((currency: any) => currency.enabled)
+                .map((currency: any) => ({
+                  code: currency.code,
+                  name: currency.name,
+                  enabled: true
+                }))
+            )
+          )
+        );
+        
+        // Use the first processor config found for API keys, etc.
+        const processConfig = processorsInChannels[0] || {
+          apiKey: "",
+          secretKey: "",
+          webhookUrl: "",
+          testMode: true
+        };
+        
+        return {
+          id: processor.id,
+          name: processor.name,
+          enabled: enabledChannels.length > 0,
+          apiKey: processConfig.apiKey,
+          secretKey: processConfig.secretKey,
+          webhookUrl: processConfig.webhookUrl,
+          testMode: processConfig.testMode,
+          channels: enabledChannels,
+          currencies: enabledCurrencies,
+        };
+      })
+    };
+    
+    mutation.mutate(paymentChannelSettings);
+  }
+
+  const toggleChannel = (channelId: string) => {
+    if (expandedChannels.includes(channelId)) {
+      setExpandedChannels(expandedChannels.filter(id => id !== channelId));
+    } else {
+      setExpandedChannels([...expandedChannels, channelId]);
+    }
+  };
+  
+  const { append } = useFieldArray({
+    control: form.control,
+    name: "channels"
+  });
+  
+  const handleToggleProcessor = (processorId: string) => {
+    setSelectedProcessors(prev => ({
+      ...prev,
+      [processorId]: !prev[processorId]
+    }));
+  };
+  
+  const handleToggleCurrency = (currencyCode: string) => {
+    setSelectedCurrencies(prev => ({
+      ...prev,
+      [currencyCode]: !prev[currencyCode]
+    }));
+  };
+  
+  const handleDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      setNewChannelName("");
+      setNewChannelId("");
+      setSelectedProcessors({});
+      setSelectedCurrencies({});
+    }
+    setNewChannelDialogOpen(open);
+  };
+  
+  const handleAddNewChannel = () => {
+    // Generate a slugified ID from the name
+    const id = newChannelId || newChannelName.toLowerCase().replace(/\s+/g, '_');
+    
+    // Add the new channel to the form
+    append({
+      id,
+      name: newChannelName,
+      enabled: true,
+      processors: processorConfigs.map(processor => ({
+        id: processor.id,
+        name: processor.name,
+        enabled: !!selectedProcessors[processor.id],
+        apiKey: "",
+        secretKey: "",
+        webhookUrl: "",
+        testMode: true,
+        currencies: currencies.map(currency => ({
+          code: currency.value,
+          name: currency.label,
+          enabled: !!selectedCurrencies[currency.value],
+        })),
+      })),
+    });
+    
+    // Add the new channel to the expanded list so it's open by default
+    setExpandedChannels([...expandedChannels, id]);
+    
+    // Reset the form
+    setNewChannelName("");
+    setNewChannelId("");
+    setSelectedProcessors({});
+    setSelectedCurrencies({});
+    setNewChannelDialogOpen(false);
+    
+    // Show success toast
+    toast({
+      title: "Channel added",
+      description: `${newChannelName} payment channel has been added successfully.`,
+    });
+  };
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        <CardContent className="space-y-8 px-6 py-6">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-medium text-gray-900">Manage Processors</h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  Configure payment processors (Fincra, Korapay, Paga, Paystack) and assign currencies to each processor.
+                </p>
+              </div>
+              <Badge variant="outline" className="px-3 py-1 bg-blue-50 text-blue-700 border-blue-200">
+                <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                Configuration
+              </Badge>
+            </div>
+            
+            <div className="flex justify-end">
+              <Dialog open={newChannelDialogOpen} onOpenChange={handleDialogOpenChange}>
+                <DialogTrigger asChild>
+                  <Button className="gap-2 bg-blue-600 hover:bg-blue-700 text-white">
+                    <PlusCircle className="h-4 w-4" />
+                    Add New Channel
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[500px]">
+                  <DialogHeader>
+                    <DialogTitle>Add New Payment Channel</DialogTitle>
+                    <DialogDescription>
+                      Enter the details for the new payment channel. After adding, you can configure its processors and currencies.
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <div className="space-y-6 py-4">
+                    <div className="space-y-3">
+                      <Label htmlFor="channel-name" className="text-sm font-medium text-gray-700">
+                        Channel Name <span className="text-red-500">*</span>
+                      </Label>
+                      <Input 
+                        id="channel-name" 
+                        placeholder="e.g. Card Payment, USSD" 
+                        value={newChannelName}
+                        onChange={(e) => setNewChannelName(e.target.value)}
+                        className="w-full"
+                      />
+                      <p className="text-xs text-gray-500">
+                        Enter the name of the payment channel as it should appear in the dashboard.
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <Label htmlFor="channel-id" className="text-sm font-medium text-gray-700">
+                        Channel ID
+                      </Label>
+                      <Input 
+                        id="channel-id" 
+                        placeholder="e.g. card_payment, ussd" 
+                        value={newChannelId}
+                        onChange={(e) => setNewChannelId(e.target.value)}
+                        className="w-full"
+                      />
+                      <p className="text-xs text-gray-500">
+                        Optional. A unique identifier for the channel. If left blank, it will be generated from the name.
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-3 pt-2 border-t border-gray-100">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Supported Payment Processors
+                      </Label>
+                      <div className="grid gap-2">
+                        {processorConfigs.map((processor) => (
+                          <div key={processor.id} className="flex items-center space-x-2 rounded-md border p-3">
+                            <Checkbox 
+                              id={`processor-${processor.id}`} 
+                              checked={!!selectedProcessors[processor.id]}
+                              onCheckedChange={() => handleToggleProcessor(processor.id)}
+                            />
+                            <div className="flex items-center space-x-2">
+                              {processor.icon && (
+                                <processor.icon className="h-4 w-4 text-blue-500" />
+                              )}
+                              <Label
+                                htmlFor={`processor-${processor.id}`}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                              >
+                                {processor.name}
+                              </Label>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3 pt-2 border-t border-gray-100">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Supported Currencies
+                      </Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {currencies.map((currency) => (
+                          <div key={currency.value} className="flex items-center space-x-2 rounded-md border p-3">
+                            <Checkbox 
+                              id={`currency-${currency.value}`} 
+                              checked={!!selectedCurrencies[currency.value]}
+                              onCheckedChange={() => handleToggleCurrency(currency.value)}
+                            />
+                            <div className="flex items-center space-x-2">
+                              <div className="h-5 w-5 rounded-full bg-gray-100 flex items-center justify-center text-xs font-medium">
+                                {currency.value}
+                              </div>
+                              <Label
+                                htmlFor={`currency-${currency.value}`}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                              >
+                                {currency.label.split(' ')[0]}
+                              </Label>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <DialogFooter>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => handleDialogOpenChange(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="button" 
+                      onClick={handleAddNewChannel}
+                      disabled={!newChannelName}
+                    >
+                      Add Channel
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
+
+          <div className="grid gap-6">
+            {fields.map((channelField, channelIndex) => {
+              const channelConfig = channels.find(c => c.value === channelField.id);
+              const Icon = channelConfig?.icon || Building;
+              const isEnabled = form.watch(`channels.${channelIndex}.enabled`);
+              const isExpanded = expandedChannels.includes(channelField.id);
+              
+              return (
+                <Card 
+                  key={channelField.id} 
+                  className={`border ${isEnabled ? 'border-gray-200' : 'border-gray-100 bg-gray-50'} overflow-hidden transition-all`}
+                >
+                  <div 
+                    className={`flex items-center justify-between px-6 py-4 cursor-pointer ${!isEnabled && 'opacity-60'}`}
+                    onClick={() => toggleChannel(channelField.id)}
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className={`p-2 rounded-md ${isEnabled ? 'bg-blue-50' : 'bg-gray-100'}`}>
+                        <Icon className={`h-5 w-5 ${isEnabled ? 'text-blue-500' : 'text-gray-400'}`} />
+                      </div>
+                      <div>
+                        <h4 className="text-base font-medium">{channelField.name}</h4>
+                        <p className="text-sm text-gray-500">Payment channel configuration</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <FormField
+                        control={form.control}
+                        name={`channels.${channelIndex}.enabled`}
+                        render={({ field }) => (
+                          <FormItem className="flex items-center space-x-2">
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={(checked) => {
+                                  field.onChange(checked);
+                                  if (checked && !isExpanded) {
+                                    // Auto-expand when enabling
+                                    toggleChannel(channelField.id);
+                                  }
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </FormControl>
+                            <FormLabel className="text-sm font-normal text-gray-500">
+                              {field.value ? 'Active' : 'Inactive'}
+                            </FormLabel>
+                          </FormItem>
+                        )}
+                      />
+                      <div className="flex items-center justify-center w-6 h-6">
+                        {isExpanded ? (
+                          <ChevronUp className="h-5 w-5 text-gray-400" />
+                        ) : (
+                          <ChevronDown className="h-5 w-5 text-gray-400" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <motion.div
+                    initial={false}
+                    animate={{ height: isExpanded ? 'auto' : 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-6 py-4 border-t border-gray-100">
+                      <div className="grid gap-6">
+                        <div className="grid md:grid-cols-1 gap-8">
+                          <div className="space-y-4">
+                            <Label className="text-sm font-medium text-gray-700">
+                              Payment Processors (Only one can be active at a time)
+                            </Label>
+                            <div className="space-y-6">
+                              {form.watch(`channels.${channelIndex}.processors`).map((processor, processorIndex) => {
+                                const processorConfig = processorConfigs.find(p => p.id === processor.id);
+                                const ProcessorIcon = processorConfig?.icon || Building;
+                                
+                                return (
+                                  <div key={processor.id} className="space-y-3">
+                                    <div className="space-y-2">
+                                      <FormField
+                                        control={form.control}
+                                        name={`channels.${channelIndex}.processors.${processorIndex}.enabled`}
+                                        render={({ field }) => (
+                                          <FormItem>
+                                            <div className="flex items-center justify-between space-x-2 rounded-md border p-3">
+                                              <div className="flex items-center space-x-3">
+                                                <FormControl>
+                                                  <Checkbox
+                                                    checked={field.value}
+                                                    onCheckedChange={(checked) => {
+                                                      if (checked) {
+                                                        // Disable all other processors in this channel
+                                                        form.watch(`channels.${channelIndex}.processors`).forEach((p, idx) => {
+                                                          if (idx !== processorIndex && form.getValues(`channels.${channelIndex}.processors.${idx}.enabled`)) {
+                                                            form.setValue(`channels.${channelIndex}.processors.${idx}.enabled`, false);
+                                                          }
+                                                        });
+                                                      }
+                                                      field.onChange(checked);
+                                                    }}
+                                                    id={`channel-${channelIndex}-processor-${processorIndex}`}
+                                                  />
+                                                </FormControl>
+                                                <div className="flex items-center space-x-2">
+                                                  <ProcessorIcon className="h-4 w-4 text-blue-500" />
+                                                  <FormLabel
+                                                    htmlFor={`channel-${channelIndex}-processor-${processorIndex}`}
+                                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                                  >
+                                                    {processor.name}
+                                                  </FormLabel>
+                                                </div>
+                                              </div>
+                                              
+                                              {field.value && (
+                                                <div className="flex items-center">
+                                                  <span className="text-xs text-blue-500 flex items-center font-medium">
+                                                    <Settings className="h-3 w-3 mr-1" />
+                                                    Processor Settings
+                                                  </span>
+                                                </div>
+                                              )}
+                                            </div>
+                                          </FormItem>
+                                        )}
+                                      />
+                                      
+                                      {/* Show currencies directly under the processor when enabled */}
+                                      {form.watch(`channels.${channelIndex}.processors.${processorIndex}.enabled`) && (
+                                        <div className="ml-8 pl-4 border-l border-gray-100">
+                                          <div className="mb-2">
+                                            <h5 className="text-xs font-medium text-blue-700">Supported Currencies</h5>
+                                          </div>
+                                          <div className="grid grid-cols-3 gap-2">
+                                            {processor.currencies && processor.currencies.map((currency, currencyIndex) => (
+                                              <FormField
+                                                key={currency.code}
+                                                control={form.control}
+                                                name={`channels.${channelIndex}.processors.${processorIndex}.currencies.${currencyIndex}.enabled`}
+                                                render={({ field }) => (
+                                                  <FormItem className="flex items-center space-x-2 rounded-md border p-2">
+                                                    <FormControl>
+                                                      <Checkbox
+                                                        checked={field.value}
+                                                        onCheckedChange={field.onChange}
+                                                        id={`channel-${channelIndex}-processor-${processorIndex}-currency-${currencyIndex}`}
+                                                      />
+                                                    </FormControl>
+                                                    <div className="flex items-center space-x-2">
+                                                      <div className="h-5 w-5 rounded-full bg-gray-100 flex items-center justify-center text-xs font-medium">
+                                                        {currency.code}
+                                                      </div>
+                                                      <FormLabel
+                                                        htmlFor={`channel-${channelIndex}-processor-${processorIndex}-currency-${currencyIndex}`}
+                                                        className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                                      >
+                                                        {currency.name.split(' ')[0]}
+                                                      </FormLabel>
+                                                    </div>
+                                                  </FormItem>
+                                                )}
+                                              />
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                </Card>
+              );
+            })}
+          </div>
+        </CardContent>
+        <CardFooter className="px-6 py-4 border-t border-gray-100 flex justify-between">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              form.reset(defaultValues);
+              toast({
+                title: "Settings reset",
+                description: "All changes have been discarded",
+              });
+            }}
+          >
+            Reset
+          </Button>
+          <Button 
+            type="submit" 
+            disabled={isLoading || !form.formState.isDirty} 
+            className="gap-2"
+          >
+            {isLoading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>Save Changes</>
+            )}
+          </Button>
+        </CardFooter>
+      </form>
+    </Form>
+  );
+}
