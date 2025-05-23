@@ -1,4 +1,4 @@
-@import './fonts.css';
+@import "./fonts.css";
 
 @tailwind base;
 @tailwind components;
@@ -26,14 +26,14 @@
     --destructive-foreground: 60 9.1% 97.8%;
     --ring: 213 83% 31%;
     --radius: 0.5rem;
-    
+
     /* Chart colors */
     --chart-1: 213 83% 31%;
     --chart-2: 221 83% 53%;
     --chart-3: 142 71% 45%;
     --chart-4: 262 83% 58%;
     --chart-5: 26 100% 50%;
-    
+
     /* Sidebar colors */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 20 14.3% 4.1%;
@@ -52,7 +52,8 @@
   }
 
   body {
-    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, system-ui,
+      sans-serif;
     @apply antialiased bg-gray-50 text-foreground;
   }
 }
@@ -61,17 +62,26 @@
   .fade-in {
     @apply transition-opacity duration-300 ease-in-out;
   }
-  
+
   /* Embla Carousel */
   .embla {
     @apply overflow-hidden;
   }
-  
+
   .embla__container {
     @apply flex;
   }
-  
+
   .embla__slide {
     @apply flex-[0_0_auto] min-w-0 relative;
   }
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

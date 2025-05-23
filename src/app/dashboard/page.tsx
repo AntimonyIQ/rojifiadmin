@@ -6,36 +6,25 @@ import RevenueChart from "@/components/dashboard/RevenueChart";
 import TransactionVolumeChart from "@/components/dashboard/TransactionVolumeChart";
 import RecentTransactionsTable from "@/components/dashboard/RecentTransactionsTable";
 import { useQueries } from "@tanstack/react-query";
-import { fetchDashboardStats, fetchRecentTransactions, fetchChartData } from "@/services/api";
+import {
+  fetchDashboardStats,
+  fetchRecentTransactions,
+  fetchChartData,
+} from "@/services/api";
+import {
+  useFetchTransactions,
+  useFetchTransactionVolume,
+} from "@/hooks/useTransaction";
+import { useFetchDashboardOverview } from "@/hooks/useStaff";
 
 export default function DashboardPage() {
+  const { data: transactions, isLoading } = useFetchTransactions();
+  const { data: dashboardData, isLoading: statsLoading } =
+    useFetchDashboardOverview();
+
   const currentDate = new Date();
   const thirtyDaysAgo = new Date(currentDate);
   thirtyDaysAgo.setDate(currentDate.getDate() - 30);
-
-  const [
-    { data: stats, isLoading: statsLoading },
-    { data: transactions, isLoading: transactionsLoading },
-    { data: chartData, isLoading: chartDataLoading }
-  ] = useQueries({
-    queries: [
-      {
-        queryKey: ['/api/dashboard/stats'],
-        queryFn: fetchDashboardStats,
-        staleTime: 5 * 60 * 1000, // 5 minutes
-      },
-      {
-        queryKey: ['/api/transactions/recent'],
-        queryFn: fetchRecentTransactions,
-        staleTime: 1 * 60 * 1000, // 1 minute
-      },
-      {
-        queryKey: ['/api/dashboard/chart-data'],
-        queryFn: () => fetchChartData(thirtyDaysAgo.toISOString(), currentDate.toISOString()),
-        staleTime: 5 * 60 * 1000, // 5 minutes
-      }
-    ]
-  });
 
   return (
     <motion.div
@@ -46,41 +35,41 @@ export default function DashboardPage() {
       className="space-y-6"
     >
       {/* KPI Cards Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <KpiCard
           title="Total Users"
-          value={stats?.totalUsers?.toLocaleString() || "0"}
-          percentageChange={stats?.userGrowth || 0}
+          value={dashboardData?.total_users.toLocaleString() || "0"}
+          percentageChange={dashboardData?.user_growth || 0}
           icon={Users}
           iconColor="text-green-500"
           iconBgColor="bg-green-50"
           loading={statsLoading}
         />
-        
+
         <KpiCard
           title="Total Transactions"
-          value={stats?.totalTransactions?.toLocaleString() || "0"}
-          percentageChange={stats?.transactionGrowth || 0}
+          value={dashboardData?.total_transactions?.toLocaleString() || "0"}
+          percentageChange={dashboardData?.transaction_growth || 0}
           icon={CreditCard}
           iconColor="text-blue-500"
           iconBgColor="bg-blue-50"
           loading={statsLoading}
         />
-        
-        <KpiCard
+
+        {/* <KpiCard
           title="Revenue"
-          value={`$${stats?.revenue?.toLocaleString() || "0"}`}
-          percentageChange={stats?.revenueGrowth || 0}
+          value={`$${dashboardData?.revenue.toLocaleString() || "0"}`}
+          percentageChange={dashboardData?.revenue_growth || 0}
           icon={DollarSign}
           iconColor="text-indigo-500"
           iconBgColor="bg-indigo-50"
           loading={statsLoading}
-        />
-        
+        /> */}
+
         <KpiCard
           title="Active Users"
-          value={stats?.activeUsers?.toLocaleString() || "0"}
-          percentageChange={stats?.activeUserGrowth || 0}
+          value={dashboardData?.active_users.toLocaleString() || "0"}
+          percentageChange={dashboardData?.active_user_growth || 0}
           icon={UserCheck}
           iconColor="text-purple-500"
           iconBgColor="bg-purple-50"
@@ -89,22 +78,22 @@ export default function DashboardPage() {
       </div>
 
       {/* Analytics Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <RevenueChart 
-          data={chartData?.revenue || []} 
-          loading={chartDataLoading} 
-        />
-        
-        <TransactionVolumeChart 
-          data={chartData?.transactions || []} 
-          loading={chartDataLoading} 
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
+        {/* <RevenueChart
+          data={chartData?.revenue || []}
+          loading={chartDataLoading}
+        /> */}
+
+        <TransactionVolumeChart
+        // data={transactionVolume || []}
+        // loading={chartDataLoading}
         />
       </div>
 
       {/* Recent Transactions Table */}
-      <RecentTransactionsTable 
-        transactions={transactions || []} 
-        loading={transactionsLoading} 
+      <RecentTransactionsTable
+        transactions={transactions || []}
+        loading={isLoading}
       />
     </motion.div>
   );

@@ -3,8 +3,8 @@ import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { motion } from "framer-motion";
-import { useAuthState } from "@/lib/auth";
 import { useLocation } from "wouter";
+import { useAuthStore } from "@/store/authStore";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -12,16 +12,17 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { collapsed } = useSidebar();
-  const { isAuthenticated } = useAuthState();
   const [, setLocation] = useLocation();
 
+  const { user } = useAuthStore();
+
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!user) {
       setLocation("/");
     }
-  }, [isAuthenticated, setLocation]);
+  }, [user, setLocation]);
 
-  if (!isAuthenticated) {
+  if (!user) {
     return null;
   }
 

@@ -1,7 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Transaction } from "@/types";
 import { format } from "date-fns";
+import TransactionDetailsDialog from "../transactions/TransactionDetailsDialog";
 
 interface RecentTransactionsTableProps {
   transactions?: Transaction[];
@@ -22,7 +30,7 @@ export default function RecentTransactionsTable({
   const [page, setPage] = useState(1);
   const itemsPerPage = 4;
   const totalPages = Math.ceil((transactions?.length || 0) / itemsPerPage);
-  
+
   const paginatedTransactions = transactions.slice(
     (page - 1) * itemsPerPage,
     page * itemsPerPage
@@ -69,13 +77,22 @@ export default function RecentTransactionsTable({
       "bg-indigo-100 text-indigo-700",
       "bg-pink-100 text-pink-700",
     ];
-    
+
     // Simple hash function to get consistent color for a name
     const hash = name.split("").reduce((acc, char) => {
       return acc + char.charCodeAt(0);
     }, 0);
-    
+
     return colors[hash % colors.length];
+  };
+
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<Transaction | null>(null);
+    const [detailsOpen, setDetailsOpen] = useState(false);
+  
+  const handleOpenDetails = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    setDetailsOpen(true);
   };
 
   if (loading) {
@@ -159,98 +176,148 @@ export default function RecentTransactionsTable({
   }
 
   return (
-    <Card className="border border-gray-100">
-      <CardHeader className="px-6 py-4 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold text-gray-800">Recent Transactions</CardTitle>
-          <Link href="/transactions">
-            <a className="text-sm font-medium text-primary hover:text-primary/80">
-              View all
-            </a>
-          </Link>
-        </div>
-      </CardHeader>
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</TableHead>
-              <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</TableHead>
-              <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</TableHead>
-              <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</TableHead>
-              <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</TableHead>
-              <TableHead className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginatedTransactions.map((transaction) => (
-              <TableRow key={transaction.id}>
-                <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  #{transaction.id}
-                </TableCell>
-                <TableCell className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className={cn("h-8 w-8 rounded-full flex items-center justify-center font-medium", getAvatarColor(transaction.userName))}>
-                      {getInitials(transaction.userName)}
-                    </div>
-                    <div className="ml-3">
-                      <div className="text-sm font-medium text-gray-900">{transaction.userName}</div>
-                      <div className="text-sm text-gray-500">{transaction.userEmail}</div>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  ${transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </TableCell>
-                <TableCell className="px-6 py-4 whitespace-nowrap">
-                  <Badge className={cn("font-medium", getStatusColor(transaction.status))}>
-                    {transaction.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {format(new Date(transaction.date), "MMM d, yyyy")}
-                </TableCell>
-                <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <Link href={`/transactions/${transaction.id}`}>
-                    <a className="text-primary hover:text-primary/80">View</a>
-                  </Link>
-                </TableCell>
+    <>
+      <Card className="border border-gray-100">
+        <CardHeader className="px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg font-semibold text-gray-800">
+              Recent Transactions
+            </CardTitle>
+            <Link href="/transactions">
+              <a className="text-sm font-medium text-primary hover:text-primary/80">
+                View all
+              </a>
+            </Link>
+          </div>
+        </CardHeader>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  ID
+                </TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  User
+                </TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Amount
+                </TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Date
+                </TableHead>
+                <TableHead className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-      <div className="px-6 py-4 border-t border-gray-200">
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-700">
-            Showing <span className="font-medium">{(page - 1) * itemsPerPage + 1}</span> to{" "}
-            <span className="font-medium">
-              {Math.min(page * itemsPerPage, transactions.length)}
-            </span>{" "}
-            of <span className="font-medium">{transactions.length}</span> results
-          </div>
-          <div className="flex space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handlePreviousPage}
-              disabled={page === 1}
-            >
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleNextPage}
-              disabled={page >= totalPages}
-            >
-              Next
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
+            </TableHeader>
+            <TableBody>
+              {paginatedTransactions.map((transaction) => (
+                <TableRow key={transaction.id}>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {transaction.id}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div
+                        className={cn(
+                          "h-8 w-8 rounded-full flex items-center justify-center font-medium",
+                          getAvatarColor(transaction.user.fullname)
+                        )}
+                      >
+                        {getInitials(transaction.user.fullname)}
+                      </div>
+                      <div className="ml-3">
+                        <div className="text-sm font-medium text-gray-900">
+                          {transaction.user.fullname}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {transaction.user.email}
+                        </div>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {transaction.currency.symbol}
+                    {transaction.amount}
+                    {/* {transaction.amount.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })} */}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap">
+                    <Badge
+                      className={cn(
+                        "font-medium",
+                        getStatusColor(transaction.status)
+                      )}
+                    >
+                      {transaction.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {format(new Date(transaction.created_at), "MMM d, yyyy")}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <Button
+                      variant="ghost"
+                      className="text-primary hover:text-primary/80"
+                      onClick={() => handleOpenDetails(transaction)}
+                    >
+                      View
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+        <div className="px-6 py-4 border-t border-gray-200">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-700">
+              Showing{" "}
+              <span className="font-medium">
+                {(page - 1) * itemsPerPage + 1}
+              </span>{" "}
+              to{" "}
+              <span className="font-medium">
+                {Math.min(page * itemsPerPage, transactions.length)}
+              </span>{" "}
+              of <span className="font-medium">{transactions.length}</span>{" "}
+              results
+            </div>
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePreviousPage}
+                disabled={page === 1}
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleNextPage}
+                disabled={page >= totalPages}
+              >
+                Next
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
-    </Card>
+      </Card>
+
+      <TransactionDetailsDialog
+        transaction={selectedTransaction}
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+      />
+    </>
   );
 }

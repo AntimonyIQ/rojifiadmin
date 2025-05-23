@@ -1,4 +1,4 @@
-import { Transaction } from "@/types";
+import { Transaction, TransactionStatusPayload } from "@/types";
 import {
   Dialog,
   DialogContent,
@@ -9,9 +9,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
-import { CreditCard, CheckCircle, XCircle, Clock, AlertTriangle } from "lucide-react";
+import {
+  CreditCard,
+  CheckCircle,
+  XCircle,
+  Clock,
+  AlertTriangle,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useUpdateTransaction } from "@/hooks/useTransaction";
+import { useState } from "react";
 
 interface TransactionDetailsDialogProps {
   transaction: Transaction | null;
@@ -24,7 +32,31 @@ export default function TransactionDetailsDialog({
   open,
   onOpenChange,
 }: TransactionDetailsDialogProps) {
+  const [actionLoading, setActionLoading] = useState<
+    "cancel" | "approve" | null
+  >(null);
+  const { mutate, isPending } = useUpdateTransaction();
+
   if (!transaction) return null;
+
+  const handleTransactionUpdate = (
+    status: "successful" | "pending" | "failed" | "reversed",
+    action: "cancel" | "approve"
+  ) => {
+    setActionLoading(action);
+
+    const payload: TransactionStatusPayload = {
+      status,
+    };
+    mutate(
+      { id: transaction.id, payload },
+      {
+        onSettled: () => {
+          setActionLoading(null);
+        },
+      }
+    );
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
@@ -43,7 +75,7 @@ export default function TransactionDetailsDialog({
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case "completed":
+      case "successful":
         return "bg-green-100 text-green-800";
       case "pending":
         return "bg-yellow-100 text-yellow-800";
@@ -72,12 +104,12 @@ export default function TransactionDetailsDialog({
       "bg-indigo-100 text-indigo-700",
       "bg-pink-100 text-pink-700",
     ];
-    
+
     // Simple hash function to get consistent color for a name
     const hash = name.split("").reduce((acc, char) => {
       return acc + char.charCodeAt(0);
     }, 0);
-    
+
     return colors[hash % colors.length];
   };
 
@@ -95,9 +127,11 @@ export default function TransactionDetailsDialog({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">Transaction ID</p>
-              <p className="text-lg font-semibold">#{transaction.id}</p>
+              <p className="text-lg font-semibold">{transaction.id}</p>
             </div>
-            <Badge className={cn("font-medium", getStatusColor(transaction.status))}>
+            <Badge
+              className={cn("font-medium", getStatusColor(transaction.status))}
+            >
               <span className="flex items-center gap-1">
                 {getStatusIcon(transaction.status)}
                 {transaction.status}
@@ -111,12 +145,21 @@ export default function TransactionDetailsDialog({
             <div>
               <p className="text-sm text-gray-500 mb-2">User</p>
               <div className="flex items-center">
-                <div className={cn("h-10 w-10 rounded-full flex items-center justify-center font-medium", getAvatarColor(transaction.userName))}>
-                  {getInitials(transaction.userName)}
+                <div
+                  className={cn(
+                    "h-10 w-10 rounded-full flex items-center justify-center font-medium",
+                    getAvatarColor(transaction.user.fullname)
+                  )}
+                >
+                  {getInitials(transaction.user.fullname)}
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium">{transaction.userName}</p>
-                  <p className="text-xs text-gray-500">{transaction.userEmail}</p>
+                  <p className="text-sm font-medium">
+                    {transaction.user.fullname}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {transaction.user.email}
+                  </p>
                 </div>
               </div>
             </div>
@@ -125,31 +168,29 @@ export default function TransactionDetailsDialog({
               <div>
                 <p className="text-sm text-gray-500">Amount</p>
                 <p className="text-base font-semibold">
-                  ${transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {transaction.currency.symbol} {transaction.amount}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Date</p>
                 <p className="text-base">
-                  {format(new Date(transaction.date), "MMM d, yyyy")}
+                  {format(new Date(transaction.created_at), "MMM d, yyyy")}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Time</p>
                 <p className="text-base">
-                  {format(new Date(transaction.date), "h:mm a")}
+                  {format(new Date(transaction.created_at), "h:mm a")}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Payment Method</p>
-                <p className="text-base">
-                  {transaction.paymentMethod || "Credit Card"}
-                </p>
+                <p className="text-base">{transaction.description}</p>
               </div>
             </div>
           </div>
 
-          {transaction.details && (
+          {/* {transaction.details && (
             <>
               <Separator />
               <div>
@@ -164,9 +205,9 @@ export default function TransactionDetailsDialog({
                 </div>
               </div>
             </>
-          )}
+          )} */}
 
-          {transaction.notes && (
+          {/* {transaction.notes && (
             <>
               <Separator />
               <div>
@@ -174,31 +215,38 @@ export default function TransactionDetailsDialog({
                 <p className="text-sm bg-gray-50 p-3 rounded-md">{transaction.notes}</p>
               </div>
             </>
-          )}
+          )} */}
         </div>
 
         <DialogFooter className="flex gap-2 sm:justify-between sm:gap-0">
-          {transaction.status === "Pending" && (
+          {transaction.status === "pending" && (
             <>
               <Button
                 variant="destructive"
                 size="sm"
+                onClick={() => handleTransactionUpdate("failed", "cancel")}
+                disabled={isPending}
+                className="disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Cancel Transaction
+                {actionLoading === "cancel"
+                  ? "Cancelling..."
+                  : "Cancel Transaction"}
               </Button>
               <Button
                 size="sm"
+                onClick={() => handleTransactionUpdate("successful", "approve")}
+                disabled={isPending}
+                className="disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Approve Transaction
+                {actionLoading === "approve"
+                  ? "Approving..."
+                  : "Approve Transaction"}
               </Button>
             </>
           )}
-          {transaction.status !== "Pending" && (
+          {transaction.status !== "pending" && (
             <div className="w-full flex justify-end">
-              <Button
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Close
               </Button>
             </div>

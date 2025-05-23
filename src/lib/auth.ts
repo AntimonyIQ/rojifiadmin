@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { useToast } from '@/hooks/use-toast';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { useToast } from "@/hooks/use-toast";
 
 type User = {
   email: string;
@@ -10,7 +10,7 @@ type User = {
 interface AuthState {
   isAuthenticated: boolean;
   user: User;
-  login: (user: Omit<NonNullable<User>, 'token'>) => void;
+  login: (user: Omit<NonNullable<User>, "token">) => void;
   logout: () => void;
 }
 
@@ -22,10 +22,10 @@ export const useAuthState = create<AuthState>()(
       login: (user) => set({ isAuthenticated: true, user }),
       logout: () => {
         set({ isAuthenticated: false, user: null });
-        
+
         // In a real application, we would make an API call to invalidate the token
         // For this example, we'll just clear the state
-        
+
         // Get toast outside of the Zustand store to avoid circular dependencies
         const { toast } = useToast();
         if (toast) {
@@ -37,7 +37,7 @@ export const useAuthState = create<AuthState>()(
       },
     }),
     {
-      name: 'auth-storage',
+      name: "auth-storage",
     }
   )
 );

@@ -2,7 +2,14 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import {
   ChevronLeft,
@@ -49,13 +56,14 @@ export default function TransactionsTable({
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [amountFilter, setAmountFilter] = useState<string>("");
   const [currencyFilter, setCurrencyFilter] = useState<string>("");
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<Transaction | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const itemsPerPage = 10;
-  
+
   // Available currencies
-  const currencies = ["NGN", "USD", "EUR", "GBP", "KES"];
+  const currencies = ["NGN", "USD", "EUR", "GBP", "KES", "GHS"];
 
   // Filter transactions based on search and filters
   const filteredTransactions = transactions.filter((transaction) => {
@@ -63,37 +71,47 @@ export default function TransactionsTable({
     const matchesSearch =
       search === "" ||
       transaction.id.toString().includes(search) ||
-      transaction.userName.toLowerCase().includes(search.toLowerCase()) ||
-      transaction.userEmail.toLowerCase().includes(search.toLowerCase());
+      transaction.user.fullname.toLowerCase().includes(search.toLowerCase()) ||
+      transaction.user.email.toLowerCase().includes(search.toLowerCase()) ||
+      transaction.status.toLowerCase().includes(search.toLowerCase());
 
     // Status filter
     const matchesStatus =
-      statusFilter === "" || transaction.status.toLowerCase() === statusFilter.toLowerCase();
+      statusFilter === "" ||
+      transaction.status.toLowerCase() === statusFilter.toLowerCase();
 
     // Amount filter
     let matchesAmount = true;
     if (amountFilter === "lt1000") {
-      matchesAmount = transaction.amount < 1000;
+      matchesAmount = parseFloat(transaction.amount) < 1000;
     } else if (amountFilter === "1000-5000") {
-      matchesAmount = transaction.amount >= 1000 && transaction.amount <= 5000;
+      matchesAmount =
+        parseFloat(transaction.amount) >= 1000 &&
+        parseFloat(transaction.amount) <= 5000;
     } else if (amountFilter === "gt5000") {
-      matchesAmount = transaction.amount > 5000;
+      matchesAmount = parseFloat(transaction.amount) > 5000;
     }
-    
+
     // Currency filter
-    const matchesCurrency = 
-      currencyFilter === "" || 
-      (transaction.paymentMethod && 
-       transaction.paymentMethod.includes(currencyFilter));
+    const matchesCurrency =
+      currencyFilter === "" ||
+      (transaction.currency.code &&
+        transaction.currency.code.includes(currencyFilter));
 
     // Date filter
     const matchesDate =
       !date ||
       !date.from ||
-      (new Date(transaction.date) >= date.from &&
-        (!date.to || new Date(transaction.date) <= date.to));
+      (new Date(transaction.created_at) >= date.from &&
+        (!date.to || new Date(transaction.created_at) <= date.to));
 
-    return matchesSearch && matchesStatus && matchesAmount && matchesDate && matchesCurrency;
+    return (
+      matchesSearch &&
+      matchesStatus &&
+      matchesAmount &&
+      matchesDate &&
+      matchesCurrency
+    );
   });
 
   const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
@@ -158,12 +176,12 @@ export default function TransactionsTable({
       "bg-indigo-100 text-indigo-700",
       "bg-pink-100 text-pink-700",
     ];
-    
+
     // Simple hash function to get consistent color for a name
     const hash = name.split("").reduce((acc, char) => {
       return acc + char.charCodeAt(0);
     }, 0);
-    
+
     return colors[hash % colors.length];
   };
 
@@ -256,7 +274,9 @@ export default function TransactionsTable({
       <Card>
         <CardHeader className="px-6 py-5 border-b border-gray-200">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <CardTitle className="text-xl font-semibold text-gray-800">Transactions</CardTitle>
+            <CardTitle className="text-xl font-semibold text-gray-800">
+              Transactions
+            </CardTitle>
             <div className="flex w-full md:w-auto gap-2">
               <div className="relative w-full md:w-64">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
@@ -291,7 +311,10 @@ export default function TransactionsTable({
                     </div>
                     <div className="space-y-2">
                       <p className="text-sm font-medium">Status</p>
-                      <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <Select
+                        value={statusFilter}
+                        onValueChange={setStatusFilter}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="All statuses" />
                         </SelectTrigger>
@@ -306,38 +329,60 @@ export default function TransactionsTable({
                     </div>
                     <div className="space-y-2">
                       <p className="text-sm font-medium">Currency</p>
-                      <Select value={currencyFilter} onValueChange={setCurrencyFilter}>
+                      <Select
+                        value={currencyFilter}
+                        onValueChange={setCurrencyFilter}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="All currencies" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="">All currencies</SelectItem>
                           {currencies.map((currency) => (
-                            <SelectItem key={currency} value={currency}>{currency}</SelectItem>
+                            <SelectItem key={currency} value={currency}>
+                              {currency}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
                       <p className="text-sm font-medium">Amount</p>
-                      <Select value={amountFilter} onValueChange={setAmountFilter}>
+                      <Select
+                        value={amountFilter}
+                        onValueChange={setAmountFilter}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="All amounts" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="">All amounts</SelectItem>
-                          <SelectItem value="lt1000">Less than $1,000</SelectItem>
-                          <SelectItem value="1000-5000">$1,000 - $5,000</SelectItem>
-                          <SelectItem value="gt5000">More than $5,000</SelectItem>
+                          <SelectItem value="lt1000">
+                            Less than $1,000
+                          </SelectItem>
+                          <SelectItem value="1000-5000">
+                            $1,000 - $5,000
+                          </SelectItem>
+                          <SelectItem value="gt5000">
+                            More than $5,000
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <Separator />
                     <div className="flex justify-between">
-                      <Button variant="outline" size="sm" onClick={handleResetFilters}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleResetFilters}
+                      >
                         Reset
                       </Button>
-                      <Button size="sm" className="flex items-center gap-1" onClick={() => setFiltersOpen(false)}>
+                      <Button
+                        size="sm"
+                        className="flex items-center gap-1"
+                        onClick={() => setFiltersOpen(false)}
+                      >
                         <Check className="h-4 w-4" /> Apply Filters
                       </Button>
                     </div>
@@ -346,55 +391,55 @@ export default function TransactionsTable({
               </Popover>
             </div>
           </div>
-          
+
           {/* Filter Pills */}
           <div className="mt-4 flex flex-wrap gap-2">
             {/* Status Filter Pills */}
             <div className="flex flex-wrap items-center gap-2 mr-4">
-              <Badge 
-                variant={statusFilter === "" ? "default" : "outline"} 
+              <Badge
+                variant={statusFilter === "" ? "default" : "outline"}
                 className="cursor-pointer"
                 onClick={() => setStatusFilter("")}
               >
                 All
               </Badge>
-              <Badge 
-                variant={statusFilter === "processing" ? "default" : "outline"} 
+              <Badge
+                variant={statusFilter === "successful" ? "default" : "outline"}
                 className="cursor-pointer"
-                onClick={() => setStatusFilter("processing")}
+                onClick={() => setStatusFilter("successful")}
               >
-                Processing
+                Successful
               </Badge>
-              <Badge 
-                variant={statusFilter === "completed" ? "default" : "outline"} 
+              <Badge
+                variant={statusFilter === "pending" ? "default" : "outline"}
                 className="cursor-pointer"
-                onClick={() => setStatusFilter("completed")}
+                onClick={() => setStatusFilter("pending")}
               >
-                Completed
+                Pending
               </Badge>
-              <Badge 
-                variant={statusFilter === "failed" ? "default" : "outline"} 
+              <Badge
+                variant={statusFilter === "failed" ? "default" : "outline"}
                 className="cursor-pointer"
                 onClick={() => setStatusFilter("failed")}
               >
                 Failed
               </Badge>
             </div>
-            
+
             {/* Currency Filter Pills - shown on right side */}
             <div className="flex flex-wrap items-center gap-2 ml-auto">
               <span className="text-xs text-gray-500">Currency:</span>
-              <Badge 
-                variant={currencyFilter === "" ? "default" : "outline"} 
+              <Badge
+                variant={currencyFilter === "" ? "default" : "outline"}
                 className="cursor-pointer"
                 onClick={() => setCurrencyFilter("")}
               >
                 All
               </Badge>
-              {currencies.map(currency => (
-                <Badge 
+              {currencies.map((currency) => (
+                <Badge
                   key={currency}
-                  variant={currencyFilter === currency ? "default" : "outline"} 
+                  variant={currencyFilter === currency ? "default" : "outline"}
                   className="cursor-pointer"
                   onClick={() => setCurrencyFilter(currency)}
                 >
@@ -403,14 +448,15 @@ export default function TransactionsTable({
               ))}
             </div>
           </div>
-          
+
           {/* Active Filters Display */}
           {(date || amountFilter) && (
             <div className="flex flex-wrap gap-2 mt-4">
               {date && (
                 <Badge variant="outline" className="flex items-center gap-1">
                   <Calendar className="h-3 w-3" />
-                  {format(date.from!, "MMM d, yyyy")} - {date.to ? format(date.to, "MMM d, yyyy") : "Present"}
+                  {format(date.from!, "MMM d, yyyy")} -{" "}
+                  {date.to ? format(date.to, "MMM d, yyyy") : "Present"}
                   <Button
                     variant="ghost"
                     size="icon"
@@ -425,7 +471,12 @@ export default function TransactionsTable({
               {amountFilter && (
                 <Badge variant="outline" className="flex items-center gap-1">
                   <DollarSign className="h-3 w-3" />
-                  Amount: {amountFilter === "lt1000" ? "< $1,000" : amountFilter === "1000-5000" ? "$1,000 - $5,000" : "> $5,000"}
+                  Amount:{" "}
+                  {amountFilter === "lt1000"
+                    ? "< $1,000"
+                    : amountFilter === "1000-5000"
+                    ? "$1,000 - $5,000"
+                    : "> $5,000"}
                   <Button
                     variant="ghost"
                     size="icon"
@@ -438,7 +489,12 @@ export default function TransactionsTable({
                 </Badge>
               )}
               {(date || amountFilter) && (
-                <Button variant="link" size="sm" onClick={handleResetFilters} className="h-6 px-2">
+                <Button
+                  variant="link"
+                  size="sm"
+                  onClick={handleResetFilters}
+                  className="h-6 px-2"
+                >
                   Clear all
                 </Button>
               )}
@@ -450,18 +506,33 @@ export default function TransactionsTable({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</TableHead>
-                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</TableHead>
-                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</TableHead>
-                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</TableHead>
-                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</TableHead>
-                  <TableHead className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</TableHead>
+                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    ID
+                  </TableHead>
+                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    User
+                  </TableHead>
+                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Amount
+                  </TableHead>
+                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </TableHead>
+                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Date
+                  </TableHead>
+                  <TableHead className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedTransactions.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                    <TableCell
+                      colSpan={6}
+                      className="text-center py-8 text-gray-500"
+                    >
                       No transactions found.
                     </TableCell>
                   </TableRow>
@@ -469,29 +540,52 @@ export default function TransactionsTable({
                   paginatedTransactions.map((transaction) => (
                     <TableRow key={transaction.id}>
                       <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        #{transaction.id}
+                        {transaction.id}
                       </TableCell>
                       <TableCell className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className={`h-8 w-8 rounded-full flex items-center justify-center font-medium ${getAvatarColor(transaction.userName)}`}>
-                            {getInitials(transaction.userName)}
+                          <div
+                            className={`h-8 w-8 rounded-full flex items-center justify-center font-medium ${getAvatarColor(
+                              transaction.user.fullname
+                            )}`}
+                          >
+                            {getInitials(transaction.user.fullname)}
                           </div>
                           <div className="ml-3">
-                            <div className="text-sm font-medium text-gray-900">{transaction.userName}</div>
-                            <div className="text-sm text-gray-500">{transaction.userEmail}</div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {transaction.user.fullname}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {transaction.user.email}
+                            </div>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        ${transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {transaction.currency.symbol}
+                        {transaction.amount}
+                        {/* {parseFloat(transaction.amount).toLocaleString(
+                          "en-US",
+                          {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }
+                        )} */}
                       </TableCell>
                       <TableCell className="px-6 py-4 whitespace-nowrap">
-                        <Badge className={`font-medium ${getStatusColor(transaction.status)}`}>
+                        <Badge
+                          className={`font-medium ${getStatusColor(
+                            transaction.status
+                          )}`}
+                        >
                           {transaction.status}
                         </Badge>
                       </TableCell>
                       <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {format(new Date(transaction.date), "MMM d, yyyy")}
+                        {format(
+                          new Date(transaction.created_at),
+                          "MMM d, yyyy"
+                        )}
                       </TableCell>
                       <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <Button
@@ -511,11 +605,21 @@ export default function TransactionsTable({
           <div className="px-6 py-4 border-t border-gray-200">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="text-sm text-gray-700">
-                Showing <span className="font-medium">{filteredTransactions.length > 0 ? (page - 1) * itemsPerPage + 1 : 0}</span> to{" "}
+                Showing{" "}
+                <span className="font-medium">
+                  {filteredTransactions.length > 0
+                    ? (page - 1) * itemsPerPage + 1
+                    : 0}
+                </span>{" "}
+                to{" "}
                 <span className="font-medium">
                   {Math.min(page * itemsPerPage, filteredTransactions.length)}
                 </span>{" "}
-                of <span className="font-medium">{filteredTransactions.length}</span> transactions
+                of{" "}
+                <span className="font-medium">
+                  {filteredTransactions.length}
+                </span>{" "}
+                transactions
               </div>
               <div className="flex space-x-2">
                 <Button

@@ -18,6 +18,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useAuthState } from "@/lib/auth";
+import { useLogin } from "@/hooks/useLogin";
 
 const formSchema = z.object({
   email: z
@@ -45,29 +46,28 @@ export default function LoginPage() {
     },
   });
 
+  const loginMutation = useLogin();
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       setIsLoading(true);
-      // In a real app, this would be an API call
-      // Here we're just simulating the login to show the flow
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      login({
+      await loginMutation.mutateAsync({
         email: values.email,
-        name: "Admin User",
+        password: values.password,
       });
-      
+
       toast({
         title: "Successfully logged in!",
         description: "Welcome to Rojifi Admin Dashboard",
       });
-      
+
       navigate("/dashboard");
-    } catch (error) {
+    } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: "Please check your credentials and try again",
+        description:
+          error.message || "Please check your credentials and try again",
       });
     } finally {
       setIsLoading(false);
@@ -88,7 +88,10 @@ export default function LoginPage() {
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="mt-8 space-y-6">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="mt-8 space-y-6"
+          >
             <div className="space-y-4">
               <FormField
                 control={form.control}
@@ -136,13 +139,16 @@ export default function LoginPage() {
                 render={({ field }) => (
                   <FormItem className="flex items-center space-x-2">
                     <FormControl>
-                      <Checkbox 
-                        checked={field.value} 
-                        onCheckedChange={field.onChange} 
-                        id="remember-me" 
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        id="remember-me"
                       />
                     </FormControl>
-                    <FormLabel className="text-sm font-normal cursor-pointer" htmlFor="remember-me">
+                    <FormLabel
+                      className="text-sm font-normal cursor-pointer"
+                      htmlFor="remember-me"
+                    >
                       Remember me
                     </FormLabel>
                   </FormItem>
@@ -150,17 +156,16 @@ export default function LoginPage() {
               />
 
               <div className="text-sm">
-                <a href="#" className="font-medium text-primary-600 hover:text-primary-500">
+                <a
+                  href="#"
+                  className="font-medium text-primary-600 hover:text-primary-500"
+                >
                   Forgot your password?
                 </a>
               </div>
             </div>
 
-            <Button 
-              type="submit" 
-              className="w-full"
-              disabled={isLoading}
-            >
+            <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Signing in..." : "Sign in"}
             </Button>
           </form>

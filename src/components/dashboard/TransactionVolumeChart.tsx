@@ -1,23 +1,44 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, TooltipProps } from "recharts";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  TooltipProps,
+} from "recharts";
 import { format } from "date-fns";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { TransactionVolume } from "@/types";
+import { getDateRange } from "@/utils/getDateRange";
+import { useFetchTransactionVolume } from "@/hooks/useTransaction";
 
 interface TransactionVolumeChartProps {
-  data?: Array<{
-    date: string;
-    volume: number;
-  }>;
+  data?: TransactionVolume[];
   loading?: boolean;
 }
 
-const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+}: TooltipProps<number, string>) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white p-3 border border-gray-200 shadow-sm rounded-md">
-        <p className="text-sm font-medium text-gray-900">{format(new Date(label), "MMM d, yyyy")}</p>
+        <p className="text-sm font-medium text-gray-900">
+          {format(new Date(label), "MMM d, yyyy")}
+        </p>
         <p className="text-sm font-medium text-secondary">
           Transactions: {payload[0].value?.toLocaleString()}
         </p>
@@ -28,13 +49,18 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
   return null;
 };
 
-export default function TransactionVolumeChart({
-  data = [],
-  loading = false,
-}: TransactionVolumeChartProps) {
-  const [timeRange, setTimeRange] = useState("month");
+export default function TransactionVolumeChart() {
+  const [timeRange, setTimeRange] = useState<
+    "week" | "month" | "quarter" | "year"
+  >("month");
 
-  if (loading) {
+  const { start, end } = getDateRange(timeRange);
+
+
+  const { data, isLoading } = useFetchTransactionVolume(start, end);
+
+
+  if (isLoading) {
     return (
       <Card className="border border-gray-100">
         <CardContent className="p-6">
@@ -52,9 +78,16 @@ export default function TransactionVolumeChart({
     <Card className="border border-gray-100">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-gray-800">Transaction Volume</h3>
+          <h3 className="text-lg font-semibold text-gray-800">
+            Transaction Volume
+          </h3>
           <div className="flex items-center space-x-2">
-            <Select defaultValue={timeRange} onValueChange={setTimeRange}>
+            <Select
+              defaultValue={timeRange}
+              onValueChange={(value) =>
+                setTimeRange(value as "week" | "month" | "quarter" | "year")
+              }
+            >
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Select time range" />
               </SelectTrigger>
@@ -74,14 +107,14 @@ export default function TransactionVolumeChart({
               margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="date" 
+              <XAxis
+                dataKey="date"
                 tickFormatter={(date) => format(new Date(date), "MMM d")}
                 stroke="#9ca3af"
                 fontSize={12}
               />
-              <YAxis 
-                tickFormatter={(value) => value.toLocaleString()} 
+              <YAxis
+                tickFormatter={(value) => value.toLocaleString()}
                 stroke="#9ca3af"
                 fontSize={12}
               />

@@ -1,29 +1,148 @@
 // User types
 export interface User {
-  id: number;
-  name: string;
+  id: string;
+  firstname: string;
+  lastname: string;
+  fullname: string;
   email: string;
-  phone: string;
-  status: string;
-  joinedDate: string;
-  lastLoginDate: string;
-  address: string;
-  recentTransactions?: Transaction[];
-  activityLog?: ActivityLog[];
+  phone: any;
+  avatar: string;
+  status: "active" | "inactive";
+  address_line_one: string;
+  address_line_two: string;
+  city: string;
+  state: string;
+  country: string;
+  joined_at: string;
+  // lastLoginDate: string;
+  // recentTransactions?: Transaction[];
+  // activityLog?: ActivityLog[];
 }
+// export interface User {
+//   id: number;
+//   name: string;
+//   email: string;
+//   phone: string;
+//   status: string;
+//   joinedDate: string;
+//   lastLoginDate: string;
+//   address: string;
+//   recentTransactions?: Transaction[];
+//   activityLog?: ActivityLog[];
+// }
 
 // Transaction types
+// src/types/transaction.ts
+
 export interface Transaction {
-  id: number;
-  userId: number;
-  userName: string;
-  userEmail: string;
-  amount: number;
-  status: string;
+  id: string;
+  created_at: string;
+  reference: string;
+  amount: string;
+  merchant_fee: string;
+  net_amount: string;
+  description: string;
+  type: "debit" | "credit";
+  status: "successful" | "pending" | "failed";
+  user: {
+    id: string;
+    fullname: string;
+    email: string;
+    avatar: string;
+  };
+  currency: {
+    code: string;
+    symbol: string;
+    decimal_place: number;
+  };
+}
+
+export interface TransactionStatusPayload {
+  status: "successful" | "pending" | "failed" | "reversed";
+}
+
+export interface TransactionVolume {
   date: string;
-  paymentMethod?: string;
-  details?: TransactionDetail[];
-  notes?: string;
+  volume: number;
+}
+
+// export interface Transaction {
+//   id: number;
+//   userId: number;
+//   userName: string;
+//   userEmail: string;
+//   amount: number;
+//   status: string;
+//   date: string;
+//   paymentMethod?: string;
+//   details?: TransactionDetail[];
+//   notes?: string;
+// }
+
+export interface OverviewProps {
+  active_user_growth: number;
+  active_users: number;
+  revenue: number;
+  revenue_growth: number;
+  total_transactions: number;
+  total_users: number;
+  transaction_growth: number;
+  user_growth: number;
+}
+
+export interface WalletOverview {
+  total_balance: string;
+  total_deposit: string;
+  total_withdraw: string;
+}
+
+export interface Permission {
+  id?: string;
+  action?: string; // create | read | ...
+  resource?: string;
+}
+
+export interface Role {
+  name: string;
+}
+
+export interface RolePayload {
+  id: string;
+  name: string;
+  description: string;
+  permissions: Permission[];
+}
+
+export interface Staff {
+  id: string;
+  created_at: any;
+  firstname: string;
+  lastname: string;
+  fullname: string;
+  email: string;
+  status: "active" | "inactive";
+  phone: string;
+  role: Role;
+  permissions: Permission[];
+}
+
+export interface AddStaffPayload {
+  email: string;
+  firstname: string;
+  lastname: string;
+  phone: string;
+  role: string;
+  id?: string;
+  // permissions: Permission[];
+}
+
+export interface EditStaffPayload {
+  email: string;
+  firstname: string;
+  lastname: string;
+  phone?: string;
+  id?: string;
+  status?: any;
 }
 
 export interface TransactionDetail {
@@ -33,7 +152,7 @@ export interface TransactionDetail {
 
 // Activity log types
 export interface ActivityLog {
-  type: 'login' | 'transaction' | 'update' | 'other';
+  type: "login" | "transaction" | "update" | "other";
   description: string;
   timestamp: string;
   details?: string;
@@ -110,7 +229,7 @@ export interface GeneralSettings {
 }
 
 export interface TransactionSettings {
-  transactionProcessingMode: 'instant' | 'batch';
+  transactionProcessingMode: "instant" | "batch";
   maxTransactionAmount: number;
   minTransactionAmount: number;
   dailyLimitAmount: number;
@@ -124,7 +243,7 @@ export interface TransactionSettings {
 }
 
 export interface FeeSettings {
-  feeModel: 'flat' | 'tiered';
+  feeModel: "flat" | "tiered";
   processingFeePercentage: number;
   processingFeeFixed: number;
   includeFeeInTotal: boolean;
@@ -135,7 +254,7 @@ export interface FeeSettings {
 
 export interface AdditionalFee {
   name: string;
-  type: 'percentage' | 'fixed';
+  type: "percentage" | "fixed";
   value: number;
   minAmount?: number;
   maxAmount?: number;
@@ -168,4 +287,19 @@ export interface PaymentProcessor {
 
 export interface PaymentChannelSettings {
   processors: PaymentProcessor[];
+}
+
+// auth types
+export interface LoginPayload {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  status: number;
+  code: string;
+  message: string;
+  data: {
+    token: string;
+  };
 }

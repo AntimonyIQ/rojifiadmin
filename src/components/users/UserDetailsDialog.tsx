@@ -1,4 +1,4 @@
-import { User } from "@/types";
+import { Transaction, User } from "@/types";
 import {
   Dialog,
   DialogContent,
@@ -12,6 +12,7 @@ import { format } from "date-fns";
 import { AlertCircle, User as UserIcon, CreditCard, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useFetchUserTransactions } from "@/hooks/useTransaction";
 
 interface UserDetailsDialogProps {
   user: User | null;
@@ -25,6 +26,13 @@ export default function UserDetailsDialog({
   onOpenChange,
 }: UserDetailsDialogProps) {
   if (!user) return null;
+
+  const {
+    data: recentTransactions,
+    isLoading,
+    isError,
+    error,
+  } = useFetchUserTransactions(user.id);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -57,12 +65,12 @@ export default function UserDetailsDialog({
       "bg-indigo-100 text-indigo-700",
       "bg-pink-100 text-pink-700",
     ];
-    
+
     // Simple hash function to get consistent color for a name
     const hash = name.split("").reduce((acc, char) => {
       return acc + char.charCodeAt(0);
     }, 0);
-    
+
     return colors[hash % colors.length];
   };
 
@@ -70,15 +78,22 @@ export default function UserDetailsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">User Details</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">
+            User Details
+          </DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col sm:flex-row items-start gap-4 py-4">
-          <div className={cn("h-16 w-16 rounded-full flex items-center justify-center text-xl font-medium", getAvatarColor(user.name))}>
-            {getInitials(user.name)}
+          <div
+            className={cn(
+              "h-16 w-16 rounded-full flex items-center justify-center text-xl font-medium",
+              getAvatarColor(user.fullname)
+            )}
+          >
+            {getInitials(user.fullname)}
           </div>
           <div className="space-y-1">
-            <h3 className="text-lg font-medium">{user.name}</h3>
+            <h3 className="text-lg font-medium">{user.fullname}</h3>
             <p className="text-sm text-gray-500">{user.email}</p>
             <Badge className={cn("mt-2", getStatusColor(user.status))}>
               {user.status}
@@ -87,32 +102,38 @@ export default function UserDetailsDialog({
         </div>
 
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="w-full grid grid-cols-3">
+          <TabsList className="w-full grid grid-cols-2">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="transactions">Transactions</TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
+            {/* <TabsTrigger value="activity">Activity</TabsTrigger> */}
           </TabsList>
           <TabsContent value="profile" className="space-y-4 mt-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <p className="text-xs font-medium text-gray-500">Phone</p>
-                <p className="text-sm">{user.phone}</p>
+                <p className="text-sm">
+                  {user.phone === null ? "N/A" : user.phone}
+                </p>
               </div>
               <div className="space-y-1">
                 <p className="text-xs font-medium text-gray-500">Date Joined</p>
-                <p className="text-sm">{format(new Date(user.joinedDate), "MMMM d, yyyy")}</p>
+                <p className="text-sm">
+                  {format(new Date(user.joined_at), "MMMM d, yyyy")}
+                </p>
               </div>
               <div className="space-y-1">
                 <p className="text-xs font-medium text-gray-500">User ID</p>
-                <p className="text-sm">#{user.id}</p>
+                <p className="text-sm">{user.id}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs font-medium text-gray-500">Last Login</p>
-                <p className="text-sm">{format(new Date(user.lastLoginDate), "MMM d, yyyy, h:mm a")}</p>
+                {/* <p className="text-xs font-medium text-gray-500">Last Login</p> */}
+                {/* <p className="text-sm">{format(new Date(user.lastLoginDate), "MMM d, yyyy, h:mm a")}</p> */}
               </div>
               <div className="space-y-1 md:col-span-2">
                 <p className="text-xs font-medium text-gray-500">Address</p>
-                <p className="text-sm">{user.address}</p>
+                <p className="text-sm">
+                  {user.address_line_one + " " + user.address_line_two}
+                </p>
               </div>
             </div>
           </TabsContent>
@@ -122,22 +143,40 @@ export default function UserDetailsDialog({
                 <h3 className="text-sm font-medium">Recent Transactions</h3>
                 <p className="text-xs text-gray-500">Last 30 days</p>
               </div>
-              {user.recentTransactions && user.recentTransactions.length > 0 ? (
+              {recentTransactions && recentTransactions.length > 0 ? (
                 <div className="divide-y">
-                  {user.recentTransactions.map((transaction, i) => (
-                    <div key={i} className="px-4 py-3 flex items-center justify-between">
+                  {recentTransactions.map((transaction: Transaction) => (
+                    <div
+                      key={transaction.id}
+                      className="px-4 py-3 flex items-center justify-between"
+                    >
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
                           <CreditCard className="h-4 w-4 text-blue-700" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium">#{transaction.id}</p>
-                          <p className="text-xs text-gray-500">{format(new Date(transaction.date), "MMM d, yyyy")}</p>
+                          <p className="text-sm font-medium">
+                            {transaction.id}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {format(
+                              new Date(transaction.created_at),
+                              "MMM d, yyyy"
+                            )}
+                          </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-medium">${transaction.amount.toLocaleString()}</p>
-                        <Badge className={cn("text-xs", getStatusColor(transaction.status))}>
+                        <p className="text-sm font-medium">
+                          {transaction.currency.symbol}
+                          {transaction.amount}
+                        </p>
+                        <Badge
+                          className={cn(
+                            "text-xs",
+                            getStatusColor(transaction.status)
+                          )}
+                        >
                           {transaction.status}
                         </Badge>
                       </div>
@@ -158,7 +197,7 @@ export default function UserDetailsDialog({
                 <h3 className="text-sm font-medium">Activity Log</h3>
                 <p className="text-xs text-gray-500">Last 7 days</p>
               </div>
-              {user.activityLog && user.activityLog.length > 0 ? (
+              {/* {user.activityLog && user.activityLog.length > 0 ? (
                 <div className="divide-y">
                   {user.activityLog.map((log, i) => (
                     <div key={i} className="px-4 py-3 flex items-start gap-3">
@@ -184,16 +223,13 @@ export default function UserDetailsDialog({
                   <AlertCircle className="h-8 w-8 text-gray-400 mb-2" />
                   <p>No activity logs found</p>
                 </div>
-              )}
+              )} */}
             </div>
           </TabsContent>
         </Tabs>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>
         </DialogFooter>

@@ -78,11 +78,11 @@ export default function Sidebar() {
       icon: <CreditCard className="h-5 w-5" />,
       label: "Transactions",
     },
-    {
-      href: "/messaging",
-      icon: <MessageSquare className="h-5 w-5" />,
-      label: "Messaging",
-    },
+    // {
+    //   href: "/messaging",
+    //   icon: <MessageSquare className="h-5 w-5" />,
+    //   label: "Messaging",
+    // },
     {
       href: "/staff",
       icon: <UserCog className="h-5 w-5" />,
