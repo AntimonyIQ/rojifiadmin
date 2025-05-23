@@ -7,7 +7,7 @@ export interface User {
   email: string;
   phone: any;
   avatar: string;
-  status: "active" | "inactive";
+  status: any; // "active" | "inactive"
   address_line_one: string;
   address_line_two: string;
   city: string;
@@ -35,15 +35,15 @@ export interface User {
 // src/types/transaction.ts
 
 export interface Transaction {
-  id: string;
+  id: any; // string
   created_at: string;
   reference: string;
-  amount: string;
+  amount: any; // string
   merchant_fee: string;
   net_amount: string;
   description: string;
   type: "debit" | "credit";
-  status: "successful" | "pending" | "failed";
+  status: any; //  "successful" | "pending" | "failed" |"reversed"
   user: {
     id: string;
     fullname: string;

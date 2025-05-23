@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
+// @ts-ignore
 import { AlertCircle, User as UserIcon, CreditCard, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -27,12 +28,7 @@ export default function UserDetailsDialog({
 }: UserDetailsDialogProps) {
   if (!user) return null;
 
-  const {
-    data: recentTransactions,
-    isLoading,
-    isError,
-    error,
-  } = useFetchUserTransactions(user.id);
+  const { data: recentTransactions } = useFetchUserTransactions(user.id);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {

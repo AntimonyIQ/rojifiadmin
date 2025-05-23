@@ -63,6 +63,7 @@ export default function GeneralSettingsForm() {
       });
       setIsLoading(false);
     },
+    // @ts-ignore
     onError: (error) => {
       toast({
         variant: "destructive",

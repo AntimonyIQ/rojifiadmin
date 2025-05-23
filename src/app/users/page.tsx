@@ -1,16 +1,7 @@
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import UsersTable from "@/components/users/UsersTable";
-import { useQuery } from "@tanstack/react-query";
-import { fetchUsers } from "@/services/api";
 import { LoadingPage } from "@/components/ui/loading-spinner";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Users as UsersIcon, UserCheck, UserX, TrendingUp } from "lucide-react";
 import { User } from "@/types";
 import { useFetchUsers } from "@/hooks/useUsers";

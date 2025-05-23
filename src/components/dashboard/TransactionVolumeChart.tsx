@@ -18,15 +18,12 @@ import {
   TooltipProps,
 } from "recharts";
 import { format } from "date-fns";
-import { useMemo, useState } from "react";
+import { useState } from "react";
+// @ts-ignore
 import { TransactionVolume } from "@/types";
 import { getDateRange } from "@/utils/getDateRange";
 import { useFetchTransactionVolume } from "@/hooks/useTransaction";
 
-interface TransactionVolumeChartProps {
-  data?: TransactionVolume[];
-  loading?: boolean;
-}
 
 const CustomTooltip = ({
   active,

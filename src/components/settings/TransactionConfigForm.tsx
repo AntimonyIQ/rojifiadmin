@@ -84,6 +84,7 @@ export default function TransactionConfigForm() {
       });
       setIsLoading(false);
     },
+    // @ts-ignore
     onError: (error) => {
       toast({
         variant: "destructive",

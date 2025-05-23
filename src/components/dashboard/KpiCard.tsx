@@ -1,6 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowUp, ArrowDown, LucideIcon } from "lucide-react";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 

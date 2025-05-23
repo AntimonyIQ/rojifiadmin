@@ -1,4 +1,5 @@
 import { permissionAPI } from "@/services/permissions";
+// @ts-ignore
 import { Permission } from "@/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 

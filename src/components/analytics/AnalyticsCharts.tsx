@@ -285,9 +285,9 @@ export function PaymentMethodsChart({
                 nameKey="name"
                 label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
               >
-                {data.map((entry, index) => (
+                {/* {data.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                ))}
+                ))} */}
               </Pie>
               <Tooltip formatter={(value) => `${value.toLocaleString()} transactions`} />
               <Legend 

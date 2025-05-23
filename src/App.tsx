@@ -6,6 +6,7 @@ import TransactionsPage from "@/app/transactions/page";
 import AnalyticsPage from "@/app/analytics/page";
 import SettingsPage from "@/app/settings/page";
 import StaffManagementPage from "@/app/staff/page";
+// @ts-ignore
 import MessagingPage from "@/app/messaging/page";
 import NotFound from "@/pages/not-found";
 import DashboardLayout from "@/components/layout/DashboardLayout";

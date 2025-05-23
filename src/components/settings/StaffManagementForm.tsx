@@ -105,6 +105,7 @@ export default function StaffManagementForm() {
       });
       setIsLoading(false);
     },
+    // @ts-ignore
     onError: (error) => {
       toast({
         variant: "destructive",

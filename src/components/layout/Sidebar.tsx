@@ -1,5 +1,5 @@
 import { useSidebar } from "@/hooks/use-sidebar";
-import { ChevronLeft, LayoutDashboard, Users, CreditCard, Settings, LogOut, UserCog, MessageSquare } from "lucide-react";
+import { ChevronLeft, LayoutDashboard, Users, CreditCard, Settings, LogOut, UserCog } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { useAuthState } from "@/lib/auth";

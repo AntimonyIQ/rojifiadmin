@@ -8,13 +8,11 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { 
-  Card, 
   CardContent, 
   CardFooter,
 } from "@/components/ui/card";
@@ -26,10 +24,8 @@ import {
   Edit,
   Trash,
   Plus,
-  Banknote,
 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 // Currency options
@@ -240,7 +236,7 @@ export default function ConfigureCurrencyForm() {
       });
       setIsLoading(false);
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         variant: "destructive",
         title: "Error saving settings",
