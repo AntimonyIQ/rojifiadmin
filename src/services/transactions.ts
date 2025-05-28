@@ -1,13 +1,14 @@
 import { apiInstance } from "@/lib/apiInstance";
 import {
   Transaction,
+  TransactionChannelsProps,
   TransactionStatusPayload,
   TransactionVolume,
 } from "@/types";
 
 export const transactionAPI = {
   fetchAllTransactions: async (): Promise<Transaction[]> => {
-    const response = await apiInstance.get("/transaction");
+    const response = await apiInstance.get("/transaction"); // dont forget to pass page, limit and offset
 
     return response.data.data;
   },
@@ -32,7 +33,32 @@ export const transactionAPI = {
       `/transaction/volume/all?start_date=${start_date}&end_date=${end_date}`
     );
 
-    console.log("transaction volume response data:", response.data.data);
+    // console.log("transaction volume response data:", response.data.data);
     return response.data.data;
+  },
+  fetchTransactionChannels: async (): Promise<TransactionChannelsProps[]> => {
+    const response = await apiInstance.get("/transaction/channel/all");
+    // console.log("transaction channels response data:", response.data.data);
+    return response.data.data;
+  },
+  updateTransactionChannel: async (id: string, payload: any) => {
+    const response = await apiInstance.patch(
+      `/transaction/channel/update/${id}`,
+      payload
+    );
+    console.log("updated processor data:", response.data.data);
+    return response.data.data;
+  },
+  createTransactionChannel: async ({
+    channel,
+  }: {
+    channel: string;
+  }): Promise<any> => {
+    const response = apiInstance.post("transaction/channel/create", {channel});
+    console.log(
+      "transaction channel creation data:",
+      (await response).data.data
+    );
+    return (await response).data.data;
   },
 };

@@ -127,7 +127,7 @@ export default function TransactionDetailsDialog({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">Transaction ID</p>
-              <p className="text-lg font-semibold">{transaction.id}</p>
+              <p className="text-lg font-semibold">{transaction.reference}</p>
             </div>
             <Badge
               className={cn("font-medium", getStatusColor(transaction.status))}

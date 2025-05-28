@@ -18,3 +18,13 @@ export const useLogin = () => {
     },
   });
 };
+
+export const useLogout = () => {
+  // @ts-ignore
+  const setAuth = useAuthStore((state) => state.setAuth);
+  // simulate the logout using clearAuth on useAuthStore
+  const clearAuth = useAuthStore((state) => state.clearAuth);
+  //  return the clearAuth function 
+  
+  return clearAuth
+};

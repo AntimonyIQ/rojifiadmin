@@ -70,7 +70,7 @@ export default function TransactionsTable({
     // Search filter
     const matchesSearch =
       search === "" ||
-      transaction.id.toString().includes(search) ||
+      transaction.reference.toString().includes(search) ||
       transaction.user.fullname.toLowerCase().includes(search.toLowerCase()) ||
       transaction.user.email.toLowerCase().includes(search.toLowerCase()) ||
       transaction.status.toLowerCase().includes(search.toLowerCase());
@@ -540,7 +540,7 @@ export default function TransactionsTable({
                   paginatedTransactions.map((transaction) => (
                     <TableRow key={transaction.id}>
                       <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {transaction.id}
+                        {transaction.reference}
                       </TableCell>
                       <TableCell className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">

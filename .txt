@@ -13,16 +13,22 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import {
+  CreditCard,
   ChevronDown,
   ChevronUp,
+  Wallet,
   Building,
+  Smartphone,
   CheckCircle,
   PlusCircle,
   Settings,
+  ArrowUpDown,
+  Download,
+  Upload,
 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { savePaymentChannels } from "@/services/api";
@@ -47,19 +53,14 @@ import {
 import {
   PaymentChannelSettings,
   Processor,
+  ProcessorChannelType,
   TransactionChannelsProps,
 } from "@/types";
 import { useFetchPaymentProcessors } from "@/hooks/usePayments";
-import {
-  useCreateTransactionChannel,
-  useFetchTransactionChannels,
-  useUpdateTransactionChannel,
-} from "@/hooks/useTransaction";
-// @ts-ignore
+import { useFetchTransactionChannels } from "@/hooks/useTransaction";
 import { channel } from "diagnostics_channel";
 
 // Currency options
-//@ts-ignore
 const currencies = [
   { value: "NGN", label: "Nigerian Naira (NGN)" },
   { value: "USD", label: "US Dollar (USD)" },
@@ -71,6 +72,15 @@ const currencies = [
   { value: "UGX", label: "Ugandan Shilling (UGX)" },
   { value: "CAD", label: "Canadian Dollar (CAD)" },
 ];
+
+// Channel options with associated icons
+// const channels = [
+//   { value: "bank_transfer", label: "Bank Transfer", icon: Building },
+//   { value: "mobile_money", label: "Mobile Money", icon: Smartphone },
+//   { value: "swap", label: "Swap", icon: ArrowUpDown },
+//   { value: "withdrawal", label: "Withdrawal", icon: Download },
+//   { value: "deposit", label: "Deposit", icon: Upload },
+// ];
 
 // Currency schema
 const currencySchema = z.object({
@@ -88,15 +98,14 @@ const processorForChannelSchema = z.object({
   secretKey: z.string().optional(),
   webhookUrl: z.string().optional(),
   testMode: z.boolean().default(true),
-  supported_currencies: z.array(currencySchema),
+  currencies: z.array(currencySchema),
 });
 
 // Channel schema
 const channelSchema = z.object({
   id: z.string(),
   name: z.string(),
-  status: z.enum(["enabled", "disabled"]),
-  // enabled: z.boolean().default(true),
+  enabled: z.boolean().default(true),
   processors: z.array(processorForChannelSchema),
 });
 
@@ -111,7 +120,7 @@ type FormValues = {
     id: string;
     name: string;
     status: "enabled" | "disabled";
-    supported_currencies: Processor[];
+    processors: Processor[];
   }>;
 };
 
@@ -120,16 +129,14 @@ interface Props {
 }
 
 export default function PaymentChannelsForm({ data }: Props) {
-  const { data: processors } = useFetchPaymentProcessors();
-
-  // console.log("processors:", processors);
+  // const { data: processors, isLoading: isProcessorLoading } =
+  //     useFetchPaymentProcessors();
   // Payment processor configurations
   const processorConfigs: TransactionChannelsProps[] = data; // check this again when the server is up
 
   const { data: channels } = useFetchTransactionChannels();
-  // console.log("Transaction Channels:", channels);
+  console.log("Transaction Channels:", channels);
 
-  // @ts-ignore
   const [isLoading, setIsLoading] = useState(false);
   const [expandedChannels, setExpandedChannels] = useState<string[]>([
     "bank_transfer",
@@ -137,73 +144,35 @@ export default function PaymentChannelsForm({ data }: Props) {
   ]);
   const [newChannelDialogOpen, setNewChannelDialogOpen] = useState(false);
   const [newChannelName, setNewChannelName] = useState("");
-  // @ts-ignore
   const [newChannelId, setNewChannelId] = useState("");
-  // @ts-ignore
   const [selectedProcessors, setSelectedProcessors] = useState<
     Record<string, boolean>
   >({});
-  // @ts-ignore
   const [selectedCurrencies, setSelectedCurrencies] = useState<
     Record<string, boolean>
   >({});
   const { toast } = useToast();
 
   // Initialize form with channels and their processors (with currencies nested under processors)
-  // const defaultValues: FormValues = {
-  //   channels: (channels || []).map((channel) => ({
-  //     id: channel.id,
-  //     name: channel.name,
-  //     status: channel.status,
-  //     processors: channel.processor
-  //       ? [
-  //           {
-  //             id: channel.processor.id,
-  //             name: channel.processor.name,
-  //             status: channel.processor.status,
-  //             enabled: channel.processor.status === "enabled",
-  //             supported_currencies: channel.processor.supported_currencies.map(
-  //               (currency: any) => ({
-  //                 code: currency.code,
-  //                 name: currency.name,
-  //                 enabled: currency.code === "NGN",
-  //               })
-  //             ),
-  //           },
-  //         ]
-  //       : [],
-  //   })),
-  // };
-
   const defaultValues: FormValues = {
-    // @ts-ignore
-    channels: channels
-      ? channels.map((channel) => {
-          return {
-            id: channel.id,
-            name: channel.name,
-            status: channel.status,
-            processors: (processors || []).map((p) => {
-              // @ts-ignore
-              const isAssigned = channel.processor?.id === p.id;
-
-              return {
-                id: p.id,
-                name: p.name,
-                status: p.status,
-                enabled: isAssigned,
-                supported_currencies: isAssigned
-                  ? p.supported_currencies.map((currency: any) => ({
-                      code: currency.code,
-                      name: currency.name,
-                      enabled: currency.code === "NGN",
-                    }))
-                  : [],
-              };
-            }),
-          };
-        })
-      : [],
+    channels: (channels || []).map((channel) => ({
+      id: channel.id,
+      name: channel.name,
+      status: channel.status,
+      processors: channel.processor.map((processor: any) => ({
+        id: processor.id,
+        name: processor.name,
+        status: processor.status,
+        enabled: processor.status === "enabled", // include this
+        supported_currencies: processor.supported_currencies.map(
+          (currency: any) => ({
+            code: currency.code,
+            name: currency.name,
+            enabled: currency.code === "NGN",
+          })
+        ),
+      })),
+    })),
   };
 
   const form = useForm<FormValues>({
@@ -238,24 +207,20 @@ export default function PaymentChannelsForm({ data }: Props) {
     },
   });
 
-  // @ts-ignore
   function onSubmit(data: FormValues) {
     setIsLoading(true);
-    console.log("submitted");
 
     // Convert the form data to the expected PaymentChannelSettings format
     const paymentChannelSettings: PaymentChannelSettings = {
       processors: processorConfigs.map((processor) => {
         const processorsInChannels = data.channels
           .map((channel) =>
-            // @ts-ignore
             channel.processors.find((p) => p.id === processor.id)
           )
           .filter(Boolean) as any[];
 
         const enabledChannels = data.channels
           .filter((channel) =>
-            // @ts-ignore
             channel.processors.some((p) => p.id === processor.id && p.enabled)
           )
           .map((channel) => ({
@@ -312,13 +277,11 @@ export default function PaymentChannelsForm({ data }: Props) {
     }
   };
 
-  // @ts-ignore
   const { append } = useFieldArray({
     control: form.control,
     name: "channels",
   });
 
-  // @ts-ignore
   const handleToggleProcessor = (processorId: string) => {
     setSelectedProcessors((prev) => ({
       ...prev,
@@ -326,7 +289,6 @@ export default function PaymentChannelsForm({ data }: Props) {
     }));
   };
 
-  // @ts-ignore
   const handleToggleCurrency = (currencyCode: string) => {
     setSelectedCurrencies((prev) => ({
       ...prev,
@@ -344,142 +306,52 @@ export default function PaymentChannelsForm({ data }: Props) {
     setNewChannelDialogOpen(open);
   };
 
-  // const handleAddNewChannel = () => {
-  //   const id =
-  //     newChannelId || newChannelName.toLowerCase().replace(/\s+/g, "_");
+  const handleAddNewChannel = () => {
+    // Generate a slugified ID from the name
+    const id =
+      newChannelId || newChannelName.toLowerCase().replace(/\s+/g, "_");
 
-  //   append({
-  //     id,
-  //     name: newChannelName,
-  //     enabled: true,
-  //     processors: processorConfigs.map((processor) => ({
-  //       id: processor.id,
-  //       name: processor.name,
-  //       enabled: !!selectedProcessors[processor.id],
-  //       apiKey: "",
-  //       secretKey: "",
-  //       webhookUrl: "",
-  //       testMode: true,
-  //       currencies: currencies.map((currency) => ({
-  //         code: currency.value,
-  //         name: currency.label,
-  //         enabled: !!selectedCurrencies[currency.value],
-  //       })),
-  //     })),
-  //   });
-
-  //   setExpandedChannels([...expandedChannels, id]);
-
-  //   setNewChannelName("");
-  //   setNewChannelId("");
-  //   setSelectedProcessors({});
-  //   setSelectedCurrencies({});
-  //   setNewChannelDialogOpen(false);
-
-  //   toast({
-  //     title: "Channel added",
-  //     description: `${newChannelName} payment channel has been added successfully.`,
-  //   });
-  // };
-
-  const onSubmit2 = (formData: FormValues) => {
-    console.log("submitted!");
-
-    const transformed = formData.channels.map((channel) => {
-      // @ts-ignore
-      const enabledProcessors = channel.processors.filter((p) => p.enabled);
-
-      return {
-        id: channel.id,
-        name: channel.name,
-        status: channel.status,
-        processors:
-          channel.status === "enabled"
-            ? // @ts-ignore
-              enabledProcessors.map((processor) => ({
-                id: processor.id,
-                name: processor.name,
-                status: "enabled",
-                enabled: true,
-              }))
-            : // @ts-ignore
-            channel.processors.length > 0
-            ? [
-                {
-                  // @ts-ignore
-                  id: channel.processors[0].id,
-                  // @ts-ignore
-                  name: channel.processors[0].name,
-                  status: "disabled",
-                  enabled: false,
-                },
-              ]
-            : [],
-      };
+    // Add the new channel to the form
+    append({
+      id,
+      name: newChannelName,
+      enabled: true,
+      processors: processorConfigs.map((processor) => ({
+        id: processor.id,
+        name: processor.name,
+        enabled: !!selectedProcessors[processor.id],
+        apiKey: "",
+        secretKey: "",
+        webhookUrl: "",
+        testMode: true,
+        currencies: currencies.map((currency) => ({
+          code: currency.value,
+          name: currency.label,
+          enabled: !!selectedCurrencies[currency.value],
+        })),
+      })),
     });
 
-    console.log("Submitted data:", transformed);
-  };
+    // Add the new channel to the expanded list so it's open by default
+    setExpandedChannels([...expandedChannels, id]);
 
-  const { mutate: updateTrxnChannel, isPending: isUpdatingTrxnChannel } =
-    useUpdateTransactionChannel();
-  const { mutate: createTrxnChannel, isPending: isCreatingTrxnChannel } =
-    useCreateTransactionChannel();
+    // Reset the form
+    setNewChannelName("");
+    setNewChannelId("");
+    setSelectedProcessors({});
+    setSelectedCurrencies({});
+    setNewChannelDialogOpen(false);
 
-  const handleAddNewChannel = () => {
-    createTrxnChannel(
-      { channel: newChannelName },
-      {
-        // @ts-ignore
-        onSuccess: (response: any) => {
-          console.log(response);
-
-          toast({
-            title: "Transaction Channel Created",
-            description: `${newChannelName} has been created successfully!`,
-          });
-          setNewChannelName("");
-        },
-        onError: (error: any) => {
-          toast({
-            title: "Error",
-            description:
-              error?.response?.data?.message || "Failed to create channel",
-            variant: "destructive",
-          });
-        },
-      }
-    );
-  };
-
-  const handleUpdateFn = ({ id, payload }: { id: string; payload: any }) => {
-    updateTrxnChannel(
-      { id: id, payload },
-      {
-        // @ts-ignore
-        onSuccess: (response: any) => {
-          console.log(response);
-
-          toast({
-            title: "Transaction Channel Updated",
-            description: `${payload.name} has been updated successfully!`,
-          });
-        },
-        onError: (error: any) => {
-          toast({
-            title: "Error",
-            description:
-              error?.response?.data?.message || "Failed to update channel",
-            variant: "destructive",
-          });
-        },
-      }
-    );
+    // Show success toast
+    toast({
+      title: "Channel added",
+      description: `${newChannelName} payment channel has been added successfully.`,
+    });
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit2)}>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
         <CardContent className="space-y-8 px-6 py-6">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -542,7 +414,7 @@ export default function PaymentChannelsForm({ data }: Props) {
                       </p>
                     </div>
 
-                    {/* <div className="space-y-3">
+                    <div className="space-y-3">
                       <Label
                         htmlFor="channel-id"
                         className="text-sm font-medium text-gray-700"
@@ -560,9 +432,9 @@ export default function PaymentChannelsForm({ data }: Props) {
                         Optional. A unique identifier for the channel. If left
                         blank, it will be generated from the name.
                       </p>
-                    </div> */}
+                    </div>
 
-                    {/* <div className="space-y-3 pt-2 border-t border-gray-100">
+                    <div className="space-y-3 pt-2 border-t border-gray-100">
                       <Label className="text-sm font-medium text-gray-700">
                         Supported Payment Processors
                       </Label>
@@ -593,9 +465,9 @@ export default function PaymentChannelsForm({ data }: Props) {
                           </div>
                         ))}
                       </div>
-                    </div> */}
+                    </div>
 
-                    {/* <div className="space-y-3 pt-2 border-t border-gray-100">
+                    <div className="space-y-3 pt-2 border-t border-gray-100">
                       <Label className="text-sm font-medium text-gray-700">
                         Supported Currencies
                       </Label>
@@ -626,7 +498,7 @@ export default function PaymentChannelsForm({ data }: Props) {
                           </div>
                         ))}
                       </div>
-                    </div> */}
+                    </div>
                   </div>
 
                   <DialogFooter>
@@ -640,11 +512,9 @@ export default function PaymentChannelsForm({ data }: Props) {
                     <Button
                       type="button"
                       onClick={handleAddNewChannel}
-                      disabled={!newChannelName || isCreatingTrxnChannel}
+                      disabled={!newChannelName}
                     >
-                      {isCreatingTrxnChannel
-                        ? "Adding Channel..."
-                        : "Add Channel"}
+                      Add Channel
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -654,25 +524,24 @@ export default function PaymentChannelsForm({ data }: Props) {
 
           <div className="grid gap-6">
             {fields.map((channelField, channelIndex) => {
-              // const channelConfig = channels?.find(
-              //   (c) => c.id === channelField.id
-              // );
+              const channelConfig = channels?.find(
+                (c) => c.value === channelField.id
+              );
               // const Icon = channelConfig?.icon || Building;
-              const Icon = Building;
-              const isEnabled =
-                form.watch(`channels.${channelIndex}.status`) === "enabled";
-              const isExpanded = expandedChannels.includes(channelField.id);
+              const isEnabled = true;
+              // const isEnabled = form.watch(`channels.${channelIndex}.enabled`);
+              // const isExpanded = expandedChannels.includes(channelField.id);
 
               return (
                 <Card
                   key={channelField.id}
-                  className={`border overflow-hidden transition-all ${
+                  className={`border ${
                     isEnabled ? "border-gray-200" : "border-gray-100 bg-gray-50"
-                  }`}
+                  } overflow-hidden transition-all`}
                 >
                   <div
                     className={`flex items-center justify-between px-6 py-4 cursor-pointer ${
-                      !isEnabled ? "opacity-60" : ""
+                      !isEnabled && "opacity-60"
                     }`}
                     onClick={() => toggleChannel(channelField.id)}
                   >
@@ -682,21 +551,15 @@ export default function PaymentChannelsForm({ data }: Props) {
                           isEnabled ? "bg-blue-50" : "bg-gray-100"
                         }`}
                       >
-                        <Icon
+                        {/* <Icon
                           className={`h-5 w-5 ${
                             isEnabled ? "text-blue-500" : "text-gray-400"
                           }`}
-                        />
+                        /> */}
                       </div>
                       <div>
-                        <h4 className="text-base font-medium capitalize">
-                          {channelField.name
-                            .split("_")
-                            .map(
-                              (word) =>
-                                word.charAt(0).toUpperCase() + word.slice(1)
-                            )
-                            .join(" ")}
+                        <h4 className="text-base font-medium">
+                          {channelField.name}
                         </h4>
                         <p className="text-sm text-gray-500">
                           Payment channel configuration
@@ -706,56 +569,28 @@ export default function PaymentChannelsForm({ data }: Props) {
                     <div className="flex items-center space-x-4">
                       <FormField
                         control={form.control}
-                        name={`channels.${channelIndex}.status`}
-                        render={({ field }) => {
-                          const isChecked = field.value === "enabled";
-
-                          return (
-                            <FormItem className="flex items-center space-x-2">
-                              <FormControl>
-                                <Switch
-                                  checked={isChecked}
-                                  disabled={isUpdatingTrxnChannel}
-                                  onCheckedChange={(checked) => {
-                                    const newStatus = checked
-                                      ? "enabled"
-                                      : "disabled";
-                                    field.onChange(newStatus);
-
-                                    if (checked && !isExpanded) {
-                                      toggleChannel(channelField.id);
-                                    }
-
-                                    const channel =
-                                      form.getValues().channels[channelIndex];
-                                    const enabledProcessor =
-                                      // @ts-ignore
-                                      channel.processors.find((p) => p.enabled);
-                                    const fallbackProcessor =
-                                      // @ts-ignore
-                                      channel.processors[0];
-
-                                    handleUpdateFn({
-                                      id: channel.id,
-                                      payload: {
-                                        status: channel.status,
-                                        processor:
-                                          enabledProcessor?.id ??
-                                          fallbackProcessor?.id,
-                                      },
-                                    });
-                                  }}
-                                  onClick={(e) => e.stopPropagation()}
-                                />
-                              </FormControl>
-                              <FormLabel className="text-sm font-normal text-gray-500">
-                                {isChecked ? "Active" : "Inactive"}
-                              </FormLabel>
-                            </FormItem>
-                          );
-                        }}
+                        name={`channels.${channelIndex}.enabled`}
+                        render={({ field }) => (
+                          <FormItem className="flex items-center space-x-2">
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={(checked) => {
+                                  field.onChange(checked);
+                                  if (checked && !isExpanded) {
+                                    // Auto-expand when enabling
+                                    toggleChannel(channelField.id);
+                                  }
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </FormControl>
+                            <FormLabel className="text-sm font-normal text-gray-500">
+                              {field.value ? "Active" : "Inactive"}
+                            </FormLabel>
+                          </FormItem>
+                        )}
                       />
-
                       <div className="flex items-center justify-center w-6 h-6">
                         {isExpanded ? (
                           <ChevronUp className="h-5 w-5 text-gray-400" />
@@ -781,100 +616,145 @@ export default function PaymentChannelsForm({ data }: Props) {
                               time)
                             </Label>
                             <div className="space-y-6">
+                              {/* watch here */}
                               {form
-                                // @ts-ignore
                                 .watch(`channels.${channelIndex}.processors`)
-                                ?.map((processor: any, processorIndex) => {
+                                .map((processor, processorIndex) => {
+                                  const processorConfig = processorConfigs.find(
+                                    (p) => p.id === processor.id
+                                  );
+                                  const ProcessorIcon = "";
+
+                                  // const ProcessorIcon =
+                                  //   processorConfig?.icon || Building;
+
                                   return (
                                     <div
                                       key={processor.id}
                                       className="space-y-3"
                                     >
-                                      <FormField
-                                        control={form.control}
-                                        //@ts-ignore
-                                        name={`channels.${channelIndex}.processors.${processorIndex}.enabled`}
-                                        render={({ field }) => (
-                                          <FormItem>
-                                            <div className="flex items-center justify-between space-x-2 rounded-md border p-3">
-                                              <div className="flex items-center space-x-3">
-                                                <FormControl>
-                                                  <Checkbox
-                                                    // @ts-ignore
-                                                    checked={field.value}
-                                                    onCheckedChange={(
-                                                      checked
-                                                    ) => {
-                                                      const isChecked =
-                                                        Boolean(checked);
-
-                                                      const processors =
-                                                        form.watch(
+                                      <div className="space-y-2">
+                                        <FormField
+                                          control={form.control}
+                                          name={`channels.${channelIndex}.processors.${processorIndex}.enabled`}
+                                          render={({ field }) => (
+                                            <FormItem>
+                                              <div className="flex items-center justify-between space-x-2 rounded-md border p-3">
+                                                <div className="flex items-center space-x-3">
+                                                  <FormControl>
+                                                    <Checkbox
+                                                      checked={field.value}
+                                                      onCheckedChange={(
+                                                        checked
+                                                      ) => {
+                                                        if (checked) {
+                                                          // Disable all other processors in this channel
                                                           // @ts-ignore
-                                                          `channels.${channelIndex}.processors`
-                                                        );
-
-                                                      // Update processor states
-                                                      processors.forEach(
-                                                        (_, idx) => {
-                                                          form.setValue(
-                                                            // @ts-ignore
-                                                            `channels.${channelIndex}.processors.${idx}.enabled`,
-                                                            idx ===
-                                                              processorIndex
-                                                              ? isChecked
-                                                              : false
-                                                          );
+                                                          form
+                                                            .watch(
+                                                              `channels.${channelIndex}.processors`
+                                                            )
+                                                            .forEach(
+                                                              (p, idx) => {
+                                                                if (
+                                                                  idx !==
+                                                                    processorIndex &&
+                                                                  form.getValues(
+                                                                    `channels.${channelIndex}.processors.${idx}.enabled`
+                                                                  )
+                                                                ) {
+                                                                  form.setValue(
+                                                                    `channels.${channelIndex}.processors.${idx}.enabled`,
+                                                                    false
+                                                                  );
+                                                                }
+                                                              }
+                                                            );
                                                         }
-                                                      );
+                                                        field.onChange(checked);
+                                                      }}
+                                                      id={`channel-${channelIndex}-processor-${processorIndex}`}
+                                                    />
+                                                  </FormControl>
+                                                  <div className="flex items-center space-x-2">
+                                                    {/* <ProcessorIcon className="h-4 w-4 text-blue-500" /> */}
+                                                    <FormLabel
+                                                      htmlFor={`channel-${channelIndex}-processor-${processorIndex}`}
+                                                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                                    >
+                                                      {processor.name}
+                                                    </FormLabel>
+                                                  </div>
+                                                </div>
 
-                                                      field.onChange(isChecked);
-
-                                                      const channel =
-                                                        form.getValues()
-                                                          .channels[
-                                                          channelIndex
-                                                        ];
-                                                      const selectedProcessor =
-                                                        // @ts-ignore
-                                                        channel.processors[
-                                                          processorIndex
-                                                        ];
-
-                                                      handleUpdateFn({
-                                                        id: channel.id,
-                                                        payload: {
-                                                          status:
-                                                            channel.status,
-                                                          processor:
-                                                            selectedProcessor.id,
-                                                        },
-                                                      });
-
-                                                      const updatedFormValues =
-                                                        form.getValues();
-                                                      console.log(
-                                                        "Updated form values:",
-                                                        updatedFormValues
-                                                      );
-                                                    }}
-                                                  />
-                                                </FormControl>
-                                                <FormLabel className="text-sm font-medium capitalize">
-                                                  {processor.name}
-                                                </FormLabel>
+                                                {field.value && (
+                                                  <div className="flex items-center">
+                                                    <span className="text-xs text-blue-500 flex items-center font-medium">
+                                                      <Settings className="h-3 w-3 mr-1" />
+                                                      Processor Settings
+                                                    </span>
+                                                  </div>
+                                                )}
                                               </div>
+                                            </FormItem>
+                                          )}
+                                        />
 
-                                              {field.value && (
-                                                <span className="text-xs text-blue-500 flex items-center font-medium">
-                                                  <Settings className="h-3 w-3 mr-1" />
-                                                  Processor Settings
-                                                </span>
-                                              )}
+                                        {/* Show currencies directly under the processor when enabled */}
+                                        {/* {form.watch(
+                                          `channels.${channelIndex}.processors.${processorIndex}.enabled`
+                                        ) && (
+                                          <div className="ml-8 pl-4 border-l border-gray-100">
+                                            <div className="mb-2">
+                                              <h5 className="text-xs font-medium text-blue-700">
+                                                Supported Currencies
+                                              </h5>
                                             </div>
-                                          </FormItem>
-                                        )}
-                                      />
+                                            <div className="grid grid-cols-3 gap-2">
+                                              {processor.currencies &&
+                                                processor.currencies.map(
+                                                  (currency, currencyIndex) => (
+                                                    <FormField
+                                                      key={currency.code}
+                                                      control={form.control}
+                                                      name={`channels.${channelIndex}.processors.${processorIndex}.currencies.${currencyIndex}.enabled`}
+                                                      render={({ field }) => (
+                                                        <FormItem className="flex items-center space-x-2 rounded-md border p-2">
+                                                          <FormControl>
+                                                            <Checkbox
+                                                              checked={
+                                                                field.value
+                                                              }
+                                                              onCheckedChange={
+                                                                field.onChange
+                                                              }
+                                                              id={`channel-${channelIndex}-processor-${processorIndex}-currency-${currencyIndex}`}
+                                                            />
+                                                          </FormControl>
+                                                          <div className="flex items-center space-x-2">
+                                                            <div className="h-5 w-5 rounded-full bg-gray-100 flex items-center justify-center text-xs font-medium">
+                                                              {currency.code}
+                                                            </div>
+                                                            <FormLabel
+                                                              htmlFor={`channel-${channelIndex}-processor-${processorIndex}-currency-${currencyIndex}`}
+                                                              className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                                            >
+                                                              {
+                                                                currency.name.split(
+                                                                  " "
+                                                                )[0]
+                                                              }
+                                                            </FormLabel>
+                                                          </div>
+                                                        </FormItem>
+                                                      )}
+                                                    />
+                                                  )
+                                                )}
+                                            </div>
+                                          </div>
+                                        )} */}
+                                      </div>
                                     </div>
                                   );
                                 })}
@@ -889,7 +769,7 @@ export default function PaymentChannelsForm({ data }: Props) {
             })}
           </div>
         </CardContent>
-        {/* <CardFooter className="px-6 py-4 border-t border-gray-100 flex justify-between">
+        <CardFooter className="px-6 py-4 border-t border-gray-100 flex justify-between">
           <Button
             type="button"
             variant="outline"
@@ -917,7 +797,7 @@ export default function PaymentChannelsForm({ data }: Props) {
               <>Save Changes</>
             )}
           </Button>
-        </CardFooter> */}
+        </CardFooter>
       </form>
     </Form>
   );

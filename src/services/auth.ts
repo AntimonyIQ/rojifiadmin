@@ -9,7 +9,7 @@ export const authAPI = {
     );
     return response.data;
   },
-  logout: async () => {
+  logout: async () => { 
     // @ts-ignore
     const response = await apiInstance.post("/auth/logout");
     return;

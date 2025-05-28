@@ -14,26 +14,10 @@ export interface User {
   state: string;
   country: string;
   joined_at: string;
-  // lastLoginDate: string;
-  // recentTransactions?: Transaction[];
-  // activityLog?: ActivityLog[];
 }
-// export interface User {
-//   id: number;
-//   name: string;
-//   email: string;
-//   phone: string;
-//   status: string;
-//   joinedDate: string;
-//   lastLoginDate: string;
-//   address: string;
-//   recentTransactions?: Transaction[];
-//   activityLog?: ActivityLog[];
-// }
+
 
 // Transaction types
-// src/types/transaction.ts
-
 export interface Transaction {
   id: any; // string
   created_at: string;
@@ -65,19 +49,6 @@ export interface TransactionVolume {
   date: string;
   volume: number;
 }
-
-// export interface Transaction {
-//   id: number;
-//   userId: number;
-//   userName: string;
-//   userEmail: string;
-//   amount: number;
-//   status: string;
-//   date: string;
-//   paymentMethod?: string;
-//   details?: TransactionDetail[];
-//   notes?: string;
-// }
 
 export interface OverviewProps {
   active_user_growth: number;
@@ -150,6 +121,51 @@ export interface TransactionDetail {
   value: string;
 }
 
+// Payments interfaces
+export interface Currency {
+  id?: string;
+  name: string;
+  code: string;
+  decimal_place: number;
+  enabled?: boolean;
+  country?: string;
+}
+
+export interface ExchangeRate {
+  id: string;
+  rate: string;
+  base_currency: Currency;
+  target_currency: Currency;
+}
+
+export interface ProcessorChannelType {
+  id: string;
+  name: string;
+  status: "enabled" | "disabled";
+  supported_currencies: Currency[];
+}
+
+// transaction channels
+export interface CurrencyProps {
+  name: string;
+  code: string;
+  country_code: string;
+}
+
+export interface Processor {
+  id: string;
+  name: string;
+  enabled?: boolean;
+  supported_currencies: CurrencyProps[];
+}
+
+export interface TransactionChannelsProps {
+  id: string;
+  name: string;
+  status: "enabled" | "disabled";
+  processor: Processor[];
+}
+
 // Activity log types
 export interface ActivityLog {
   type: "login" | "transaction" | "update" | "other";
@@ -184,6 +200,37 @@ export interface RevenueData {
 export interface TransactionData {
   date: string;
   volume: number;
+}
+
+// currency types
+export interface AdminCurrencyProps {
+  id: string;
+  name: string;
+  code: string;
+  symbol: string;
+  country: string;
+  country_code: string;
+  decimal_place: number;
+  min_swap_amount: number;
+  min_transfer_amount: number;
+  max_transfer_amount: number;
+  max_swap_amount: number;
+}
+
+export interface AddCurrencyPayload {
+  name: string;
+  code: string;
+  symbol: string;
+  country: string;
+  decimal_place: number;
+  country_code: string;
+}
+
+export interface EditCurrencyPayload {
+  min_swap_amount: number;
+  min_transfer_amount: number;
+  max_transfer_amount: number;
+  max_swap_amount: number;
 }
 
 // Analytics data types
