@@ -1,10 +1,25 @@
 import { useSidebar } from "@/hooks/use-sidebar";
-import { ChevronLeft, LayoutDashboard, Users, CreditCard, Settings, LogOut, UserCog } from "lucide-react";
+import {
+  ChevronLeft,
+  LayoutDashboard,
+  Users,
+  CreditCard,
+  Settings,
+  LogOut,
+  UserCog,
+} from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { useAuthState } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+ // @ts-ignore
+import { useLogout } from "@/hooks/useLogin";
+import { useAuthStore } from "@/store/authStore";
 
 interface NavItemProps {
   href: string;
@@ -18,10 +33,10 @@ function NavItem({ href, icon, label, active, collapsed }: NavItemProps) {
   return (
     <li className="relative">
       {active && (
-        <motion.div 
+        <motion.div
           className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-md"
           layoutId="activeIndicator"
-          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+          transition={{ type: "spring", stiffness: 500, damping: 30 }}
         />
       )}
       <Link href={href}>
@@ -33,16 +48,24 @@ function NavItem({ href, icon, label, active, collapsed }: NavItemProps) {
               : "text-gray-700 hover:bg-gray-100"
           }`}
         >
-          <div className={`${active ? 'text-primary' : 'text-gray-500'} ${collapsed ? 'mx-auto' : ''}`}>
+          <div
+            className={`${active ? "text-primary" : "text-gray-500"} ${
+              collapsed ? "mx-auto" : ""
+            }`}
+          >
             {icon}
           </div>
-          
+
           {!collapsed && (
-            <span className={`ml-3 transition-all duration-200 ${active ? 'text-primary' : 'text-gray-700'}`}>
+            <span
+              className={`ml-3 transition-all duration-200 ${
+                active ? "text-primary" : "text-gray-700"
+              }`}
+            >
               {label}
             </span>
           )}
-          
+
           {collapsed && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -60,7 +83,13 @@ function NavItem({ href, icon, label, active, collapsed }: NavItemProps) {
 export default function Sidebar() {
   const { collapsed, toggleSidebar } = useSidebar();
   const [location] = useLocation();
+  // @ts-ignore
   const { logout, user } = useAuthState();
+  const { clearAuth } = useAuthStore();
+
+  const handleLoguut = () => {
+    clearAuth();
+  };
 
   const navigationItems = [
     {
@@ -107,7 +136,9 @@ export default function Sidebar() {
         <div className="flex items-center justify-between h-20 px-4 border-b border-gray-100">
           {!collapsed ? (
             <div className="flex items-center">
-              <div className="font-bold text-xl text-primary tracking-tight">Rojifi</div>
+              <div className="font-bold text-xl text-primary tracking-tight">
+                Rojifi
+              </div>
             </div>
           ) : (
             <div className="mx-auto">
@@ -116,7 +147,7 @@ export default function Sidebar() {
               </div>
             </div>
           )}
-          
+
           {!collapsed && (
             <Button
               onClick={toggleSidebar}
@@ -125,9 +156,7 @@ export default function Sidebar() {
               className="p-1 rounded-full hover:bg-gray-100"
               aria-label="Collapse sidebar"
             >
-              <ChevronLeft
-                className="h-5 w-5 text-gray-500 transition-transform duration-300"
-              />
+              <ChevronLeft className="h-5 w-5 text-gray-500 transition-transform duration-300" />
             </Button>
           )}
         </div>
@@ -148,7 +177,9 @@ export default function Sidebar() {
         </nav>
 
         <div className="border-t border-gray-100 p-4">
-          <div className={`flex ${collapsed ? 'justify-center' : 'items-center'}`}>
+          <div
+            className={`flex ${collapsed ? "justify-center" : "items-center"}`}
+          >
             {collapsed ? (
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -156,7 +187,9 @@ export default function Sidebar() {
                     {user?.email?.substring(0, 2).toUpperCase() || "AU"}
                   </div>
                 </TooltipTrigger>
-                <TooltipContent side="right">{user?.name || "Admin User"}</TooltipContent>
+                <TooltipContent side="right">
+                  {user?.name || "Admin User"}
+                </TooltipContent>
               </Tooltip>
             ) : (
               <>
@@ -172,7 +205,7 @@ export default function Sidebar() {
                   </p>
                 </div>
                 <Button
-                  onClick={logout}
+                  onClick={handleLoguut}
                   variant="ghost"
                   size="icon"
                   className="ml-auto p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full"
@@ -182,7 +215,7 @@ export default function Sidebar() {
                 </Button>
               </>
             )}
-            
+
             {collapsed && (
               <Button
                 onClick={toggleSidebar}
@@ -191,9 +224,7 @@ export default function Sidebar() {
                 className="absolute bottom-4 right-3.5 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full"
                 aria-label="Expand sidebar"
               >
-                <ChevronLeft
-                  className="h-5 w-5 rotate-180 transition-transform duration-300"
-                />
+                <ChevronLeft className="h-5 w-5 rotate-180 transition-transform duration-300" />
               </Button>
             )}
           </div>

@@ -218,7 +218,7 @@ export default function RecentTransactionsTable({
               {paginatedTransactions.map((transaction) => (
                 <TableRow key={transaction.id}>
                   <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {transaction.id}
+                    {transaction.reference}
                   </TableCell>
                   <TableCell className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">

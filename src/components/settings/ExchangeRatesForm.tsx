@@ -7,7 +7,6 @@ import {
   Form,
   FormControl,
   FormDescription,
-  FormField,
   FormItem,
   FormLabel,
 } from "@/components/ui/form";
@@ -15,17 +14,7 @@ import { Input } from "@/components/ui/input";
 import { CardContent, CardFooter, Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
-import { saveTransactionSettings } from "@/services/api";
-import {
-  CheckCircleIcon,
-  InfoIcon,
-  RefreshCwIcon,
-  ArrowRightLeftIcon,
-  TrendingUpIcon,
-  TrendingDownIcon,
-} from "lucide-react";
-import { Switch } from "@/components/ui/switch";
+import { CheckCircleIcon, InfoIcon, ArrowRightIcon } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -41,6 +30,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ExchangeRate } from "@/types";
+import { useEditExchangeRate } from "@/hooks/useCurrency";
 
 // Currency options
 // @ts-ignore
@@ -80,14 +71,21 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export default function ExchangeRatesForm() {
+interface Props {
+  data: any;
+}
+
+export default function ExchangeRatesForm({ data }: Props) {
+  console.log(data);
   const [isLoading, setIsLoading] = useState(false);
   const [editRateDialogOpen, setEditRateDialogOpen] = useState(false);
   const [editCurrency, setEditCurrency] = useState<string | null>(null);
   const [sourceCurrency, setSourceCurrency] = useState("NGN");
   const [targetCurrency, setTargetCurrency] = useState("");
   const [rateAmount, setRateAmount] = useState("");
+  // @ts-ignore
   const [rateType, setRateType] = useState<"buy" | "sell">("buy");
+  const [editCurrencyId, setEditCurrencyId] = useState("");
   const { toast } = useToast();
 
   // Default values for the form
@@ -168,58 +166,73 @@ export default function ExchangeRatesForm() {
     defaultValues,
   });
 
-  const mutation = useMutation({
-    mutationFn: (data: FormValues) => {
-      // Convert form data to the expected API format
-      return saveTransactionSettings({
-        rateSettings: data,
-      } as any);
-    },
-    onSuccess: () => {
-      toast({
-        title: "Rates saved",
-        description: "Currency exchange rates have been updated successfully",
-      });
-      setIsLoading(false);
-    },
-    // @ts-ignore
-    onError: (error) => {
-      toast({
-        variant: "destructive",
-        title: "Error saving rates",
-        description:
-          "There was a problem saving your exchange rates. Please try again.",
-      });
-      setIsLoading(false);
-    },
-  });
+  const { mutate: editExchangeRateMutation, isPending: isEditExchangeRate } =
+    useEditExchangeRate();
 
+  // @ts-ignore
   function onSubmit(data: FormValues) {
     // Update the lastUpdated timestamp
-    data.lastUpdated = new Date().toISOString();
-    setIsLoading(true);
-    mutation.mutate(data);
+    // data.lastUpdated = new Date().toISOString();
+    // setIsLoading(true);
+    // mutation.mutate(data);
   }
+
+  const editRateFn = (id: string) => {
+    const filteredData: ExchangeRate[] = data.filter(
+      (i: ExchangeRate) => i.id === id
+    );
+
+    if (filteredData) {
+      const payload = { id: filteredData[0].id, data: rateAmount };
+      editExchangeRateMutation(
+        {
+          id: payload.id,
+          data: payload.data,
+        },
+        {
+          onSuccess: (response: any) => {
+            console.log(response);
+            setEditRateDialogOpen(false);
+            toast({
+              title: "Rates saved",
+              description:
+                "Currency exchange rates have been updated successfully",
+            });
+            setRateAmount("");
+            setEditCurrencyId("");
+          },
+          // @ts-ignore
+          onError: (error: any) => {
+            toast({
+              variant: "destructive",
+              title: "Error saving rates",
+              description:
+                "There was a problem saving your exchange rates. Please try again.",
+            });
+          },
+        }
+      );
+    }
+  };
 
   // Function to handle editing a currency rate
   const handleEditRate = (currencyCode: string) => {
-    setEditCurrency(currencyCode);
-    setTargetCurrency(currencyCode);
-    setSourceCurrency("NGN");
-    setRateType("buy");
+    // get the data based on the id
+    const filteredData: ExchangeRate[] = data.filter(
+      (i: ExchangeRate) => i.id === currencyCode
+    );
 
-    // Get the rate from the form
-    const currency = form
-      .getValues()
-      .rates.find((r) => r.code === currencyCode);
-    if (currency) {
-      setRateAmount(currency.buyRate.toString());
-    }
+    setEditCurrency(filteredData[0].target_currency.code);
+    setTargetCurrency(filteredData[0].base_currency.code);
+    setSourceCurrency("NGN");
+    setRateAmount(filteredData[0].rate);
+    setEditCurrencyId(filteredData[0].id);
 
     setEditRateDialogOpen(true);
   };
 
   // Format currency amount with symbol
+  // @ts-ignore
   const formatCurrency = (amount: number, symbol: string) => {
     return `${symbol}${amount.toLocaleString(undefined, {
       minimumFractionDigits: 2,
@@ -228,12 +241,14 @@ export default function ExchangeRatesForm() {
   };
 
   // Function to calculate rate difference (in percentage)
+  // @ts-ignore
   const calculateRateDifference = (buyRate: number, sellRate: number) => {
     if (buyRate === 0) return 0;
     return ((sellRate - buyRate) / buyRate) * 100;
   };
 
   // Function to fetch live rates (simulated)
+  // @ts-ignore
   const fetchLiveRates = () => {
     setIsLoading(true);
 
@@ -265,6 +280,7 @@ export default function ExchangeRatesForm() {
   };
 
   // Format date for display
+  // @ts-ignore
   const formatDate = (dateString?: string) => {
     if (!dateString) return "Never";
     const date = new Date(dateString);
@@ -282,6 +298,19 @@ export default function ExchangeRatesForm() {
   const currentCurrency = editCurrency
     ? form.getValues().rates.find((rate) => rate.code === editCurrency)
     : null;
+
+  const SYMBOLS: Record<string, string> = {
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+    KES: "KSh",
+    GHS: "₵",
+    ZAR: "R",
+    NGN: "₦",
+    RWF: "FRw",
+    UGX: "USh",
+    CAD: "C$",
+  };
 
   return (
     <Form {...form}>
@@ -306,7 +335,7 @@ export default function ExchangeRatesForm() {
             </Badge>
           </div>
 
-          <div className="flex justify-between items-center bg-gray-50 border rounded-md p-4">
+          {/* <div className="flex justify-between items-center bg-gray-50 border rounded-md p-4">
             <div className="flex items-center">
               <div className="mr-4 p-2 bg-green-50 rounded-full">
                 <RefreshCwIcon className="h-5 w-5 text-green-600" />
@@ -350,7 +379,7 @@ export default function ExchangeRatesForm() {
                 Refresh Rates
               </Button>
             </div>
-          </div>
+          </div> */}
 
           <div className="bg-blue-50 p-4 rounded-md">
             <div className="flex items-start">
@@ -376,27 +405,126 @@ export default function ExchangeRatesForm() {
                   <thead className="bg-gray-50 border-b">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Currency
+                        Base Currency
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Buy Rate (NGN)
+                        {/* Buy Rate (NGN) */}
+                        Target Currency
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Sell Rate (NGN)
+                        {/* Sell Rate (NGN) */}
+                        Rate
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Spread
                       </th>
                       <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Status
-                      </th>
+                      </th> */}
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {form.watch("rates").map((rate, index) => {
+                    {data.map((rate: ExchangeRate) => {
+                      return (
+                        <tr
+                          key={rate.id}
+                          // className={!rate.enabled ? "bg-gray-50" : ""}
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium mr-3">
+                                {SYMBOLS[rate.base_currency.code]}
+                              </div>
+                              <div>
+                                <div className="text-sm font-medium text-gray-900">
+                                  {rate.base_currency.code}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  {rate.base_currency.name}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium mr-3">
+                                {SYMBOLS[rate.target_currency.code]}
+                              </div>
+                              <div>
+                                <div className="text-sm font-medium text-gray-900">
+                                  {rate.target_currency.code}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  {rate.target_currency.name}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">
+                              {/* base_currency.symbol */}₦
+                              {parseFloat(rate.rate).toLocaleString()}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              1 {SYMBOLS[rate.base_currency.code]} ={" "}
+                              {SYMBOLS[rate.target_currency.code]}
+                              {parseFloat(rate.rate).toLocaleString()}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {/* <div className="text-sm font-medium text-gray-900">
+                                ₦{rate.sellRate.toLocaleString()}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {formatCurrency(1 / rate.sellRate, rate.symbol)}{" "}
+                                = ₦1
+                              </div> */}
+                          </td>
+                          {/* <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              {rateDifference > 0 ? (
+                                <TrendingUpIcon className="h-4 w-4 text-green-500 mr-1" />
+                              ) : (
+                                <TrendingDownIcon className="h-4 w-4 text-red-500 mr-1" />
+                              )}
+                              <span className="text-sm font-medium">
+                                {rateDifference.toFixed(2)}%
+                              </span>
+                            </div>
+                          </td> */}
+                          {/* <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <FormField
+                              control={form.control}
+                              name={`rates.${index}.enabled`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <Switch
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          </td> */}
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditRate(rate.id)}
+                              className="text-blue-600 hover:text-blue-900"
+                            >
+                              Edit Rates
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {/* {form.watch("rates").map((rate, index) => {
                       const rateDifference = calculateRateDifference(
                         rate.buyRate,
                         rate.sellRate
@@ -480,7 +608,7 @@ export default function ExchangeRatesForm() {
                           </td>
                         </tr>
                       );
-                    })}
+                    })} */}
                   </tbody>
                 </table>
               </div>
@@ -580,36 +708,37 @@ export default function ExchangeRatesForm() {
                 variant="ghost"
                 size="icon"
                 className="h-9 w-9"
-                onClick={() => {
-                  // Swap currencies
-                  const temp = sourceCurrency;
-                  setSourceCurrency(targetCurrency);
-                  setTargetCurrency(temp);
+                // onClick={() => {
+                //   // Swap currencies
+                //   const temp = sourceCurrency;
+                //   setSourceCurrency(targetCurrency);
+                //   setTargetCurrency(temp);
 
-                  // Toggle rate type
-                  setRateType(rateType === "buy" ? "sell" : "buy");
+                //   // Toggle rate type
+                //   setRateType(rateType === "buy" ? "sell" : "buy");
 
-                  // Update rate amount appropriately
-                  const index = form
-                    .getValues()
-                    .rates.findIndex(
-                      (r) =>
-                        r.code ===
-                        (rateType === "buy" ? targetCurrency : sourceCurrency)
-                    );
+                //   // Update rate amount appropriately
+                //   const index = form
+                //     .getValues()
+                //     .rates.findIndex(
+                //       (r) =>
+                //         r.code ===
+                //         (rateType === "buy" ? targetCurrency : sourceCurrency)
+                //     );
 
-                  if (index !== -1) {
-                    const rate = form.getValues().rates[index];
-                    setRateAmount(
-                      (rateType === "buy"
-                        ? rate.sellRate
-                        : rate.buyRate
-                      ).toString()
-                    );
-                  }
-                }}
+                //   if (index !== -1) {
+                //     const rate = form.getValues().rates[index];
+                //     setRateAmount(
+                //       (rateType === "buy"
+                //         ? rate.sellRate
+                //         : rate.buyRate
+                //       ).toString()
+                //     );
+                //   }
+                // }}
               >
-                <ArrowRightLeftIcon className="h-4 w-4" />
+                <ArrowRightIcon className="h-4 w-4" />
+                {/* <ArrowRightLeftIcon className="h-4 w-4" /> */}
               </Button>
 
               <div className="flex-1">
@@ -683,7 +812,11 @@ export default function ExchangeRatesForm() {
                   />
                 </FormControl>
                 <FormDescription>
-                  {sourceCurrency === "NGN" && targetCurrency ? (
+                  <span>
+                    {parseFloat(rateAmount).toLocaleString()} {sourceCurrency}{" "}
+                    for 1 {targetCurrency}
+                  </span>
+                  {/* {sourceCurrency === "NGN" && targetCurrency ? (
                     <span>Amount in ₦ to buy 1 {targetCurrency}</span>
                   ) : targetCurrency === "NGN" && sourceCurrency ? (
                     <span>Amount in ₦ when selling 1 {sourceCurrency}</span>
@@ -691,7 +824,7 @@ export default function ExchangeRatesForm() {
                     <span>
                       Rate between {sourceCurrency} and {targetCurrency}
                     </span>
-                  )}
+                  )} */}
                 </FormDescription>
               </FormItem>
             </div>
@@ -726,66 +859,12 @@ export default function ExchangeRatesForm() {
             </Button>
             <Button
               type="button"
+              disabled={isEditExchangeRate}
               onClick={() => {
-                // Update the appropriate rate
-                const index = form
-                  .getValues()
-                  .rates.findIndex((r) => r.code === editCurrency);
-
-                if (index !== -1) {
-                  const currentRates = [...form.getValues().rates];
-
-                  if (rateType === "buy") {
-                    // Updating buy rate
-                    currentRates[index] = {
-                      ...currentRates[index],
-                      buyRate: parseFloat(rateAmount),
-                    };
-
-                    // Ensure buy rate is lower than sell rate
-                    if (
-                      parseFloat(rateAmount) >= currentRates[index].sellRate
-                    ) {
-                      toast({
-                        variant: "destructive",
-                        title: "Invalid rates",
-                        description:
-                          "Buy rate must be lower than sell rate to ensure a profitable spread.",
-                      });
-                      return;
-                    }
-                  } else {
-                    // Updating sell rate
-                    currentRates[index] = {
-                      ...currentRates[index],
-                      sellRate: parseFloat(rateAmount),
-                    };
-
-                    // Ensure sell rate is higher than buy rate
-                    if (parseFloat(rateAmount) <= currentRates[index].buyRate) {
-                      toast({
-                        variant: "destructive",
-                        title: "Invalid rates",
-                        description:
-                          "Sell rate must be higher than buy rate to ensure a profitable spread.",
-                      });
-                      return;
-                    }
-                  }
-
-                  // Update form state
-                  form.setValue("rates", currentRates);
-
-                  // Close dialog and show success toast
-                  setEditRateDialogOpen(false);
-                  toast({
-                    title: "Rate updated",
-                    description: `Exchange rate for ${editCurrency} has been updated.`,
-                  });
-                }
+                editRateFn(editCurrencyId);
               }}
             >
-              Save Changes
+              {isEditExchangeRate ? "Saving Changes..." : "Save Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>

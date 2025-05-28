@@ -18,18 +18,15 @@ import {
   ArrowUpFromLine,
   // @ts-ignore
   LockIcon,
-  TrendingUp,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 // @ts-ignore
 import { formatCurrency } from "@/lib/utils";
 import useEmblaCarousel from "embla-carousel-react";
-import { Button } from "@/components/ui/button";
 import { useFetchTransactions } from "@/hooks/useTransaction";
 import { useFetchWalletOverview } from "@/hooks/useStaff";
 
 // Mock wallet data - in a real app, this would come from an API
+ // @ts-ignore
 const walletData = {
   totalBalance: 1250430.75,
   totalDeposits: 2156742.5,
@@ -49,6 +46,7 @@ export default function TransactionsPage() {
   const { data: walletOverview } = useFetchWalletOverview();
 
   // Initialize the embla carousel
+  // @ts-ignore
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: "start",
     loop: false,
@@ -56,10 +54,12 @@ export default function TransactionsPage() {
   });
 
   // Controls for the carousel
+  // @ts-ignore
   const scrollPrev = () => {
     if (emblaApi) emblaApi.scrollPrev();
   };
 
+  // @ts-ignore
   const scrollNext = () => {
     if (emblaApi) emblaApi.scrollNext();
   };
@@ -157,7 +157,7 @@ export default function TransactionsPage() {
       </Card>
 
       {/* Currency Balances Card */}
-      <Card>
+      {/* <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <div>
@@ -217,7 +217,7 @@ export default function TransactionsPage() {
             </div>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* Transactions Table */}
       <TransactionsTable
