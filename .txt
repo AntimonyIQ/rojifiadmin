@@ -802,3 +802,578 @@ export default function PaymentChannelsForm({ data }: Props) {
     </Form>
   );
 }
+
+
+
+
+??????????
+{form.watch(
+                                          `currencyFees.${currencyIndex}.channelFees.${channelIndex}.feeType`
+                                        ) === "flat" && (
+                                          <FormField
+                                            control={form.control}
+                                            name={`currencyFees.${currencyIndex}.channelFees.${channelIndex}.flatValue`}
+                                            render={({ field }) => (
+                                              <FormItem>
+                                                <FormLabel>
+                                                  Flat Fee Amount
+                                                </FormLabel>
+                                                <FormControl>
+                                                  <div className="relative">
+                                                    <span className="absolute left-3 top-2.5 text-gray-500">
+                                                      {currencySymbol}
+                                                    </span>
+                                                    <Input
+                                                      {...field}
+                                                      className="pl-7"
+                                                      type="number"
+                                                      min="0"
+                                                      step="0.01"
+                                                    />
+                                                  </div>
+                                                </FormControl>
+                                                <FormDescription>
+                                                  Fixed fee amount for each
+                                                  transaction
+                                                </FormDescription>
+                                                <FormMessage />
+                                              </FormItem>
+                                            )}
+                                          />
+                                        )}
+
+                                        {[
+                                          "percentage_min",
+                                          "percentage_max",
+                                          "percentage_min_max",
+                                        ].includes(
+                                          form.watch(
+                                            `currencyFees.${currencyIndex}.channelFees.${channelIndex}.feeType`
+                                          )
+                                        ) && (
+                                          <FormField
+                                            control={form.control}
+                                            name={`currencyFees.${currencyIndex}.channelFees.${channelIndex}.percentageValue`}
+                                            render={({ field }) => (
+                                              <FormItem>
+                                                <FormLabel>
+                                                  Percentage Rate
+                                                </FormLabel>
+                                                <FormControl>
+                                                  <div className="relative">
+                                                    <Input
+                                                      {...field}
+                                                      type="number"
+                                                      min="0"
+                                                      max="100"
+                                                      step="0.01"
+                                                    />
+                                                    <span className="absolute right-3 top-2.5 text-gray-500">
+                                                      %
+                                                    </span>
+                                                  </div>
+                                                </FormControl>
+                                                <FormDescription>
+                                                  Percentage of transaction
+                                                  amount charged as fee
+                                                </FormDescription>
+                                                <FormMessage />
+                                              </FormItem>
+                                            )}
+                                          />
+                                        )}
+
+                                        {[
+                                          "percentage_min",
+                                          "percentage_min_max",
+                                        ].includes(
+                                          form.watch(
+                                            `currencyFees.${currencyIndex}.channelFees.${channelIndex}.feeType`
+                                          )
+                                        ) && (
+                                          <FormField
+                                            control={form.control}
+                                            name={`currencyFees.${currencyIndex}.channelFees.${channelIndex}.minValue`}
+                                            render={({ field }) => (
+                                              <FormItem>
+                                                <FormLabel>
+                                                  Minimum Fee Amount
+                                                </FormLabel>
+                                                <FormControl>
+                                                  <div className="relative">
+                                                    <span className="absolute left-3 top-2.5 text-gray-500">
+                                                      {currencySymbol}
+                                                    </span>
+                                                    <Input
+                                                      {...field}
+                                                      className="pl-7"
+                                                      type="number"
+                                                      min="0"
+                                                      step="0.01"
+                                                    />
+                                                  </div>
+                                                </FormControl>
+                                                <FormDescription>
+                                                  Minimum fee amount regardless
+                                                  of percentage calculation
+                                                </FormDescription>
+                                                <FormMessage />
+                                              </FormItem>
+                                            )}
+                                          />
+                                        )}
+
+                                        {[
+                                          "percentage_max",
+                                          "percentage_min_max",
+                                        ].includes(
+                                          form.watch(
+                                            `currencyFees.${currencyIndex}.channelFees.${channelIndex}.feeType`
+                                          )
+                                        ) && (
+                                          <FormField
+                                            control={form.control}
+                                            name={`currencyFees.${currencyIndex}.channelFees.${channelIndex}.maxValue`}
+                                            render={({ field }) => (
+                                              <FormItem>
+                                                <FormLabel>
+                                                  Maximum Fee Amount
+                                                </FormLabel>
+                                                <FormControl>
+                                                  <div className="relative">
+                                                    <span className="absolute left-3 top-2.5 text-gray-500">
+                                                      {currencySymbol}
+                                                    </span>
+                                                    <Input
+                                                      {...field}
+                                                      className="pl-7"
+                                                      type="number"
+                                                      min="0"
+                                                      step="0.01"
+                                                    />
+                                                  </div>
+                                                </FormControl>
+                                                <FormDescription>
+                                                  Maximum fee amount regardless
+                                                  of percentage calculation
+                                                </FormDescription>
+                                                <FormMessage />
+                                              </FormItem>
+                                            )}
+                                          />
+                                        )}
+
+                                        {form.watch(
+                                          `currencyFees.${currencyIndex}.channelFees.${channelIndex}.feeType`
+                                        ) === "range" && (
+                                          <div className="space-y-4">
+                                            <div className="flex items-center justify-between">
+                                              <FormLabel>Fee Ranges</FormLabel>
+                                              <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() =>
+                                                  addRange(
+                                                    currencyIndex,
+                                                    channelIndex
+                                                  )
+                                                }
+                                                className="flex items-center gap-1"
+                                              >
+                                                <Plus className="h-3.5 w-3.5" />
+                                                Add Range
+                                              </Button>
+                                            </div>
+
+                                            <div className="space-y-4">
+                                              {(
+                                                form.watch(
+                                                  `currencyFees.${currencyIndex}.channelFees.${channelIndex}.ranges`
+                                                ) || []
+                                              ).map(
+                                                // @ts-ignore
+                                                (range, rangeIndex) => (
+                                                  <div
+                                                    key={rangeIndex}
+                                                    className="border rounded-lg p-4 space-y-4"
+                                                  >
+                                                    <div className="flex justify-between items-center">
+                                                      <h4 className="font-medium">
+                                                        Range {rangeIndex + 1}
+                                                      </h4>
+                                                      <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() =>
+                                                          removeRange(
+                                                            currencyIndex,
+                                                            channelIndex,
+                                                            rangeIndex
+                                                          )
+                                                        }
+                                                      >
+                                                        <Trash2 className="h-4 w-4" />
+                                                      </Button>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                      <FormField
+                                                        control={form.control}
+                                                        name={`currencyFees.${currencyIndex}.channelFees.${channelIndex}.ranges.${rangeIndex}.startRange`}
+                                                        render={({ field }) => (
+                                                          <FormItem>
+                                                            <FormLabel>
+                                                              Start Amount
+                                                            </FormLabel>
+                                                            <FormControl>
+                                                              <div className="relative">
+                                                                <span className="absolute left-3 top-2.5 text-gray-500">
+                                                                  {
+                                                                    currencySymbol
+                                                                  }
+                                                                </span>
+                                                                <Input
+                                                                  {...field}
+                                                                  className="pl-7"
+                                                                  type="number"
+                                                                  min="0"
+                                                                  step="1"
+                                                                />
+                                                              </div>
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                          </FormItem>
+                                                        )}
+                                                      />
+
+                                                      <FormField
+                                                        control={form.control}
+                                                        name={`currencyFees.${currencyIndex}.channelFees.${channelIndex}.ranges.${rangeIndex}.endRange`}
+                                                        render={({ field }) => (
+                                                          <FormItem>
+                                                            <FormLabel>
+                                                              End Amount
+                                                            </FormLabel>
+                                                            <FormControl>
+                                                              <div className="relative">
+                                                                <span className="absolute left-3 top-2.5 text-gray-500">
+                                                                  {
+                                                                    currencySymbol
+                                                                  }
+                                                                </span>
+                                                                <Input
+                                                                  {...field}
+                                                                  className="pl-7"
+                                                                  type="number"
+                                                                  min="0"
+                                                                  step="1"
+                                                                />
+                                                              </div>
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                          </FormItem>
+                                                        )}
+                                                      />
+
+                                                      <FormField
+                                                        control={form.control}
+                                                        name={`currencyFees.${currencyIndex}.channelFees.${channelIndex}.ranges.${rangeIndex}.feeValue`}
+                                                        render={({ field }) => (
+                                                          <FormItem>
+                                                            <FormLabel>
+                                                              Fee Amount
+                                                            </FormLabel>
+                                                            <FormControl>
+                                                              <div className="relative">
+                                                                <span className="absolute left-3 top-2.5 text-gray-500">
+                                                                  {
+                                                                    currencySymbol
+                                                                  }
+                                                                </span>
+                                                                <Input
+                                                                  {...field}
+                                                                  className="pl-7"
+                                                                  type="number"
+                                                                  min="0"
+                                                                  step="0.01"
+                                                                />
+                                                              </div>
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                          </FormItem>
+                                                        )}
+                                                      />
+                                                    </div>
+                                                  </div>
+                                                )
+                                              )}
+                                            </div>
+                                          </div>
+                                        )}
+
+                                        ?????????
+                                        feeConfig dialog
+                                        ??????
+                                        <Dialog>
+        <DialogTrigger asChild>
+          <div className="ml-auto w-fit px-6">
+            <Button className="mb-2">Create Fee Config</Button>
+          </div>
+        </DialogTrigger>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create Fee Configuration</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex flex-col gap-1 mb-2">
+              <Label htmlFor="currency">Name</Label>
+              <Input
+                type="text"
+                placeholder="NGN transfer fee config"
+                value={formData.name}
+                onChange={(e) => handleChange("name", e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-1 mb-2">
+              <Label htmlFor="currency">Currency</Label>
+              <Select onValueChange={(val) => handleChange("currency", val)}>
+                <SelectTrigger id="currency">
+                  <SelectValue placeholder="Select Currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CURRENCIES.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.code} - {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-1 mb-2">
+              <Label htmlFor="tx_channel">Transaction Channel</Label>
+              <Select onValueChange={(val) => handleChange("tx_channel", val)}>
+                <SelectTrigger id="tx_channel">
+                  <SelectValue placeholder="Select Channel" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TRANSACTIONCHANNEL.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-1 mb-2">
+              <Label htmlFor="tx_channel">Fee Config Type</Label>
+              <Select onValueChange={(val) => handleChange("type", val)}>
+                <SelectTrigger id="type">
+                  <SelectValue placeholder="Select Config Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {FEE_CONFIG_TYPES.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/*  this will be based on the config type */}
+            <div className="grid grid-cols-2 gap-4">
+              {formData.type === "percentage_max" && (
+                <>
+                  <div>
+                    <Label>Percentage</Label>
+                    <Input
+                      type="number"
+                      value={formData.config.percentage || 0}
+                      onChange={(e) =>
+                        handleChange("percentage", e.target.value)
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label>Maximum Fee</Label>
+                    <Input
+                      type="number"
+                      value={formData.config.maximumFee || 0}
+                      onChange={(e) =>
+                        handleChange("maximumFee", e.target.value)
+                      }
+                    />
+                  </div>
+                </>
+              )}
+
+              {formData.type === "percentage_min" && (
+                <>
+                  <div>
+                    <Label>Percentage</Label>
+                    <Input
+                      type="number"
+                      value={formData.config.percentage || 0}
+                      onChange={(e) =>
+                        handleChange("percentage", e.target.value)
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label>Minimum Fee</Label>
+                    <Input
+                      type="number"
+                      value={formData.config.minimumFee || 0}
+                      onChange={(e) =>
+                        handleChange("minimumFee", e.target.value)
+                      }
+                    />
+                  </div>
+                </>
+              )}
+
+              {formData.type === "percentage_min_max" && (
+                <>
+                  <div>
+                    <Label>Percentage</Label>
+                    <Input
+                      type="number"
+                      value={formData.config.percentage || 0}
+                      onChange={(e) =>
+                        handleChange("percentage", e.target.value)
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label>Minimum Fee</Label>
+                    <Input
+                      type="number"
+                      value={formData.config.minimumFee || 0}
+                      onChange={(e) =>
+                        handleChange("minimumFee", e.target.value)
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label>Maximum Fee</Label>
+                    <Input
+                      type="number"
+                      value={formData.config.maximumFee || 0}
+                      onChange={(e) =>
+                        handleChange("maximumFee", e.target.value)
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label>Fee Amount</Label>
+                    <Input
+                      type="number"
+                      value={formData.config.feeAmount || 0}
+                      onChange={(e) =>
+                        handleChange("feeAmount", e.target.value)
+                      }
+                    />
+                  </div>
+                </>
+              )}
+
+              {formData.type === "flat_fee" && (
+                <div>
+                  <Label>Flat Fee</Label>
+                  <Input
+                    type="number"
+                    value={formData.config.feeAmount || 0}
+                    onChange={(e) => handleChange("feeAmount", e.target.value)}
+                  />
+                </div>
+              )}
+
+              {formData.type === "flat_fee_and_percentage" && (
+                <>
+                  <div>
+                    <Label>Flat Fee</Label>
+                    <Input
+                      type="number"
+                      value={formData.config.feeAmount || 0}
+                      onChange={(e) =>
+                        handleChange("feeAmount", e.target.value)
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label>Percentage</Label>
+                    <Input
+                      type="number"
+                      value={formData.config.percentage || 0}
+                      onChange={(e) =>
+                        handleChange("percentage", e.target.value)
+                      }
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* {formData.type === "range" && (
+                <div className="col-span-2 space-y-4">
+                  {(config.ranges || []).map((range: any, index: number) => (
+                    <div key={index} className="grid grid-cols-3 gap-4">
+                      <div>
+                        <Label>Start Amount</Label>
+                        <Input
+                          type="number"
+                          value={range.startAmount}
+                          onChange={(e) =>
+                            handleRangeChange(
+                              index,
+                              "startAmount",
+                              e.target.value
+                            )
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Label>End Amount</Label>
+                        <Input
+                          type="number"
+                          value={range.endAmount}
+                          onChange={(e) =>
+                            handleRangeChange(
+                              index,
+                              "endAmount",
+                              e.target.value
+                            )
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Label>Fee Amount</Label>
+                        <Input
+                          type="number"
+                          value={range.feeAmount}
+                          onChange={(e) =>
+                            handleRangeChange(
+                              index,
+                              "feeAmount",
+                              e.target.value
+                            )
+                          }
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  <Button onClick={addRange}>Add Range</Button>
+                </div>
+              )} */}
+            </div>
+            {/* end here */}
+
+            <div className="w-fit ml-auto">
+              <Button onClick={handleSubmit}>Create</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>

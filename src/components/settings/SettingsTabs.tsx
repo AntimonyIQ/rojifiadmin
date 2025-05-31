@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import GeneralSettingsForm from "./GeneralSettingsForm";
 // @ts-ignore
 import TransactionConfigForm from "./TransactionConfigForm";
+// @ts-ignore
 import FeeConfigForm from "./FeeConfigForm";
 import PaymentChannelsForm from "./PaymentChannelsForm";
 import ConfigureCurrencyForm from "./ConfigureCurrencyForm";
@@ -17,6 +18,7 @@ import {
   useFetchAdminCurrencies,
   useFetchExchangeRates,
 } from "@/hooks/useCurrency";
+import TestFeeConfig from "./TestFeeConfig";
 
 interface SettingsTabsProps {
   defaultTab?: string;
@@ -70,7 +72,8 @@ export default function SettingsTabs({
           </TabsTrigger>
           <TabsTrigger value="manage-processors">Manage Processors</TabsTrigger>
           <TabsTrigger value="transactions">Manage Rates</TabsTrigger>
-          <TabsTrigger value="fees">Fee Configuration</TabsTrigger>
+          {/* <TabsTrigger value="fees">Fee Configuration</TabsTrigger> */}
+          <TabsTrigger value="test">Fee Configuration</TabsTrigger>
         </TabsList>
 
         <TabsContent value="payment-channels">
@@ -91,8 +94,12 @@ export default function SettingsTabs({
           {exchangeRates && <ExchangeRatesForm data={exchangeRates} />}
         </TabsContent>
 
-        <TabsContent value="fees">
+        {/* <TabsContent value="fees">
           <FeeConfigForm />
+        </TabsContent> */}
+
+        <TabsContent value="test">
+          <TestFeeConfig />
         </TabsContent>
       </Tabs>
     </Card>
