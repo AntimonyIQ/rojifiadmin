@@ -74,6 +74,7 @@ const PAYMENT_CHANNELS = [
 ];
 
 // Define the supported currencies
+// @ts-ignore
 const CURRENCIES = [
   { code: "NGN", name: "Nigerian Naira", symbol: "₦" },
   { code: "USD", name: "US Dollar", symbol: "$" },
@@ -139,12 +140,23 @@ export default function FeeConfigForm() {
   const { data: feeConfig } = useFetchFeeConfig();
   console.log("config client:", feeConfig);
 
-  // fetch transaction channels
   const { data: transactionChannels } = useFetchTransactionChannels();
-  console.log("transaction channels:", transactionChannels);
-  // fetch currencies
   const { data: currencies } = useFetchAdminCurrencies();
-  console.log("currencies:", currencies);
+
+  // @ts-ignore
+  const TRANSACTIONCHANNEL = transactionChannels?.map(({ id, name }) => ({
+    id,
+    name,
+  }));
+  const CURRENCIES = currencies?.map(
+    ({ id, name, code, symbol, decimal_place }) => ({
+      id,
+      name,
+      code,
+      symbol,
+      decimal_place,
+    })
+  );
 
   const [isLoading, setIsLoading] = useState(false);
   const [expandedCurrency, setExpandedCurrency] = useState<string | null>(
@@ -154,6 +166,7 @@ export default function FeeConfigForm() {
 
   // Generate default values for the form
   const generateDefaultValues = (): FormValues => {
+    // @ts-ignore
     const currencyFees = CURRENCIES.map((currency) => {
       return {
         currencyCode: currency.code,
@@ -265,6 +278,7 @@ export default function FeeConfigForm() {
 
   // Function to get currency symbol by code
   const getCurrencySymbol = (code: string): string => {
+    // @ts-ignore
     const currency = CURRENCIES.find((c) => c.code === code);
     return currency ? currency.symbol : "";
   };
@@ -298,6 +312,190 @@ export default function FeeConfigForm() {
                 have its own fee type and configuration.
               </p>
             </div>
+
+            {/* start here */}
+            {/* <div className="grid grid-cols-1 gap-4">
+              {CURRENCIES?.map((currency) => {
+                return (
+                  <Card
+                    key={currency.id}
+                    className={`border overflow-hidden ${
+                      expandedCurrency === currency.code
+                        ? "ring-2 ring-blue-200"
+                        : ""
+                    }`}
+                  >
+                    <div
+                      className="flex items-center justify-between p-4 cursor-pointer"
+                      onClick={() =>
+                        setExpandedCurrency(
+                          expandedCurrency === currency.code
+                            ? null
+                            : currency.code
+                        )
+                      }
+                    >
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-lg font-medium mr-3">
+                          {currency.symbol}
+                        </div>
+                        <div>
+                          <div className="text-md font-medium text-gray-900">
+                            {currency.code}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {
+                              CURRENCIES.find((c) => c.code === currency.code)
+                                ?.name
+                            }
+                          </div>
+                        </div>
+                      </div>
+                      {expandedCurrency === currency.code ? (
+                        <ChevronUp className="h-5 w-5 text-gray-400" />
+                      ) : (
+                        <ChevronDown className="h-5 w-5 text-gray-400" />
+                      )}
+                    </div>
+
+                    {expandedCurrency === currency.code && (
+                      <div className="p-4 pt-0 border-t">
+                        <Accordion type="single" collapsible className="w-full">
+                          {form
+                            .getValues()
+                            .currencyFees[currencyIndex].channelFees.map(
+                              (channelFee, channelIndex) => {
+                                const channel = PAYMENT_CHANNELS.find(
+                                  (c) => c.id === channelFee.channelId
+                                );
+
+                                return (
+                                  <AccordionItem
+                                    value={`channel-${channelFee.channelId}`}
+                                    key={channelFee.channelId}
+                                  >
+                                    <AccordionTrigger className="py-3">
+                                      <div className="flex items-center space-x-2">
+                                        <span>{channel?.label}</span>
+                                        <FormField
+                                          control={form.control}
+                                          name={`currencyFees.${currencyIndex}.channelFees.${channelIndex}.enabled`}
+                                          render={({ field }) => (
+                                            <FormItem
+                                              className="flex items-center space-x-2 m-0"
+                                              onClick={(e) =>
+                                                e.stopPropagation()
+                                              }
+                                            >
+                                              <FormControl>
+                                                <Switch
+                                                  checked={field.value}
+                                                  onCheckedChange={
+                                                    field.onChange
+                                                  }
+                                                  className="data-[state=checked]:bg-green-500"
+                                                />
+                                              </FormControl>
+                                            </FormItem>
+                                          )}
+                                        />
+                                      </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent className="pt-2">
+                                      <div className="space-y-4">
+                                        <FormField
+                                          control={form.control}
+                                          name={`currencyFees.${currencyIndex}.channelFees.${channelIndex}.feeType`}
+                                          render={({ field }) => (
+                                            <FormItem>
+                                              <FormLabel>Fee Type</FormLabel>
+                                              <Select
+                                                onValueChange={field.onChange}
+                                                value={field.value}
+                                              >
+                                                <FormControl>
+                                                  <SelectTrigger>
+                                                    <SelectValue placeholder="Select fee type" />
+                                                  </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                  {FEE_TYPES.map((feeType) => (
+                                                    <SelectItem
+                                                      key={feeType.id}
+                                                      value={feeType.id}
+                                                    >
+                                                      <div className="flex flex-col">
+                                                        <span>
+                                                          {feeType.label}
+                                                        </span>
+                                                        <span className="text-xs text-gray-500">
+                                                          {feeType.description}
+                                                        </span>
+                                                      </div>
+                                                    </SelectItem>
+                                                  ))}
+                                                </SelectContent>
+                                              </Select>
+                                              <FormDescription>
+                                                Select the fee structure for
+                                                this payment channel
+                                              </FormDescription>
+                                              <FormMessage />
+                                            </FormItem>
+                                          )}
+                                        />
+
+                                        {TRANSACTIONCHANNEL?.map(
+                                          (transaction) => {
+                                            return (
+                                              <FormField
+                                                control={form.control}
+                                                name={`currencyFees.${currencyIndex}.channelFees.${channelIndex}.flatValue`}
+                                                render={({ field }) => (
+                                                  <FormItem>
+                                                    <FormLabel>
+                                                      Flat Fee Amount
+                                                    </FormLabel>
+                                                    <FormControl>
+                                                      <div className="relative">
+                                                        <span className="absolute left-3 top-2.5 text-gray-500">
+                                                          {currencySymbol}
+                                                        </span>
+                                                        <Input
+                                                          {...field}
+                                                          className="pl-7"
+                                                          type="number"
+                                                          min="0"
+                                                          step="0.01"
+                                                        />
+                                                      </div>
+                                                    </FormControl>
+                                                    <FormDescription>
+                                                      Fixed fee amount for each
+                                                      transaction
+                                                    </FormDescription>
+                                                    <FormMessage />
+                                                  </FormItem>
+                                                )}
+                                              />
+                                            );
+                                          }
+                                        )}
+                                        
+                                      </div>
+                                    </AccordionContent>
+                                  </AccordionItem>
+                                );
+                              }
+                            )}
+                        </Accordion>
+                      </div>
+                    )}
+                  </Card>
+                );
+              })}
+            </div> */}
+            {/* end here */}
 
             <div className="grid grid-cols-1 gap-4">
               {currencyFields.map((currencyField, currencyIndex) => {
@@ -333,6 +531,7 @@ export default function FeeConfigForm() {
                           </div>
                           <div className="text-sm text-gray-500">
                             {
+                              // @ts-ignore
                               CURRENCIES.find((c) => c.code === currencyCode)
                                 ?.name
                             }

@@ -402,7 +402,7 @@ export default function ExchangeRatesForm({ data }: Props) {
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50 border-b">
+                  <thead className="bg-gray-50 border-b w-full">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Base Currency
@@ -474,15 +474,15 @@ export default function ExchangeRatesForm({ data }: Props) {
                               {parseFloat(rate.rate).toLocaleString()}
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {/* <div className="text-sm font-medium text-gray-900">
+                          {/* <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">
                                 ₦{rate.sellRate.toLocaleString()}
                               </div>
                               <div className="text-xs text-gray-500">
                                 {formatCurrency(1 / rate.sellRate, rate.symbol)}{" "}
                                 = ₦1
-                              </div> */}
-                          </td>
+                              </div>
+                          </td> */}
                           {/* <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               {rateDifference > 0 ? (
