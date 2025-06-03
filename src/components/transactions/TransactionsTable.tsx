@@ -519,6 +519,9 @@ export default function TransactionsTable({
                     Status
                   </TableHead>
                   <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Type
+                  </TableHead>
+                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Date
                   </TableHead>
                   <TableHead className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -580,6 +583,11 @@ export default function TransactionsTable({
                         >
                           {transaction.status}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="px-6 py-4 whitespace-nowrap capitalize">
+                        
+                          {transaction.type}
+                       
                       </TableCell>
                       <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {format(

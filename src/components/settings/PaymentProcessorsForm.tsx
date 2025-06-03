@@ -111,7 +111,7 @@ export default function PaymentProcessorsForm({ data }: Props) {
 
           toast({
             title: "Processor Updated",
-            description: `${payload.name} has been updated successfully!`,
+            description: `Updated successfully!`,
           });
           setCheckedProcessorCurrencies([]);
           setCheckedProcessorId("");

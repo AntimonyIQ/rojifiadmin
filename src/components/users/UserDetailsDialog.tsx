@@ -151,8 +151,8 @@ export default function UserDetailsDialog({
                           <CreditCard className="h-4 w-4 text-blue-700" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium">
-                            {transaction.id}
+                          <p className="text-sm font-medium capitalize">
+                            {transaction.type}
                           </p>
                           <p className="text-xs text-gray-500">
                             {format(

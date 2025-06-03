@@ -18,7 +18,7 @@ export const useUpdatePermission = () => {
     mutationFn: ({ id, payload }: { id: string; payload: any }) =>
       permissionAPI.update(id, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["staffs", "permissions"] });
+      queryClient.invalidateQueries({ queryKey: ["staffs"] });
     },
   });
 };

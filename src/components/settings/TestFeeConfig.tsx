@@ -298,11 +298,13 @@ const ChannelFeeConfig = ({ currency, channel }: any) => {
         return {
           percentage: config.percentage,
           maximumFee: config.maximumFee,
+          feeAmount: config.feeAmount,
         };
       case "percentage_min":
         return {
           percentage: config.percentage,
           minimumFee: config.minimumFee,
+          feeAmount: config.feeAmount,
         };
       case "percentage_min_max":
         return {

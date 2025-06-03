@@ -1203,14 +1203,14 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                         <Edit className="h-4 w-4" />
                       </Button>
 
-                      <Button
+                      {/* <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setDeleteCurrencyCode(currency.id)}
                         className="text-red-600 hover:text-red-900"
                       >
                         <Trash className="h-4 w-4" />
-                      </Button>
+                      </Button> */}
                     </div>
                   </td>
                 </tr>
@@ -1236,7 +1236,7 @@ export default function ConfigureCurrencyForm({ data }: Props) {
           </div>
         </div>
       </CardContent>
-      <CardFooter className="px-6 py-4 border-t border-gray-100 flex justify-between">
+      {/* <CardFooter className="px-6 py-4 border-t border-gray-100 flex justify-between">
         <Button
           type="button"
           variant="outline"
@@ -1264,7 +1264,7 @@ export default function ConfigureCurrencyForm({ data }: Props) {
             <>Save Changes</>
           )}
         </Button>
-      </CardFooter>
+      </CardFooter> */}
     </>
   );
 }
