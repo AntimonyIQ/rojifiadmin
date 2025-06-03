@@ -1377,3 +1377,113 @@ export default function PaymentChannelsForm({ data }: Props) {
           </div>
         </DialogContent>
       </Dialog>
+
+      ?????
+      edit currency
+       <Select
+                  value={sourceCurrency}
+                  onValueChange={(value) => {
+                    setSourceCurrency(value);
+                    // For now, we only support NGN as base currency
+                    if (value !== "NGN") {
+                      setTargetCurrency("NGN");
+                      setRateType("sell");
+
+                      // Find the rate
+                      const currency = form
+                        .getValues()
+                        .rates.find((r) => r.code === value);
+                      if (currency) {
+                        setRateAmount(currency.sellRate.toString());
+                      }
+                    } else if (targetCurrency) {
+                      setRateType("buy");
+
+                      // Find the rate
+                      const currency = form
+                        .getValues()
+                        .rates.find((r) => r.code === targetCurrency);
+                      if (currency) {
+                        setRateAmount(currency.buyRate.toString());
+                      }
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select source currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="NGN">
+                      <div className="flex items-center">
+                        <div className="h-5 w-5 rounded-full bg-gray-100 flex items-center justify-center text-xs font-medium mr-2">
+                          ₦
+                        </div>
+                        <span>NGN</span>
+                      </div>
+                    </SelectItem>
+                    {form.getValues().rates.map((rate) => (
+                      <SelectItem key={`source-${rate.code}`} value={rate.code}>
+                        <div className="flex items-center">
+                          <div className="h-5 w-5 rounded-full bg-gray-100 flex items-center justify-center text-xs font-medium mr-2">
+                            {rate.symbol}
+                          </div>
+                          <span>{rate.code}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                 <Select
+                  value={targetCurrency}
+                  onValueChange={(value) => {
+                    setTargetCurrency(value);
+                    // For now, we only support NGN as base currency
+                    if (value === "NGN") {
+                      setSourceCurrency(editCurrency || "USD");
+                      setRateType("sell");
+
+                      // Find the rate
+                      const currency = form
+                        .getValues()
+                        .rates.find((r) => r.code === sourceCurrency);
+                      if (currency) {
+                        setRateAmount(currency.sellRate.toString());
+                      }
+                    } else {
+                      setSourceCurrency("NGN");
+                      setRateType("buy");
+
+                      // Find the rate
+                      const currency = form
+                        .getValues()
+                        .rates.find((r) => r.code === value);
+                      if (currency) {
+                        setRateAmount(currency.buyRate.toString());
+                      }
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select target currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="NGN">
+                      <div className="flex items-center">
+                        <div className="h-5 w-5 rounded-full bg-gray-100 flex items-center justify-center text-xs font-medium mr-2">
+                          ₦
+                        </div>
+                        <span>NGN</span>
+                      </div>
+                    </SelectItem>
+                    {form.getValues().rates.map((rate) => (
+                      <SelectItem key={`target-${rate.code}`} value={rate.code}>
+                        <div className="flex items-center">
+                          <div className="h-5 w-5 rounded-full bg-gray-100 flex items-center justify-center text-xs font-medium mr-2">
+                            {rate.symbol}
+                          </div>
+                          <span>{rate.code}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>

@@ -462,7 +462,7 @@ export default function PaymentChannelsForm({ data }: Props) {
 
           toast({
             title: "Transaction Channel Updated",
-            description: `${payload.name} has been updated successfully!`,
+            description: `Channel has been updated successfully!`,
           });
         },
         onError: (error: any) => {

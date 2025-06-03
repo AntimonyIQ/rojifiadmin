@@ -9,10 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
  // @ts-ignore
 import { Switch } from "@/components/ui/switch";
-import { CardContent, CardFooter } from "@/components/ui/card";
+import { CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, DollarSign, Edit, Trash, Plus } from "lucide-react";
+import { CheckCircle, DollarSign, Edit, Plus } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import {
   Dialog,
@@ -152,6 +152,7 @@ interface Props {
 }
 
 export default function ConfigureCurrencyForm({ data }: Props) {
+  // @ts-ignore
   const [isLoading, setIsLoading] = useState(false);
   const { mutate: createCurrency, isPending: isCreateCurrencyPending } =
     useCreateCurrency();
@@ -229,6 +230,7 @@ export default function ConfigureCurrencyForm({ data }: Props) {
     })),
   };
 
+  // @ts-ignore
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues,
@@ -1203,14 +1205,14 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                         <Edit className="h-4 w-4" />
                       </Button>
 
-                      <Button
+                      {/* <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setDeleteCurrencyCode(currency.id)}
                         className="text-red-600 hover:text-red-900"
                       >
                         <Trash className="h-4 w-4" />
-                      </Button>
+                      </Button> */}
                     </div>
                   </td>
                 </tr>
@@ -1236,7 +1238,7 @@ export default function ConfigureCurrencyForm({ data }: Props) {
           </div>
         </div>
       </CardContent>
-      <CardFooter className="px-6 py-4 border-t border-gray-100 flex justify-between">
+      {/* <CardFooter className="px-6 py-4 border-t border-gray-100 flex justify-between">
         <Button
           type="button"
           variant="outline"
@@ -1264,7 +1266,7 @@ export default function ConfigureCurrencyForm({ data }: Props) {
             <>Save Changes</>
           )}
         </Button>
-      </CardFooter>
+      </CardFooter> */}
     </>
   );
 }

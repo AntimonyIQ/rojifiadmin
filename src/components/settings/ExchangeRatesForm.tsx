@@ -11,7 +11,7 @@ import {
   FormLabel,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { CardContent, CardFooter, Card } from "@/components/ui/card";
+import { CardContent, Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircleIcon, InfoIcon, ArrowRightIcon } from "lucide-react";
@@ -23,13 +23,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ExchangeRate } from "@/types";
 import { useEditExchangeRate } from "@/hooks/useCurrency";
 
@@ -77,6 +70,7 @@ interface Props {
 
 export default function ExchangeRatesForm({ data }: Props) {
   console.log(data);
+  // @ts-ignore
   const [isLoading, setIsLoading] = useState(false);
   const [editRateDialogOpen, setEditRateDialogOpen] = useState(false);
   const [editCurrency, setEditCurrency] = useState<string | null>(null);
@@ -615,7 +609,7 @@ export default function ExchangeRatesForm({ data }: Props) {
             </CardContent>
           </Card>
         </CardContent>
-        <CardFooter className="flex justify-between px-6 py-4 border-t">
+        {/* <CardFooter className="flex justify-between px-6 py-4 border-t">
           <Button
             type="button"
             variant="outline"
@@ -633,7 +627,7 @@ export default function ExchangeRatesForm({ data }: Props) {
               <>Save Changes</>
             )}
           </Button>
-        </CardFooter>
+        </CardFooter> */}
       </form>
 
       {/* Edit Rate Dialog */}
@@ -649,59 +643,8 @@ export default function ExchangeRatesForm({ data }: Props) {
           <div className="grid gap-4 py-4">
             <div className="flex items-center justify-center gap-3 mb-2">
               <div className="flex-1">
-                <Select
-                  value={sourceCurrency}
-                  onValueChange={(value) => {
-                    setSourceCurrency(value);
-                    // For now, we only support NGN as base currency
-                    if (value !== "NGN") {
-                      setTargetCurrency("NGN");
-                      setRateType("sell");
-
-                      // Find the rate
-                      const currency = form
-                        .getValues()
-                        .rates.find((r) => r.code === value);
-                      if (currency) {
-                        setRateAmount(currency.sellRate.toString());
-                      }
-                    } else if (targetCurrency) {
-                      setRateType("buy");
-
-                      // Find the rate
-                      const currency = form
-                        .getValues()
-                        .rates.find((r) => r.code === targetCurrency);
-                      if (currency) {
-                        setRateAmount(currency.buyRate.toString());
-                      }
-                    }
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select source currency" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="NGN">
-                      <div className="flex items-center">
-                        <div className="h-5 w-5 rounded-full bg-gray-100 flex items-center justify-center text-xs font-medium mr-2">
-                          ₦
-                        </div>
-                        <span>NGN</span>
-                      </div>
-                    </SelectItem>
-                    {form.getValues().rates.map((rate) => (
-                      <SelectItem key={`source-${rate.code}`} value={rate.code}>
-                        <div className="flex items-center">
-                          <div className="h-5 w-5 rounded-full bg-gray-100 flex items-center justify-center text-xs font-medium mr-2">
-                            {rate.symbol}
-                          </div>
-                          <span>{rate.code}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Input value={sourceCurrency} readOnly />
+               
               </div>
 
               <Button
@@ -742,60 +685,8 @@ export default function ExchangeRatesForm({ data }: Props) {
               </Button>
 
               <div className="flex-1">
-                <Select
-                  value={targetCurrency}
-                  onValueChange={(value) => {
-                    setTargetCurrency(value);
-                    // For now, we only support NGN as base currency
-                    if (value === "NGN") {
-                      setSourceCurrency(editCurrency || "USD");
-                      setRateType("sell");
-
-                      // Find the rate
-                      const currency = form
-                        .getValues()
-                        .rates.find((r) => r.code === sourceCurrency);
-                      if (currency) {
-                        setRateAmount(currency.sellRate.toString());
-                      }
-                    } else {
-                      setSourceCurrency("NGN");
-                      setRateType("buy");
-
-                      // Find the rate
-                      const currency = form
-                        .getValues()
-                        .rates.find((r) => r.code === value);
-                      if (currency) {
-                        setRateAmount(currency.buyRate.toString());
-                      }
-                    }
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select target currency" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="NGN">
-                      <div className="flex items-center">
-                        <div className="h-5 w-5 rounded-full bg-gray-100 flex items-center justify-center text-xs font-medium mr-2">
-                          ₦
-                        </div>
-                        <span>NGN</span>
-                      </div>
-                    </SelectItem>
-                    {form.getValues().rates.map((rate) => (
-                      <SelectItem key={`target-${rate.code}`} value={rate.code}>
-                        <div className="flex items-center">
-                          <div className="h-5 w-5 rounded-full bg-gray-100 flex items-center justify-center text-xs font-medium mr-2">
-                            {rate.symbol}
-                          </div>
-                          <span>{rate.code}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Input value={targetCurrency} readOnly/>
+               
               </div>
             </div>
 
