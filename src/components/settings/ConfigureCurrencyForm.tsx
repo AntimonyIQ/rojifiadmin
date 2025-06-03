@@ -9,10 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
  // @ts-ignore
 import { Switch } from "@/components/ui/switch";
-import { CardContent, CardFooter } from "@/components/ui/card";
+import { CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, DollarSign, Edit, Trash, Plus } from "lucide-react";
+import { CheckCircle, DollarSign, Edit, Plus } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import {
   Dialog,
@@ -152,6 +152,7 @@ interface Props {
 }
 
 export default function ConfigureCurrencyForm({ data }: Props) {
+  // @ts-ignore
   const [isLoading, setIsLoading] = useState(false);
   const { mutate: createCurrency, isPending: isCreateCurrencyPending } =
     useCreateCurrency();
@@ -229,6 +230,7 @@ export default function ConfigureCurrencyForm({ data }: Props) {
     })),
   };
 
+  // @ts-ignore
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues,

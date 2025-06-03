@@ -11,7 +11,7 @@ import {
   FormLabel,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { CardContent, CardFooter, Card } from "@/components/ui/card";
+import { CardContent, Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircleIcon, InfoIcon, ArrowRightIcon } from "lucide-react";
@@ -23,13 +23,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ExchangeRate } from "@/types";
 import { useEditExchangeRate } from "@/hooks/useCurrency";
 
@@ -77,6 +70,7 @@ interface Props {
 
 export default function ExchangeRatesForm({ data }: Props) {
   console.log(data);
+  // @ts-ignore
   const [isLoading, setIsLoading] = useState(false);
   const [editRateDialogOpen, setEditRateDialogOpen] = useState(false);
   const [editCurrency, setEditCurrency] = useState<string | null>(null);
