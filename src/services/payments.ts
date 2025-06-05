@@ -12,8 +12,12 @@ export const paymentAPI = {
       `/payment/processor/${id}`,
       payload
     );
-    console.log("updated processor data:", response.data.data);
+    // console.log("updated processor data:", response.data.data);
     return response.data.data;
   },
-  
+  create: async (payload: any) => {
+    const response = await apiInstance.post(`/payment/processor`, payload);
+    console.log("Created processor data:", response.data.data);
+    return response.data.data;
+  },
 };

@@ -17,10 +17,11 @@ export const useAuthStore = create<AuthState>()(
         localStorage.setItem("rojifi_admin_token", token);
         set({ user, token });
       },
-      clearAuth: () => {
-        localStorage.removeItem("rojifi_admin_token");
-        set({ user: null, token: null });
-      },
+      // clearAuth: () => {
+      //   localStorage.removeItem("rojifi_admin_token");
+      //   set({ user: null, token: null });
+      // },
+      clearAuth: () => set({ user: null, token: null }),
     }),
     { name: "auth-storage" }
   )

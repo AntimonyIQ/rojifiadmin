@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { CardContent, Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircleIcon, InfoIcon, ArrowRightIcon } from "lucide-react";
+import { CheckCircleIcon, InfoIcon, ArrowRightIcon, Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -22,9 +22,21 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { ExchangeRate } from "@/types";
-import { useEditExchangeRate } from "@/hooks/useCurrency";
+import {
+  useAddExchangeRate,
+  useEditExchangeRate,
+  useFetchAdminCurrencies,
+} from "@/hooks/useCurrency";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 // Currency options
 // @ts-ignore
@@ -69,10 +81,15 @@ interface Props {
 }
 
 export default function ExchangeRatesForm({ data }: Props) {
-  console.log(data);
+  const { mutate: addExchangeRate, isPending: isAddingExchangeRate } =
+    useAddExchangeRate();
+  const { data: currencies } = useFetchAdminCurrencies();
+  // console.log(currencies)
+
   // @ts-ignore
   const [isLoading, setIsLoading] = useState(false);
   const [editRateDialogOpen, setEditRateDialogOpen] = useState(false);
+  const [addRateDialogOpen, setAddRateDialogOpen] = useState(false);
   const [editCurrency, setEditCurrency] = useState<string | null>(null);
   const [sourceCurrency, setSourceCurrency] = useState("NGN");
   const [targetCurrency, setTargetCurrency] = useState("");
@@ -306,6 +323,50 @@ export default function ExchangeRatesForm({ data }: Props) {
     CAD: "C$",
   };
 
+  const addRateFn = () => {
+    const baseCurrencyId = currencies?.find(
+      (currency) => currency.code === sourceCurrency
+    )?.id;
+
+    const targetCurrencyId = currencies?.find(
+      (currency) => currency.code === targetCurrency
+    )?.id;
+
+    const newRateData = {
+      base_currency_id: baseCurrencyId,
+      target_currency_id: targetCurrencyId,
+      rate: rateAmount,
+    };
+
+    console.log(newRateData);
+
+    addExchangeRate(newRateData, {
+      onSuccess: (response: any) => {
+        console.log(response);
+        setAddRateDialogOpen(false);
+
+        toast({
+          title: "Exchange rate added",
+          description: `Exchnage rate has been added successfully`,
+        });
+        setRateAmount("");
+        setTargetCurrency("");
+        setSourceCurrency("");
+      },
+      onError: (error: any) => {
+        setRateAmount("");
+        setTargetCurrency("");
+        setSourceCurrency("");
+        toast({
+          title: "Error",
+          description:
+            error?.response?.data?.message || "Failed to add exchange rate",
+          variant: "destructive",
+        });
+      },
+    });
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -390,6 +451,152 @@ export default function ExchangeRatesForm({ data }: Props) {
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* Add Rate Dialog */}
+          <div className="flex justify-end">
+            <Dialog
+              open={addRateDialogOpen}
+              onOpenChange={setAddRateDialogOpen}
+            >
+              <DialogTrigger asChild>
+                <Button className="gap-2 bg-blue-600 hover:bg-blue-700 text-white">
+                  <Plus className="h-4 w-4" />
+                  Add New Rate
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Add Exchange Rate</DialogTitle>
+                  <DialogDescription>
+                    Configure the exchange rate between currencies.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="grid gap-4 py-4">
+                  <div className="flex items-center justify-center gap-3 mb-2">
+                    <div className="flex-1">
+                      <Select
+                        value={sourceCurrency}
+                        onValueChange={(value) => {
+                          setSourceCurrency(value);
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select base currency" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {currencies?.map((rate) => (
+                            <SelectItem
+                              key={`source-${rate.code}`}
+                              value={rate.code}
+                            >
+                              <div className="flex items-center">
+                                <div className="h-5 w-5 rounded-full bg-gray-100 flex items-center justify-center text-xs font-medium mr-2">
+                                  {rate.symbol}
+                                </div>
+                                <span>{rate.code}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <Button variant="ghost" size="icon" className="h-9 w-9">
+                      <ArrowRightIcon className="h-4 w-4" />
+                    </Button>
+
+                    <div className="flex-1">
+                      <Select
+                        value={targetCurrency}
+                        onValueChange={(value) => {
+                          setTargetCurrency(value);
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select target currency" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {currencies?.map((rate) => (
+                            <SelectItem
+                              key={`source-${rate.code}`}
+                              value={rate.code}
+                            >
+                              <div className="flex items-center">
+                                <div className="h-5 w-5 rounded-full bg-gray-100 flex items-center justify-center text-xs font-medium mr-2">
+                                  {rate.symbol}
+                                </div>
+                                <span>{rate.code}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <FormItem>
+                      <FormLabel>Exchange Rate</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0.01"
+                          value={rateAmount}
+                          onChange={(e) => setRateAmount(e.target.value)}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        <span>
+                          {parseFloat(rateAmount).toLocaleString()}{" "}
+                          {sourceCurrency} for 1 {targetCurrency}
+                        </span>
+                      </FormDescription>
+                    </FormItem>
+                  </div>
+
+                  <div className="mt-2 bg-blue-50 p-3 rounded-md">
+                    {sourceCurrency === "NGN" && targetCurrency ? (
+                      <p className="text-sm text-blue-700">
+                        Users will pay {Number(rateAmount).toLocaleString()} NGN
+                        to get 1 {targetCurrency}
+                      </p>
+                    ) : targetCurrency === "NGN" && sourceCurrency ? (
+                      <p className="text-sm text-blue-700">
+                        Users will receive {Number(rateAmount).toLocaleString()}{" "}
+                        NGN when they sell 1 {sourceCurrency}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-blue-700">
+                        <strong>Note:</strong> Please select both currencies to
+                        see the rate conversion.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setAddRateDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    disabled={isAddingExchangeRate}
+                    onClick={() => {
+                      addRateFn();
+                    }}
+                  >
+                    {isAddingExchangeRate ? "Adding rate..." : "Add rate"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
 
           <Card className="border border-gray-200">
@@ -644,7 +851,6 @@ export default function ExchangeRatesForm({ data }: Props) {
             <div className="flex items-center justify-center gap-3 mb-2">
               <div className="flex-1">
                 <Input value={sourceCurrency} readOnly />
-               
               </div>
 
               <Button
@@ -685,8 +891,7 @@ export default function ExchangeRatesForm({ data }: Props) {
               </Button>
 
               <div className="flex-1">
-                <Input value={targetCurrency} readOnly/>
-               
+                <Input value={targetCurrency} readOnly />
               </div>
             </div>
 

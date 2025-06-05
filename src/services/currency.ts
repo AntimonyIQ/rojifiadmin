@@ -34,4 +34,9 @@ export const currencyAPI = {
     console.log("updated exchange rate data:", response.data.data);
     return response.data.data;
   },
+  add_exchange_rate: async (payload: any): Promise<any> => {
+    const response = await apiInstance.post("/exchange-rate", payload);
+    console.log("exchange rate added", response.data.data);
+    return response.data.data;
+  },
 };

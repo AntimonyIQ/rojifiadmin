@@ -26,7 +26,7 @@ export const useEditExchangeRate = () => {
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["exchange_rates"] }),
   });
-}
+};
 
 export const useCreateCurrency = () => {
   const queryClient = useQueryClient();
@@ -36,6 +36,18 @@ export const useCreateCurrency = () => {
     mutationFn: (payload: AddCurrencyPayload) => currencyAPI.create(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin_currencies"] });
+    },
+  });
+};
+
+export const useAddExchangeRate = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["add_exchange_rate"],
+    mutationFn: (payload: any) => currencyAPI.add_exchange_rate(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["exchange_rates"] });
     },
   });
 };

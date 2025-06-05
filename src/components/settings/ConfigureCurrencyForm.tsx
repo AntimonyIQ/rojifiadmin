@@ -341,6 +341,12 @@ export default function ConfigureCurrencyForm({ data }: Props) {
 
   const handleSaveEditedCurrency = () => {
     const currencyFormData = {
+      name: editCurrencyName,
+      code: editCurrencyCode,
+      symbol: editCurrencySymbol,
+      country: editCurrencyCountry,
+      country_code: editCurrencyCountryCode,
+      decimal_place: editCurrencyDecimalPlaces,
       min_swap_amount: editCurrencyMinSwapAmount,
       max_swap_amount: editCurrencyMaxSwapAmount,
       min_transfer_amount: editCurrencyMinTransferAmount,
@@ -460,7 +466,6 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                         setEditCurrencyCode(e.target.value.toUpperCase())
                       }
                       className="w-full"
-                      readOnly
                       maxLength={3}
                       disabled={editCurrencyIsBaseCurrency} // Base currency code should not be edited
                     />
@@ -479,7 +484,7 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                       value={editCurrencyName}
                       onChange={(e) => setEditCurrencyName(e.target.value)}
                       className="w-full"
-                      readOnly
+                      
                     />
                   </div>
                 </div>
@@ -498,7 +503,7 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                       value={editCurrencySymbol}
                       onChange={(e) => setEditCurrencySymbol(e.target.value)}
                       className="w-full"
-                      readOnly
+                      
                       maxLength={3}
                     />
                   </div>
@@ -520,7 +525,7 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                         setEditCurrencyExchangeRate(parseFloat(e.target.value))
                       }
                       className="w-full"
-                      readOnly
+                      
                       disabled={editCurrencyIsBaseCurrency} // Base currency always has exchange rate 1
                     />
                     {/* <p className="text-xs text-gray-500">
@@ -543,7 +548,7 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                       value={editCurrencyCountry}
                       onChange={(e) => setEditCurrencyCountry(e.target.value)}
                       className="w-full"
-                      readOnly
+                      
                     />
                   </div>
 
@@ -563,7 +568,7 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                       }
                       className="w-full"
                       maxLength={2}
-                      readOnly
+                      
                     />
                   </div>
                 </div>
@@ -586,7 +591,7 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                       setEditCurrencyDecimalPlaces(parseInt(e.target.value))
                     }
                     className="w-full"
-                    readOnly
+                    
                   />
                   <p className="text-xs text-gray-500">
                     Number of decimal places to display (0-8)

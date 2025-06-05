@@ -1,16 +1,19 @@
 import { apiInstance } from "@/lib/apiInstance";
 import {
-  Transaction,
   TransactionChannelsProps,
+  TransactionResponse,
   TransactionStatusPayload,
   TransactionVolume,
 } from "@/types";
 
 export const transactionAPI = {
-  fetchAllTransactions: async (): Promise<Transaction[]> => {
-    const response = await apiInstance.get("/transaction"); // dont forget to pass page, limit and offset
+  fetchAllTransactions: async (): Promise<TransactionResponse> => {
+    const response = await apiInstance.get("/transaction");
 
-    return response.data.data;
+    return {
+      transactions: response.data.data,
+      metadata: response.data.metadata,
+    };
   },
   fetchUserTransactions: async (userId: string) => {
     const response = await apiInstance.get(
@@ -54,7 +57,9 @@ export const transactionAPI = {
   }: {
     channel: string;
   }): Promise<any> => {
-    const response = apiInstance.post("transaction/channel/create", {channel});
+    const response = apiInstance.post("transaction/channel/create", {
+      channel,
+    });
     console.log(
       "transaction channel creation data:",
       (await response).data.data
