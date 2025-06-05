@@ -3,10 +3,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "./use-toast";
 import { TransactionStatusPayload } from "@/types";
 
-export const useFetchTransactions = () => {
+export const useFetchTransactions = (page: number) => {
+  const limit = 10;
+  const offset = page === 1 ? (page - 1) * limit + 1 : page;
+
   return useQuery({
-    queryKey: ["transactions"],
-    queryFn: () => transactionAPI.fetchAllTransactions(),
+    queryKey: ["transactions", page],
+    queryFn: () => transactionAPI.fetchAllTransactions(offset),
     staleTime: 1000 * 60 * 1, // 1 minutes
   });
 };

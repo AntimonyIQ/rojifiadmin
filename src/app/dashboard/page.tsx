@@ -18,7 +18,7 @@ import {
 import { useFetchDashboardOverview } from "@/hooks/useStaff";
 
 export default function DashboardPage() {
-  const { data: transactions, isLoading } = useFetchTransactions();
+  const { data: transactions, isLoading } = useFetchTransactions(1);
   const { data: dashboardData, isLoading: statsLoading } =
     useFetchDashboardOverview();
 
@@ -92,7 +92,7 @@ export default function DashboardPage() {
 
       {/* Recent Transactions Table */}
       <RecentTransactionsTable
-        transactions={transactions || []}
+        transactions={transactions?.transactions || []}
         loading={isLoading}
       />
     </motion.div>

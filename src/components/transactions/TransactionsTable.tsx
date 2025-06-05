@@ -44,12 +44,20 @@ import { cn } from "@/lib/utils";
 interface TransactionsTableProps {
   transactions?: Transaction[];
   loading?: boolean;
+  total: number;
+  currentPage: number;
+  setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
 }
 
 export default function TransactionsTable({
   transactions = [],
   loading = false,
+  total,
+  currentPage,
+  setCurrentPage,
 }: TransactionsTableProps) {
+  console.log("total:", total);
+  // @ts-ignore
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [date, setDate] = useState<DateRange | undefined>(undefined);
@@ -114,6 +122,7 @@ export default function TransactionsTable({
     );
   });
 
+// @ts-ignore
   const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
   const paginatedTransactions = filteredTransactions.slice(
     (page - 1) * itemsPerPage,
@@ -135,17 +144,9 @@ export default function TransactionsTable({
     }
   };
 
-  const handlePreviousPage = () => {
-    if (page > 1) {
-      setPage(page - 1);
-    }
-  };
+ 
 
-  const handleNextPage = () => {
-    if (page < totalPages) {
-      setPage(page + 1);
-    }
-  };
+  
 
   const handleOpenDetails = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
@@ -585,9 +586,7 @@ export default function TransactionsTable({
                         </Badge>
                       </TableCell>
                       <TableCell className="px-6 py-4 whitespace-nowrap capitalize">
-                        
-                          {transaction.type}
-                       
+                        {transaction.type}
                       </TableCell>
                       <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {format(
@@ -615,35 +614,35 @@ export default function TransactionsTable({
               <div className="text-sm text-gray-700">
                 Showing{" "}
                 <span className="font-medium">
-                  {filteredTransactions.length > 0
-                    ? (page - 1) * itemsPerPage + 1
+                  {transactions.length > 0
+                    ? (currentPage - 1) * itemsPerPage + 1
                     : 0}
                 </span>{" "}
                 to{" "}
                 <span className="font-medium">
-                  {Math.min(page * itemsPerPage, filteredTransactions.length)}
+                  {Math.min(currentPage * itemsPerPage, total)}
                 </span>{" "}
-                of{" "}
-                <span className="font-medium">
-                  {filteredTransactions.length}
-                </span>{" "}
-                transactions
+                of <span className="font-medium">{total}</span> transactions
               </div>
+
               <div className="flex space-x-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handlePreviousPage}
-                  disabled={page === 1}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                  disabled={currentPage === 1}
                 >
                   <ChevronLeft className="h-4 w-4 mr-1" />
                   Previous
                 </Button>
+
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleNextPage}
-                  disabled={page >= totalPages}
+                  onClick={() => setCurrentPage((prev) => prev + 1)}
+                  disabled={currentPage >= Math.ceil(total / itemsPerPage)}
                 >
                   Next
                   <ChevronRight className="h-4 w-4 ml-1" />
