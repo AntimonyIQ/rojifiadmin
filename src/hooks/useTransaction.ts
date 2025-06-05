@@ -6,7 +6,7 @@ import { TransactionStatusPayload } from "@/types";
 export const useFetchTransactions = () => {
   return useQuery({
     queryKey: ["transactions"],
-    queryFn: transactionAPI.fetchAllTransactions,
+    queryFn: () => transactionAPI.fetchAllTransactions(),
     staleTime: 1000 * 60 * 1, // 1 minutes
   });
 };

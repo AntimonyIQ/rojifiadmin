@@ -20,4 +20,13 @@ export const useUpdatePaymentProcessor = () => {
   });
 };
 
+export const useAddProcessor = () => {
+  const queryClient = useQueryClient();
 
+  return useMutation({
+    mutationKey: ["add_payment_processor"],
+    mutationFn: (payload: any) => paymentAPI.create(payload),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["payment_processors"] }),
+  });
+};

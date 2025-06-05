@@ -34,13 +34,14 @@ const DEFAULT_FEE_CONFIG = {
     minimumFee: 0,
     percentage: 0,
     ranges: [],
+    fixedAmount:0
   },
 };
 
 const FEE_CONFIG_TYPES = [
   "percentage_max",
   "percentage_min_max",
-  "flat_fee",
+  "fixed",
   "flat_fee_and_percentage",
   "range",
   "percentage_min",
@@ -59,6 +60,7 @@ const TestFeeConfig = () => {
       feeAmount: 5,
       minimumFee: 10,
       maximumFee: 100,
+      fixedAmount:0,
     },
     tx_channel: "",
     currency: "",
@@ -99,9 +101,9 @@ const TestFeeConfig = () => {
           maximumFee: formData.config.maximumFee,
           feeAmount: formData.config.feeAmount,
         };
-      case "flat_fee":
+      case "fixed":
         return {
-          fixedAmount: formData.config.feeAmount,
+          fixedAmount: formData.config.fixedAmount,
         };
       case "flat_fee_and_percentage":
         return {
@@ -313,9 +315,9 @@ const ChannelFeeConfig = ({ currency, channel }: any) => {
           maximumFee: config.maximumFee,
           feeAmount: config.feeAmount,
         };
-      case "flat_fee":
+      case "fixed":
         return {
-          fixedAmount: config.feeAmount,
+          fixedAmount: config.fixedAmount,
         };
       case "flat_fee_and_percentage":
         return {
@@ -364,7 +366,7 @@ const ChannelFeeConfig = ({ currency, channel }: any) => {
 
     const getTypeName = (type: string): string => {
       switch (type) {
-        case "flat_fee":
+        case "fixed":
           return "fixed";
         case "range":
           return "fixed_by_amount";
@@ -572,13 +574,13 @@ const ChannelFeeConfig = ({ currency, channel }: any) => {
             </>
           )}
 
-          {selectedConfigType === "flat_fee" && (
+          {selectedConfigType === "fixed" && (
             <div>
               <Label>Flat Fee</Label>
               <Input
                 type="number"
-                value={config.feeAmount || 0}
-                onChange={(e) => handleChange("feeAmount", e.target.value)}
+                value={config.fixedAmount || 0}
+                onChange={(e) => handleChange("fixedAmount", e.target.value)}
               />
             </div>
           )}

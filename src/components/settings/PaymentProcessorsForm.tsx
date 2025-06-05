@@ -45,13 +45,17 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 // @ts-ignore
-import { CheckCircleIcon, InfoIcon } from "lucide-react";
+import { CheckCircleIcon, InfoIcon, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { saveGeneralSettings } from "@/services/api";
 import { Currency, ProcessorChannelType } from "@/types";
-import { useUpdatePaymentProcessor } from "@/hooks/usePayments";
+import {
+  useAddProcessor,
+  useUpdatePaymentProcessor,
+} from "@/hooks/usePayments";
 import { useFetchAdminCurrencies } from "@/hooks/useCurrency";
+import { Input } from "../ui/input";
 
 // Currency schema
 const currencySchema = z.object({
@@ -94,6 +98,13 @@ export default function PaymentProcessorsForm({ data }: Props) {
 
   const { mutate: updateProcessor, isPending: isUpdateProcessorPending } =
     useUpdatePaymentProcessor();
+  const {
+    mutate: addNewPaymentProcessor,
+    isPending: isAddingProcessorPending,
+  } = useAddProcessor();
+
+  const [processorName, setProcessorName] = useState("");
+  const [supportedCurrencies, setSupportedCurrencies] = useState<string[]>([]);
 
   const handleUpdateProcessor = ({
     id,
@@ -147,6 +158,8 @@ export default function PaymentProcessorsForm({ data }: Props) {
   const [checkedProcessorCurrencies, setCheckedProcessorCurrencies] = useState<
     string[]
   >([]);
+  const [addProcessorDialogOpen, setAddProcessorDialogOpen] =
+    useState<boolean>(false);
 
   const defaultValues: FormValues = {
     // @ts-ignore
@@ -165,7 +178,6 @@ export default function PaymentProcessorsForm({ data }: Props) {
               ...currency,
               enabled:
                 currency.code === "NGN" ||
-                currency.code === "USD" ||
                 processor.supported_currencies.some(
                   (i) => i.code === currency.code
                 ),
@@ -267,6 +279,49 @@ export default function PaymentProcessorsForm({ data }: Props) {
     setIsDeleteDialogOpen(true);
   };
 
+  const addProcessorFn = () => {
+    const data = {
+      name: processorName,
+      currencies: supportedCurrencies,
+    };
+
+    addNewPaymentProcessor(data, {
+      onSuccess: (response: any) => {
+        console.log(response);
+        setAddProcessorDialogOpen(false);
+
+        toast({
+          title: "Payment processor added",
+          description: `Payment processor has been added successfully`,
+        });
+        setProcessorName("");
+        setSupportedCurrencies([]);
+      },
+      onError: (error: any) => {
+        setProcessorName("");
+        setSupportedCurrencies([]);
+        toast({
+          title: "Error",
+          description:
+            error?.response?.data?.message || "Failed to add exchange rate",
+          variant: "destructive",
+        });
+      },
+    });
+  };
+
+  const toggleCurrency = (id: string) => {
+    setSupportedCurrencies((prev: any) => {
+      const isSelected = prev.includes(id);
+      const updated = isSelected
+        ? prev.filter((cid: any) => cid !== id)
+        : [...prev, id];
+
+      // console.log("Selected Currency IDs:", updated);
+      return updated;
+    });
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -288,6 +343,98 @@ export default function PaymentProcessorsForm({ data }: Props) {
               <CheckCircleIcon className="h-3.5 w-3.5 mr-1" />
               Configuration
             </Badge>
+          </div>
+
+          {/* add processor dialog */}
+          <div className="flex justify-end">
+            <Dialog
+              open={addProcessorDialogOpen}
+              onOpenChange={setAddProcessorDialogOpen}
+            >
+              <DialogTrigger asChild>
+                <Button className="gap-2 bg-blue-600 hover:bg-blue-700 text-white">
+                  <Plus className="h-4 w-4" />
+                  Add Payment Processor
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Add New Payment Processor</DialogTitle>
+                  <DialogDescription>
+                    Add new payment processor and configure supported
+                    currencies.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-1 gap-3 mb-2">
+                    <div className="">
+                      <Input
+                        value={processorName}
+                        onChange={(e) => setProcessorName(e.target.value)}
+                        type="text"
+                        placeholder="Processor name"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <p className="text-sm text-gray-700">
+                        Select supported currencies
+                      </p>
+                      <div className="flex items-start gap-4 flex-wrap">
+                        {currencyList?.map((currency) => (
+                          <div
+                            key={currency.id}
+                            className="flex items-center space-x-2"
+                          >
+                            <Checkbox
+                              id={currency.id}
+                              checked={supportedCurrencies?.includes(
+                                currency.id
+                              )}
+                              onCheckedChange={() =>
+                                toggleCurrency(currency.id)
+                              }
+                            />
+                            <label
+                              htmlFor={currency.id}
+                              className="text-sm font-medium"
+                            >
+                              {currency.name}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setAddProcessorDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    disabled={
+                      isAddingProcessorPending ||
+                      !processorName ||
+                      supportedCurrencies.length < 1
+                    }
+                    onClick={() => {
+                      addProcessorFn();
+                    }}
+                  >
+                    {isAddingProcessorPending
+                      ? " Adding processor..."
+                      : " Add processor"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
 
           <div className="space-y-4">

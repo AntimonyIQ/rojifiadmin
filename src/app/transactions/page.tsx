@@ -42,8 +42,10 @@ const walletData = {
 };
 
 export default function TransactionsPage() {
+  // @ts-ignore
   const { data: transactions, isLoading } = useFetchTransactions();
   const { data: walletOverview } = useFetchWalletOverview();
+
 
   // Initialize the embla carousel
   // @ts-ignore
@@ -109,7 +111,7 @@ export default function TransactionsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-500">
-                    Total Deposits
+                    Total Credit
                   </p>
                   <p className="text-2xl font-bold text-green-600">
                     {walletOverview?.total_deposit}
@@ -125,7 +127,7 @@ export default function TransactionsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-500">
-                    Total Withdrawals
+                    Total Debit
                   </p>
                   <p className="text-2xl font-bold text-blue-600">
                     {walletOverview?.total_withdraw}
@@ -221,7 +223,7 @@ export default function TransactionsPage() {
 
       {/* Transactions Table */}
       <TransactionsTable
-        transactions={transactions || []}
+        transactions={transactions?.transactions || []}
         loading={isLoading}
       />
     </motion.div>

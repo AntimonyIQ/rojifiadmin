@@ -16,8 +16,16 @@ export interface User {
   joined_at: string;
 }
 
-
 // Transaction types
+export interface TransactionResponse {
+  transactions: Transaction[];
+  metadata: {
+    page: any;
+    limit: any;
+    total: any;
+  };
+}
+
 export interface Transaction {
   id: any; // string
   created_at: string;

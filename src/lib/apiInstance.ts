@@ -1,6 +1,8 @@
+import { useLogout } from "@/hooks/useLogin";
+import { useAuthStore } from "@/store/authStore";
 import axios from "axios";
 
-export const apiInstance = axios.create({
+const apiInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   // withCredentials: true,
 });
@@ -13,3 +15,20 @@ apiInstance.interceptors.request.use((config) => {
 
   return config;
 });
+
+apiInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      console.log("token expired:", error.response.status);
+
+      localStorage.removeItem("rojifi_admin_token");
+      useAuthStore.getState().clearAuth();
+
+      window.location.href = "/";
+    }
+    return Promise.reject(error);
+  }
+);
+
+export { apiInstance };
