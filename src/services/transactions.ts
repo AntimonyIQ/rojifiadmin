@@ -6,9 +6,13 @@ import {
   TransactionVolume,
 } from "@/types";
 
+const LIMIT = 10;
+
 export const transactionAPI = {
-  fetchAllTransactions: async (): Promise<TransactionResponse> => {
-    const response = await apiInstance.get("/transaction");
+  fetchAllTransactions: async (offset: number): Promise<TransactionResponse> => {
+    const response = await apiInstance.get("/transaction", {
+      params: { limit: LIMIT, offset },
+    });
 
     return {
       transactions: response.data.data,

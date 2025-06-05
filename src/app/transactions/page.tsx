@@ -24,6 +24,7 @@ import { formatCurrency } from "@/lib/utils";
 import useEmblaCarousel from "embla-carousel-react";
 import { useFetchTransactions } from "@/hooks/useTransaction";
 import { useFetchWalletOverview } from "@/hooks/useStaff";
+import {  useState } from "react";
 
 // Mock wallet data - in a real app, this would come from an API
  // @ts-ignore
@@ -43,8 +44,13 @@ const walletData = {
 
 export default function TransactionsPage() {
   // @ts-ignore
-  const { data: transactions, isLoading } = useFetchTransactions();
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const { data: transactions, isLoading } = useFetchTransactions(currentPage);
   const { data: walletOverview } = useFetchWalletOverview();
+
+  // useEffect(() => {
+  //   localStorage.setItem("currentPage", currentPage.toString());
+  // }, [currentPage]);
 
 
   // Initialize the embla carousel
@@ -225,6 +231,9 @@ export default function TransactionsPage() {
       <TransactionsTable
         transactions={transactions?.transactions || []}
         loading={isLoading}
+        total={transactions?.metadata.total}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
       />
     </motion.div>
   );
