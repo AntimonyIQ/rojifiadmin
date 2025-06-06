@@ -34,7 +34,7 @@ const DEFAULT_FEE_CONFIG = {
     minimumFee: 0,
     percentage: 0,
     ranges: [],
-    fixedAmount:0
+    fixedAmount: 0,
   },
 };
 
@@ -60,7 +60,7 @@ const TestFeeConfig = () => {
       feeAmount: 5,
       minimumFee: 10,
       maximumFee: 100,
-      fixedAmount:0,
+      fixedAmount: 0,
     },
     tx_channel: "",
     currency: "",
@@ -209,7 +209,7 @@ const TestFeeConfig = () => {
       </div>
 
       {/* add the create fee config button here with the dialog containing the form for creating a config */}
-      
+
       {/* dialog ends here */}
       <Accordion type="multiple" className="w-full px-6">
         {structuredData.map((currency) => (

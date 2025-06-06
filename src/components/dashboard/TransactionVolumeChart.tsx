@@ -107,12 +107,13 @@ export default function TransactionVolumeChart() {
               <XAxis
                 dataKey="date"
                 tickFormatter={(date) => format(new Date(date), "MMM d")}
-                stroke="#9ca3af"
+                stroke="#000"
                 fontSize={12}
               />
+              {/* 9ca3af */}
               <YAxis
-                tickFormatter={(value) => value.toLocaleString()}
-                stroke="#9ca3af"
+                tickFormatter={(value) => "₦" + value.toLocaleString()}
+                stroke="#000"
                 fontSize={12}
               />
               <Tooltip content={<CustomTooltip />} />

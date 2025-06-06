@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
- // @ts-ignore
+// @ts-ignore
 import { Switch } from "@/components/ui/switch";
 import { CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -456,7 +456,7 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                       htmlFor="edit-currency-code"
                       className="text-sm font-medium text-gray-700"
                     >
-                      Currency Code <span className="text-red-500">*</span>
+                      Currency Code
                     </Label>
                     <Input
                       id="edit-currency-code"
@@ -476,7 +476,7 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                       htmlFor="edit-currency-name"
                       className="text-sm font-medium text-gray-700"
                     >
-                      Currency Name <span className="text-red-500">*</span>
+                      Currency Name
                     </Label>
                     <Input
                       id="edit-currency-name"
@@ -484,7 +484,6 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                       value={editCurrencyName}
                       onChange={(e) => setEditCurrencyName(e.target.value)}
                       className="w-full"
-                      
                     />
                   </div>
                 </div>
@@ -495,7 +494,7 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                       htmlFor="edit-currency-symbol"
                       className="text-sm font-medium text-gray-700"
                     >
-                      Currency Symbol <span className="text-red-500">*</span>
+                      Currency Symbol
                     </Label>
                     <Input
                       id="edit-currency-symbol"
@@ -503,7 +502,6 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                       value={editCurrencySymbol}
                       onChange={(e) => setEditCurrencySymbol(e.target.value)}
                       className="w-full"
-                      
                       maxLength={3}
                     />
                   </div>
@@ -513,7 +511,7 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                       htmlFor="edit-exchange-rate"
                       className="text-sm font-medium text-gray-700"
                     >
-                      Exchange Rate <span className="text-red-500">*</span>
+                      Exchange Rate
                     </Label>
                     <Input
                       id="edit-exchange-rate"
@@ -525,7 +523,6 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                         setEditCurrencyExchangeRate(parseFloat(e.target.value))
                       }
                       className="w-full"
-                      
                       disabled={editCurrencyIsBaseCurrency} // Base currency always has exchange rate 1
                     />
                     {/* <p className="text-xs text-gray-500">
@@ -540,7 +537,7 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                       htmlFor="edit-country"
                       className="text-sm font-medium text-gray-700"
                     >
-                      Country <span className="text-red-500">*</span>
+                      Country
                     </Label>
                     <Input
                       id="edit-country"
@@ -548,7 +545,6 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                       value={editCurrencyCountry}
                       onChange={(e) => setEditCurrencyCountry(e.target.value)}
                       className="w-full"
-                      
                     />
                   </div>
 
@@ -557,7 +553,7 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                       htmlFor="edit-country-code"
                       className="text-sm font-medium text-gray-700"
                     >
-                      Country Code <span className="text-red-500">*</span>
+                      Country Code
                     </Label>
                     <Input
                       id="edit-country-code"
@@ -568,7 +564,6 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                       }
                       className="w-full"
                       maxLength={2}
-                      
                     />
                   </div>
                 </div>
@@ -578,7 +573,7 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                     htmlFor="edit-decimal-places"
                     className="text-sm font-medium text-gray-700"
                   >
-                    Decimal Places <span className="text-red-500">*</span>
+                    Decimal Places
                   </Label>
                   <Input
                     id="edit-decimal-places"
@@ -591,7 +586,6 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                       setEditCurrencyDecimalPlaces(parseInt(e.target.value))
                     }
                     className="w-full"
-                    
                   />
                   <p className="text-xs text-gray-500">
                     Number of decimal places to display (0-8)
@@ -609,7 +603,7 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                         htmlFor="edit-min-swap"
                         className="text-sm font-medium text-gray-700"
                       >
-                        Min Swap Amount <span className="text-red-500">*</span>
+                        Min Swap Amount
                       </Label>
                       <Input
                         id="edit-min-swap"
@@ -631,7 +625,7 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                         htmlFor="edit-max-swap"
                         className="text-sm font-medium text-gray-700"
                       >
-                        Max Swap Amount <span className="text-red-500">*</span>
+                        Max Swap Amount
                       </Label>
                       <Input
                         id="edit-max-swap"
@@ -656,7 +650,6 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                         className="text-sm font-medium text-gray-700"
                       >
                         Min Transfer Amount{" "}
-                        <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         id="edit-min-transfer"
@@ -679,7 +672,6 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                         className="text-sm font-medium text-gray-700"
                       >
                         Max Transfer Amount{" "}
-                        <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         id="edit-max-transfer"
@@ -750,10 +742,10 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                   type="button"
                   onClick={handleSaveEditedCurrency}
                   disabled={
-                    editCurrencyMinSwapAmount < 0 ||
-                    editCurrencyMaxSwapAmount <= 0 ||
-                    editCurrencyMinTransferAmount < 0 ||
-                    editCurrencyMaxTransferAmount <= 0 ||
+                    // editCurrencyMinSwapAmount < 0 ||
+                    // editCurrencyMaxSwapAmount <= 0 ||
+                    // editCurrencyMinTransferAmount < 0 ||
+                    // editCurrencyMaxTransferAmount <= 0 ||
                     isEditCurrencyPending
                   }
                 >
