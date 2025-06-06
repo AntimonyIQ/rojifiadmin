@@ -4,7 +4,6 @@ import TransactionsTable from "@/components/transactions/TransactionsTable";
 import { useQuery } from "@tanstack/react-query";
 // @ts-ignore
 import { fetchTransactions } from "@/services/api";
-import { LoadingPage } from "@/components/ui/loading-spinner";
 import {
   Card,
   CardContent,
@@ -24,10 +23,19 @@ import { formatCurrency } from "@/lib/utils";
 import useEmblaCarousel from "embla-carousel-react";
 import { useFetchTransactions } from "@/hooks/useTransaction";
 import { useFetchWalletOverview } from "@/hooks/useStaff";
-import {  useState } from "react";
+import { useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 // Mock wallet data - in a real app, this would come from an API
- // @ts-ignore
+// @ts-ignore
 const walletData = {
   totalBalance: 1250430.75,
   totalDeposits: 2156742.5,
@@ -52,7 +60,6 @@ export default function TransactionsPage() {
   //   localStorage.setItem("currentPage", currentPage.toString());
   // }, [currentPage]);
 
-
   // Initialize the embla carousel
   // @ts-ignore
   const [emblaRef, emblaApi] = useEmblaCarousel({
@@ -73,7 +80,118 @@ export default function TransactionsPage() {
   };
 
   if (isLoading && !transactions) {
-    return <LoadingPage />;
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xl font-semibold flex items-center gap-2">
+              <Skeleton className="h-5 w-5 rounded-md" />
+              <Skeleton className="h-5 w-40" />
+            </CardTitle>
+            <CardDescription>
+              <Skeleton className="h-4 w-60 mt-2" />
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[...Array(3)].map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm space-y-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-6 w-32" />
+                    </div>
+                    <Skeleton className="h-12 w-12 rounded-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="px-6 py-5 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-8 w-32" />
+              <div className="flex gap-2">
+                <Skeleton className="h-10 w-64" />
+                <Skeleton className="h-10 w-10" />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>
+                    <Skeleton className="h-4 w-10" />
+                  </TableHead>
+                  <TableHead>
+                    <Skeleton className="h-4 w-20" />
+                  </TableHead>
+                  <TableHead>
+                    <Skeleton className="h-4 w-20" />
+                  </TableHead>
+                  <TableHead>
+                    <Skeleton className="h-4 w-20" />
+                  </TableHead>
+                  <TableHead>
+                    <Skeleton className="h-4 w-20" />
+                  </TableHead>
+                  <TableHead>
+                    <Skeleton className="h-4 w-10" />
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell>
+                      <Skeleton className="h-4 w-10" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <Skeleton className="h-8 w-8 rounded-full" />
+                        <div className="ml-3">
+                          <Skeleton className="h-4 w-24" />
+                          <Skeleton className="h-3 w-32 mt-1" />
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-6 w-16 rounded-full" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-end">
+                        <Skeleton className="h-8 w-16" />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <div className="px-6 py-4 border-t border-gray-200">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-4 w-48" />
+                <div className="flex space-x-2">
+                  <Skeleton className="h-8 w-24" />
+                  <Skeleton className="h-8 w-24" />
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -228,13 +346,14 @@ export default function TransactionsPage() {
       </Card> */}
 
       {/* Transactions Table */}
-      <TransactionsTable
+      <TransactionsTable />
+      {/* <TransactionsTable
         transactions={transactions?.transactions || []}
         loading={isLoading}
         total={transactions?.metadata.total}
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
-      />
+      /> */}
     </motion.div>
   );
 }

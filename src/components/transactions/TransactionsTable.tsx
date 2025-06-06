@@ -40,23 +40,15 @@ import { Separator } from "@/components/ui/separator";
 import { DateRange } from "react-day-picker";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { useFetchTransactions } from "@/hooks/useTransaction";
 
-interface TransactionsTableProps {
-  transactions?: Transaction[];
-  loading?: boolean;
-  total: number;
-  currentPage: number;
-  setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
-}
-
-export default function TransactionsTable({
-  transactions = [],
-  loading = false,
-  total,
-  currentPage,
-  setCurrentPage,
-}: TransactionsTableProps) {
-  console.log("total:", total);
+export default function TransactionsTable() {
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const { data: transactionData, isLoading: loading } =
+    useFetchTransactions(currentPage);
+  // console.log("total:", total);
+  const transactions = transactionData?.transactions;
+  const total = transactionData?.metadata.total;
   // @ts-ignore
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -74,7 +66,7 @@ export default function TransactionsTable({
   const currencies = ["NGN", "USD", "EUR", "GBP", "KES", "GHS"];
 
   // Filter transactions based on search and filters
-  const filteredTransactions = transactions.filter((transaction) => {
+  const filteredTransactions = transactions?.filter((transaction) => {
     // Search filter
     const matchesSearch =
       search === "" ||
@@ -122,9 +114,9 @@ export default function TransactionsTable({
     );
   });
 
-// @ts-ignore
-  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
-  const paginatedTransactions = filteredTransactions.slice(
+  // @ts-ignore
+  const totalPages = Math.ceil(filteredTransactions?.length / itemsPerPage);
+  const paginatedTransactions = filteredTransactions?.slice(
     (page - 1) * itemsPerPage,
     page * itemsPerPage
   );
@@ -143,10 +135,6 @@ export default function TransactionsTable({
         return "bg-blue-100 text-blue-800";
     }
   };
-
- 
-
-  
 
   const handleOpenDetails = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
@@ -531,7 +519,7 @@ export default function TransactionsTable({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedTransactions.length === 0 ? (
+                {paginatedTransactions?.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={6}
@@ -541,7 +529,7 @@ export default function TransactionsTable({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  paginatedTransactions.map((transaction) => (
+                  paginatedTransactions?.map((transaction) => (
                     <TableRow key={transaction.id}>
                       <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {transaction.reference}
@@ -614,7 +602,7 @@ export default function TransactionsTable({
               <div className="text-sm text-gray-700">
                 Showing{" "}
                 <span className="font-medium">
-                  {transactions.length > 0
+                  {transactions && transactions.length > 0
                     ? (currentPage - 1) * itemsPerPage + 1
                     : 0}
                 </span>{" "}
