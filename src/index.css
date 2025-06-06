@@ -1,4 +1,5 @@
-@import "./fonts.css";
+@import url("https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&display=swap");
+/* @import "./fonts.css"; */
 
 @tailwind base;
 @tailwind components;
@@ -52,8 +53,9 @@
   }
 
   body {
-    font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, system-ui,
-      sans-serif;
+    /* font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, system-ui,
+      sans-serif; */
+    font-family: "Figtree", sans-serif;
     @apply antialiased bg-gray-50 text-foreground;
   }
 }
