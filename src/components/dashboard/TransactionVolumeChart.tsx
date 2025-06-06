@@ -37,7 +37,7 @@ const CustomTooltip = ({
           {format(new Date(label), "MMM d, yyyy")}
         </p>
         <p className="text-sm font-medium text-secondary text-black">
-          Transactions: ₦{payload[0].value?.toLocaleString()}
+          Transactions: ₦{payload[0].value?.toLocaleString()} 
         </p>
       </div>
     );
