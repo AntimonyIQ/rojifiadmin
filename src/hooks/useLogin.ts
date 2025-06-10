@@ -8,9 +8,16 @@ export const useLogin = () => {
 
   return useMutation({
     mutationFn: authAPI.login,
-    onSuccess: (data) => {
+    onSuccess: (data:any) => {
       //   console.log("login response data:", data);
-      setAuth(data.data.token, data.data.token);
+      const userData: any = {
+        name: data.data.name,
+        email: data.data.email,
+      };
+
+      // console.log('user data:', userData)
+      // console.log('user token:', data.data.token)
+      setAuth(userData, data.data.token);
     },
     onError: (error: any) => {
       const message = extractErrorMessage(error);
@@ -24,7 +31,7 @@ export const useLogout = () => {
   const setAuth = useAuthStore((state) => state.setAuth);
   // simulate the logout using clearAuth on useAuthStore
   const clearAuth = useAuthStore((state) => state.clearAuth);
-  //  return the clearAuth function 
-  
-  return clearAuth
+  //  return the clearAuth function
+
+  return clearAuth;
 };

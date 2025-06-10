@@ -29,18 +29,19 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { DateRange } from "react-day-picker";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { useFetchTransactions } from "@/hooks/useTransaction";
+import { useFetchAdminCurrencies } from "@/hooks/useCurrency";
 
 export default function TransactionsTable() {
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -62,8 +63,10 @@ export default function TransactionsTable() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const itemsPerPage = 10;
 
+  const { data: currencyList } = useFetchAdminCurrencies();
+
   // Available currencies
-  const currencies = ["NGN", "USD", "EUR", "GBP", "KES", "GHS"];
+  const currencies = currencyList?.map((i: any) => i.code);
 
   // Filter transactions based on search and filters
   const filteredTransactions = transactions?.filter((transaction) => {
@@ -298,7 +301,7 @@ export default function TransactionsTable() {
                         />
                       </div>
                     </div>
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                       <p className="text-sm font-medium">Status</p>
                       <Select
                         value={statusFilter}
@@ -315,8 +318,8 @@ export default function TransactionsTable() {
                           <SelectItem value="failed">Failed</SelectItem>
                         </SelectContent>
                       </Select>
-                    </div>
-                    <div className="space-y-2">
+                    </div> */}
+                    {/* <div className="space-y-2">
                       <p className="text-sm font-medium">Currency</p>
                       <Select
                         value={currencyFilter}
@@ -334,8 +337,8 @@ export default function TransactionsTable() {
                           ))}
                         </SelectContent>
                       </Select>
-                    </div>
-                    <div className="space-y-2">
+                    </div> */}
+                    {/* <div className="space-y-2">
                       <p className="text-sm font-medium">Amount</p>
                       <Select
                         value={amountFilter}
@@ -357,7 +360,7 @@ export default function TransactionsTable() {
                           </SelectItem>
                         </SelectContent>
                       </Select>
-                    </div>
+                    </div> */}
                     <Separator />
                     <div className="flex justify-between">
                       <Button
@@ -425,7 +428,7 @@ export default function TransactionsTable() {
               >
                 All
               </Badge>
-              {currencies.map((currency) => (
+              {currencies?.map((currency) => (
                 <Badge
                   key={currency}
                   variant={currencyFilter === currency ? "default" : "outline"}

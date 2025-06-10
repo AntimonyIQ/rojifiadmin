@@ -265,9 +265,9 @@ export default function UsersTable({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {/* <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     ID
-                  </TableHead>
+                  </TableHead> */}
                   <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     User
                   </TableHead>
@@ -298,9 +298,9 @@ export default function UsersTable({
                 ) : (
                   paginatedUsers.map((user) => (
                     <TableRow key={user.id}>
-                      <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {/* <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {user.id}
-                      </TableCell>
+                      </TableCell> */}
                       <TableCell className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div

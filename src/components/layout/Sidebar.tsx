@@ -87,6 +87,8 @@ export default function Sidebar() {
   const { logout, user } = useAuthState();
   const { clearAuth } = useAuthStore();
 
+  // console.log('user:', user)
+
   const handleLoguut = () => {
     clearAuth();
   };
