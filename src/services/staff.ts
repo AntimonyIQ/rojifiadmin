@@ -34,12 +34,20 @@ export const staffAPI = {
   },
   staffOverview: async (): Promise<OverviewProps> => {
     const response = await apiInstance.get("/staff/dashboard");
-
     return response.data.data;
   },
   walletOverview: async (): Promise<WalletOverview> => {
     const response = await apiInstance.get("/wallet/overview/all");
-
+    return response.data.data;
+  },
+  walletOverviewAllCurrencies: async (): Promise<any> => {
+    const response = await apiInstance.get("/wallet/overview/currency/all");
+    // console.log("wallet overview all currencies:", response.data.data);
+    return response.data.data;
+  },
+  processorBalance: async (): Promise<any> => {
+    const response = await apiInstance.get("/payment/processor/balance");
+    // console.log("all processor balance:", response.data.data);
     return response.data.data;
   },
 };

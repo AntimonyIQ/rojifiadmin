@@ -11,11 +11,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, Search, Filter } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, Filter, SquarePen } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import UserDetailsDialog from "./UserDetailsDialog";
 import { User } from "@/types";
 import { format } from "date-fns";
+import UserEditDialog from "./UserEditDialog";
+import UserDeleteDialog from "./UserDeleteDialog";
 
 interface UsersTableProps {
   users?: User[];
@@ -31,6 +33,8 @@ export default function UsersTable({
   const [statusFilter, setStatusFilter] = useState<string>(""); // "" = All, "active", "inactive"
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const itemsPerPage = 10;
 
   // Filter users based on search and status
@@ -87,6 +91,17 @@ export default function UsersTable({
   const handleOpenDetails = (user: User) => {
     setSelectedUser(user);
     setDetailsOpen(true);
+  };
+
+  const handleOpenEditUser = (user: User) => {
+    setSelectedUser(user);
+    setEditModalOpen(true);
+  };
+
+  // @ts-ignore
+  const handleOpenDeleteUser = (user: User) => {
+    setSelectedUser(user);
+    setDeleteModalOpen(true);
   };
 
   const getInitials = (name: string) => {
@@ -283,6 +298,7 @@ export default function UsersTable({
                   <TableHead className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </TableHead>
+                  <TableHead className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -344,6 +360,22 @@ export default function UsersTable({
                           View
                         </Button>
                       </TableCell>
+                      <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <Button
+                          variant="ghost"
+                          className="text-primary hover:text-primary/80"
+                          onClick={() => handleOpenEditUser(user)}
+                        >
+                          <SquarePen />
+                        </Button>
+                        {/* <Button
+                          variant="ghost"
+                          className="text-red-600 hover:text-red-500/80"
+                          onClick={() => handleOpenDeleteUser(user)}
+                        >
+                          <Trash />
+                        </Button> */}
+                      </TableCell>
                     </TableRow>
                   ))
                 )}
@@ -393,6 +425,20 @@ export default function UsersTable({
         user={selectedUser}
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
+      />
+
+      {/* user edit dialog */}
+      <UserEditDialog
+        user={selectedUser}
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+      />
+
+      {/* user delete dialog */}
+      <UserDeleteDialog
+        user={selectedUser}
+        open={deleteModalOpen}
+        onOpenChange={setDeleteModalOpen}
       />
     </>
   );

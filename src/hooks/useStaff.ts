@@ -23,6 +23,20 @@ export const useFetchWalletOverview = () => {
   });
 };
 
+export const useFetchAllCurrenciesWalletOverview = () => {
+  return useQuery({
+    queryKey: ["all_currencies_wallet_overview"],
+    queryFn: staffAPI.walletOverviewAllCurrencies,
+  });
+};
+
+export const useFetchAllProcessorBalance = () => {
+  return useQuery({
+    queryKey: ["all_processor_balance"],
+    queryFn: staffAPI.processorBalance,
+  });
+};
+
 export const useCreateStaff = () => {
   const queryClient = useQueryClient();
 
