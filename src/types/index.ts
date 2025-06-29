@@ -86,10 +86,10 @@ export interface Role {
 }
 
 export interface RolePayload {
-  id: string;
+  id?: string;
   name: string;
   description: string;
-  permissions: Permission[];
+  permissions: any;
 }
 
 export interface Staff {

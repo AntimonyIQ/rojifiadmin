@@ -14,6 +14,8 @@ import { AlertCircle, User as UserIcon, CreditCard, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useFetchUserTransactions } from "@/hooks/useTransaction";
+import KycForm from "./Kycform";
+import WalletsComponent from "./WalletComponent";
 
 interface UserDetailsDialogProps {
   user: User | null;
@@ -72,7 +74,7 @@ export default function UserDetailsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-auto hide-scrollbar">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
             User Details
@@ -98,9 +100,11 @@ export default function UserDetailsDialog({
         </div>
 
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="w-full grid grid-cols-2">
+          <TabsList className="w-full grid grid-cols-4">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="transactions">Transactions</TabsTrigger>
+            <TabsTrigger value="kyc">Kyc</TabsTrigger>
+            <TabsTrigger value="wallets">Wallets</TabsTrigger>
             {/* <TabsTrigger value="activity">Activity</TabsTrigger> */}
           </TabsList>
           <TabsContent value="profile" className="space-y-4 mt-4">
@@ -221,6 +225,12 @@ export default function UserDetailsDialog({
                 </div>
               )} */}
             </div>
+          </TabsContent>
+          <TabsContent value="wallets">
+            <WalletsComponent userId={user.id} />
+          </TabsContent>
+          <TabsContent value="kyc">
+            <KycForm userId={user.id} />
           </TabsContent>
         </Tabs>
 

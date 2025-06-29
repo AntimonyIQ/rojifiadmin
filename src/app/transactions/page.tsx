@@ -17,12 +17,17 @@ import {
   ArrowUpFromLine,
   // @ts-ignore
   LockIcon,
+  ChevronsRight,
+  TrendingUp,
 } from "lucide-react";
 // @ts-ignore
 import { formatCurrency } from "@/lib/utils";
-import useEmblaCarousel from "embla-carousel-react";
 import { useFetchTransactions } from "@/hooks/useTransaction";
-import { useFetchWalletOverview } from "@/hooks/useStaff";
+import {
+  useFetchAllCurrenciesWalletOverview,
+  useFetchAllProcessorBalance,
+  useFetchWalletOverview,
+} from "@/hooks/useStaff";
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -33,6 +38,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 // Mock wallet data - in a real app, this would come from an API
 // @ts-ignore
@@ -50,34 +63,76 @@ const walletData = {
   ],
 };
 
+type Processor = {
+  processor: string;
+  data: {
+    currency: string;
+    balance: number;
+  }[];
+};
+
+// processor balances component
+function ProcessorBalanceGrid() {
+  const { data: processorBalances } = useFetchAllProcessorBalance();
+  const [selectedProcessor, setSelectedProcessor] = useState<Processor | null>(
+    null
+  );
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      {processorBalances?.map((item: Processor) => (
+        <Card
+          key={item.processor}
+          onClick={() => setSelectedProcessor(item)}
+          className="p-6 cursor-pointer shadow-md hover:shadow-lg transition"
+        >
+          <div className="text-center">
+            {/* <p className="text-sm text-gray-500">Processor</p> */}
+            <h3 className="text-xl font-semibold capitalize">
+              {item.processor}
+            </h3>
+          </div>
+        </Card>
+      ))}
+
+      {/* Dialog */}
+      <Dialog
+        open={!!selectedProcessor}
+        onOpenChange={() => setSelectedProcessor(null)}
+      >
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto hide-scrollbar">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedProcessor?.processor.toUpperCase()} Balances
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            {selectedProcessor?.data.map((currencyInfo) => (
+              <div
+                key={currencyInfo.currency}
+                className="flex items-center justify-between border p-3 rounded-md"
+              >
+                <p className="text-sm text-gray-600">{currencyInfo.currency}</p>
+                <p className="font-semibold">
+                  {currencyInfo.balance.toLocaleString()}
+                </p>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
 export default function TransactionsPage() {
   // @ts-ignore
   const [currentPage, setCurrentPage] = useState<number>(1);
   const { data: transactions, isLoading } = useFetchTransactions(currentPage);
   const { data: walletOverview } = useFetchWalletOverview();
-
-  // useEffect(() => {
-  //   localStorage.setItem("currentPage", currentPage.toString());
-  // }, [currentPage]);
-
-  // Initialize the embla carousel
-  // @ts-ignore
-  const [emblaRef, emblaApi] = useEmblaCarousel({
-    align: "start",
-    loop: false,
-    dragFree: true,
-  });
-
-  // Controls for the carousel
-  // @ts-ignore
-  const scrollPrev = () => {
-    if (emblaApi) emblaApi.scrollPrev();
-  };
-
-  // @ts-ignore
-  const scrollNext = () => {
-    if (emblaApi) emblaApi.scrollNext();
-  };
+  const { data: allCurrenciesWalletOverview } =
+    useFetchAllCurrenciesWalletOverview();
 
   if (isLoading && !transactions) {
     return (
@@ -205,13 +260,17 @@ export default function TransactionsPage() {
       {/* Wallet Overview Card */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-xl font-semibold flex items-center gap-2">
-            <Wallet className="h-5 w-5 text-primary" />
-            Wallet Overview
-          </CardTitle>
-          <CardDescription>
-            Summary of wallet balances and transactions
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-xl font-semibold flex items-center gap-2">
+                <Wallet className="h-5 w-5 text-primary" />
+                Wallet Overview
+              </CardTitle>
+              <CardDescription>
+                Summary of wallet balances and transactions
+              </CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -279,11 +338,19 @@ export default function TransactionsPage() {
               </div>
             </div> */}
           </div>
+
+          {/* processor balances */}
+          <div className="mt-6">
+            <h3 className="text-lg font-semibold text-gray-700 mb-4">
+              Processor Balances
+            </h3>
+            <ProcessorBalanceGrid />
+          </div>
         </CardContent>
       </Card>
 
-      {/* Currency Balances Card */}
-      {/* <Card>
+      {/* Currency balances Cards */}
+      <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <div>
@@ -293,57 +360,100 @@ export default function TransactionsPage() {
               </CardTitle>
               <CardDescription>Available funds by currency</CardDescription>
             </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="icon"
-                className="rounded-full"
-                onClick={scrollPrev}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                <span className="sr-only">Previous slide</span>
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                className="rounded-full"
-                onClick={scrollNext}
-              >
-                <ChevronRight className="h-4 w-4" />
-                <span className="sr-only">Next slide</span>
-              </Button>
-            </div>
+            <Dialog>
+              <DialogTrigger>
+                <div className="text-blue-600 text-base cursor-pointer flex items-center gap-1 hover:text-primary">
+                  View all <ChevronsRight className="size-4" />
+                </div>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto hide-scrollbar">
+                <DialogHeader>
+                  <DialogTitle>All Currency Wallets Overviews</DialogTitle>
+                </DialogHeader>
+
+                <div className="grid grid-cols-1 gap-6 mt-6">
+                  {allCurrenciesWalletOverview?.map((wallet: any) => (
+                    <div key={wallet.currency} className="space-y-4">
+                      <h3 className="text-left font-semibold text-gray-700">
+                        {wallet.currency}
+                      </h3>
+
+                      {/* Total Balance */}
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="p-4 border rounded-xl shadow-sm bg-white flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-gray-500">
+                              Total Balance
+                            </p>
+                            <p className="text-xl font-bold text-gray-900">
+                              {wallet.total_balance}
+                            </p>
+                          </div>
+                          <div className="h-10 w-10 bg-[#1A6EFF1A] rounded-full flex items-center justify-center">
+                            <Wallet className="h-5 w-5 text-[#1A6EFF]" />
+                          </div>
+                        </div>
+
+                        {/* Total Deposit */}
+                        <div className="p-4 border rounded-xl shadow-sm bg-white flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-gray-500">
+                              Total Credit
+                            </p>
+                            <p className="text-xl font-bold text-gray-900">
+                              {wallet.total_deposit}
+                            </p>
+                          </div>
+                          <div className="h-12 w-12 bg-green-50 rounded-full flex items-center justify-center">
+                            <ArrowDownToLine className="h-6 w-6 text-green-600" />
+                          </div>
+                        </div>
+
+                        {/* Total Withdrawal */}
+                        <div className="p-4 border rounded-xl shadow-sm bg-white flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-gray-500">
+                              Total Debit
+                            </p>
+                            <p className="text-xl font-bold text-gray-900">
+                              {wallet.total_withdraw}
+                            </p>
+                          </div>
+                          <div className="h-12 w-12 bg-blue-50 rounded-full flex items-center justify-center">
+                            <ArrowUpFromLine className="h-6 w-6 text-blue-600" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="embla" ref={emblaRef}>
-            <div className="embla__container">
-              {walletData.currencies.map((currency) => (
-                <div
-                  key={currency.code}
-                  className="embla__slide px-4"
-                  style={{ flex: "0 0 220px" }}
-                >
-                  <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm h-full hover:shadow-md transition-shadow">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <div className="h-14 w-14 bg-gray-100 rounded-full flex items-center justify-center font-bold text-xl">
-                        {currency.symbol}
-                      </div>
-                      <p className="text-sm font-medium text-gray-500">
-                        {currency.code}
-                      </p>
-                      <p className="text-xl font-bold text-gray-900">
-                        {currency.symbol}
-                        {currency.balance.toLocaleString()}
-                      </p>
+          <div className="grid grid-cols-4 gap-3">
+            {allCurrenciesWalletOverview?.slice(0, 4).map((currency: any) => (
+              <div key={currency.code}>
+                <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm h-full hover:shadow-md transition-shadow">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <div className="h-14 w-14 bg-gray-100 rounded-full flex items-center justify-center font-bold text-xl">
+                      {currency.currency}
                     </div>
+                    <p className="text-sm font-medium text-gray-500">
+                      {currency.currency}
+                    </p>
+                    <p className="text-xl font-bold text-gray-900">
+                      {currency.currency}
+                      {currency.total_balance.toLocaleString()}
+                    </p>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </CardContent>
-      </Card> */}
+      </Card>
 
       {/* Transactions Table */}
       <TransactionsTable />

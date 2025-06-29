@@ -81,7 +81,7 @@ import {
   useUpdatePermission,
 } from "@/hooks/usePermissions";
 import { getPermissionColor } from "@/utils/getPermissionColor";
-import { useAssignRole, useFetchRoles } from "@/hooks/useRole";
+import { useAssignRole, useCreateRole, useFetchRoles } from "@/hooks/useRole";
 // @ts-ignore
 import { deriveStaffPermissions } from "@/utils/deriveStaffPermission";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -103,6 +103,7 @@ export default function StaffManagementPage() {
   const { data: permissions } = useFetchAllPermissions();
   const { mutate: createStaff, isPending: isCreateStaffPending } =
     useCreateStaff();
+  const { mutate: createRole, isPending: isCreatingRole } = useCreateRole();
   const { mutate: editStaff, isPending: isEditStaffPending } = useEditStaff();
   const { mutate: deleteStaff, isPending: isStaffDeleting } = useDeleteStaff();
   const { mutate: editStaffRole, isPending: isStaffRoleEditing } =
@@ -114,11 +115,17 @@ export default function StaffManagementPage() {
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddStaffDialog, setShowAddStaffDialog] = useState(false);
+  const [showCreateRoleDialog, setShowCreateRoleDialog] = useState(false);
   const [showEditStaffDialog, setShowEditStaffDialog] = useState(false);
   const [showPermissionsDialog, setShowPermissionsDialog] = useState(false);
   const [showRoleDialog, setShowRoleDialog] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
   const [editingStaffId, setEditingStaffId] = useState<string | null>(null);
+  const [newRoleData, setNewRoleData]=useState<{
+    name: string; description: string; permissions: string[]
+  }>({
+    name: "", description:"", permissions:[]
+  });
   const [newStaffData, setNewStaffData] = useState<{
     name: string;
     email: string;
@@ -156,6 +163,49 @@ export default function StaffManagementPage() {
       staff.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       staff.role.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const resetRoleForm = () => {
+    setNewRoleData({
+      name: "", description: "", permissions: []
+    })
+  }
+
+  const handleCreateNewRole = () => {
+    if (!newRoleData.name || !newRoleData.description || newRoleData.permissions.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Missing information",
+        description: "Please fill in all required fields",
+      })
+
+      return;
+    }
+
+    // create new role logic
+    console.log('new role:', newRoleData)
+    createRole(newRoleData, {
+      // @ts-ignore
+      onSuccess: (response: any) => {
+        // console.log(response);
+        setShowCreateRoleDialog(false);
+        resetRoleForm();
+
+        toast({
+          title: "Role created",
+          description: `New role has been created.`,
+        });
+      },
+      onError: (error: any) => {
+        resetRoleForm();
+        toast({
+          title: "Error",
+          description:
+            error?.response?.data?.message || "Failed to create role",
+          variant: "destructive",
+        });
+      },
+    })
+  };
 
   const resetForm = () => {
     setNewStaffData({
@@ -542,6 +592,24 @@ export default function StaffManagementPage() {
     });
   };
 
+  // const handlePermissionToggle = (checked: boolean, permission:any) => {
+  //   setNewRoleData((prev) => {
+  //     const currentPermissions = prev.permissions;
+  //     if (checked) {
+  //       // Add permission if it's not already included
+  //       return {
+  //         ...prev,
+  //         permissions: [...currentPermissions, permission.id],
+  //       };
+  //     } else {
+  //       // Remove permission
+  //       return {
+  //         ...prev,
+  //         permissions: currentPermissions.filter((id) => id !== permission.id),
+  //       };
+  //     }
+  //   });
+
   const handleManagePermissions = () => {
     try {
       if (selectedStaff) {
@@ -592,139 +660,276 @@ export default function StaffManagementPage() {
     >
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900">Manage Staff</h2>
-        <Dialog open={showAddStaffDialog} onOpenChange={setShowAddStaffDialog}>
-          <DialogTrigger asChild>
-            <Button className="flex items-center gap-1">
-              <UserPlus className="h-4 w-4" />
-              <span>Add Staff</span>
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-h-screen overflow-y-auto hide-scrollbar">
-            <DialogHeader>
-              <DialogTitle>Add New Staff Member</DialogTitle>
-              <DialogDescription>
-                Add a new staff member to your team with appropriate role and
-                permissions.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  placeholder="Enter full name"
-                  value={newStaffData.name}
-                  onChange={(e) =>
-                    setNewStaffData({ ...newStaffData, name: e.target.value })
-                  }
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="email@example.com"
-                  value={newStaffData.email}
-                  onChange={(e) =>
-                    setNewStaffData({ ...newStaffData, email: e.target.value })
-                  }
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="email">Phone</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder="07000000000"
-                  value={newStaffData.phone}
-                  onChange={(e) =>
-                    setNewStaffData({ ...newStaffData, phone: e.target.value })
-                  }
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="role">Role</Label>
-                <Select
-                  value={newStaffData.role}
-                  onValueChange={(value) => {
-                    const selectedRole = roles.find(
-                      (r: RolePayload) => r.name === value
-                    );
-                    setNewStaffData({ ...newStaffData, role: value });
-
-                    if (!selectedRole) return;
-
-                    setAvailablePermissions(selectedRole.permissions);
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {roles?.map((role: RolePayload) => (
-                      <SelectItem
-                        value={role.name}
-                        key={role.name}
-                        className="capitalize"
-                      >
-                        {role.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {availablePermissions && newStaffData.role && (
-                <div className="space-y-4">
-                  <Label htmlFor="role">Permissions</Label>
-                  {availablePermissions.map((permission: Permission) => (
-                    <div
-                      className="flex items-center justify-between space-x-2"
-                      key={permission.id}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id={permission.id}
-                          checked={true}
-                          // disabled={true}
-                        />
-                        <Label
-                          htmlFor={permission.id}
-                          className={"cursor-not-allowed"}
-                        >
-                          {permission.resource}
-                        </Label>
-                      </div>
-                      <span
-                        className={`text-xs ${getPermissionColor(
-                          permission.action || ""
-                        )} bg-blue-100 rounded-full px-4 py-1`}
-                      >
-                        {permission.action}
-                      </span>
-                    </div>
-                  ))}
+        <div className="flex items-center gap-2">
+          {/* add role dialoge */}
+          <Dialog
+            open={showCreateRoleDialog}
+            onOpenChange={setShowCreateRoleDialog}
+          >
+            <DialogTrigger asChild>
+              <Button className="flex items-center gap-1">
+                <UserPlus className="h-4 w-4" />
+                <span>Add New Role</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-h-[80vh] overflow-y-auto hide-scrollbar">
+              <DialogHeader>
+                <DialogTitle>Add New Role</DialogTitle>
+                <DialogDescription>
+                  Add a role to your team with appropriate permissions.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    placeholder="Enter full name"
+                    value={newRoleData.name}
+                    onChange={(e) =>
+                      setNewRoleData({ ...newRoleData, name: e.target.value })
+                    }
+                  />
                 </div>
-              )}
-            </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setShowAddStaffDialog(false)}
-              >
-                Cancel
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Description</Label>
+                  <Input
+                    id="description"
+                    type="text"
+                    placeholder="Role description..."
+                    value={newRoleData.description}
+                    onChange={(e) =>
+                      setNewRoleData({
+                        ...newRoleData,
+                        description: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                {/* display all permission list here */}
+                <div className="grid gap-4 py-4">
+                  <div className="space-y-4">
+                    {permissions?.map((permission: Permission) => {
+                      const permissionId = permission.id;
+
+                      if (!permissionId) return null;
+
+                      const handlePermissionToggle = (checked: boolean) => {
+                        setNewRoleData((prev) => {
+                          const currentPermissions = prev.permissions;
+                          if (checked) {
+                            return {
+                              ...prev,
+                              permissions: [
+                                ...currentPermissions,
+                                permissionId,
+                              ],
+                            };
+                          } else {
+                            return {
+                              ...prev,
+                              permissions: currentPermissions.filter(
+                                (id) => id !== permissionId
+                              ),
+                            };
+                          }
+                        });
+                      };
+
+                      return (
+                        <div
+                          key={permissionId}
+                          className="flex items-center justify-between space-x-2"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id={permissionId}
+                              checked={newRoleData.permissions.includes(
+                                permissionId
+                              )}
+                              onCheckedChange={(checked: boolean) =>
+                                handlePermissionToggle(checked)
+                              }
+                            />
+                            <Label htmlFor={permissionId}>
+                              {permission.resource}
+                            </Label>
+                          </div>
+                          <span
+                            className={`text-xs ${getPermissionColor(
+                              permission.action || ""
+                            )} bg-blue-100 rounded-full px-4 py-1`}
+                          >
+                            {permission.action}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowCreateRoleDialog(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleCreateNewRole}
+                  disabled={isCreatingRole}
+                  className="disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isCreatingRole ? "Creating..." : "Create Role"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* add new staff dialoge */}
+          <Dialog
+            open={showAddStaffDialog}
+            onOpenChange={setShowAddStaffDialog}
+          >
+            <DialogTrigger asChild>
+              <Button className="flex items-center gap-1">
+                <UserPlus className="h-4 w-4" />
+                <span>Add Staff</span>
               </Button>
-              <Button
-                onClick={handleAddStaff}
-                disabled={isCreateStaffPending}
-                className="disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isCreateStaffPending ? "Adding..." : "Add Staff"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent className="max-h-screen overflow-y-auto hide-scrollbar">
+              <DialogHeader>
+                <DialogTitle>Add New Staff Member</DialogTitle>
+                <DialogDescription>
+                  Add a new staff member to your team with appropriate role and
+                  permissions.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input
+                    id="name"
+                    placeholder="Enter full name"
+                    value={newStaffData.name}
+                    onChange={(e) =>
+                      setNewStaffData({ ...newStaffData, name: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="email@example.com"
+                    value={newStaffData.email}
+                    onChange={(e) =>
+                      setNewStaffData({
+                        ...newStaffData,
+                        email: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Phone</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="07000000000"
+                    value={newStaffData.phone}
+                    onChange={(e) =>
+                      setNewStaffData({
+                        ...newStaffData,
+                        phone: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="role">Role</Label>
+                  <Select
+                    value={newStaffData.role}
+                    onValueChange={(value) => {
+                      const selectedRole = roles.find(
+                        (r: RolePayload) => r.name === value
+                      );
+                      setNewStaffData({ ...newStaffData, role: value });
+
+                      if (!selectedRole) return;
+
+                      setAvailablePermissions(selectedRole.permissions);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {roles?.map((role: RolePayload) => (
+                        <SelectItem
+                          value={role.name}
+                          key={role.name}
+                          className="capitalize"
+                        >
+                          {role.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {availablePermissions && newStaffData.role && (
+                  <div className="space-y-4">
+                    <Label htmlFor="role">Permissions</Label>
+                    {availablePermissions.map((permission: Permission) => (
+                      <div
+                        className="flex items-center justify-between space-x-2"
+                        key={permission.id}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id={permission.id}
+                            checked={true}
+                            // disabled={true}
+                          />
+                          <Label
+                            htmlFor={permission.id}
+                            className={"cursor-not-allowed"}
+                          >
+                            {permission.resource}
+                          </Label>
+                        </div>
+                        <span
+                          className={`text-xs ${getPermissionColor(
+                            permission.action || ""
+                          )} bg-blue-100 rounded-full px-4 py-1`}
+                        >
+                          {permission.action}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAddStaffDialog(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleAddStaff}
+                  disabled={isCreateStaffPending}
+                  className="disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isCreateStaffPending ? "Adding..." : "Add Staff"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Staff Summary Cards */}
@@ -1243,4 +1448,4 @@ export default function StaffManagementPage() {
       </Card>
     </motion.div>
   );
-}
+};
