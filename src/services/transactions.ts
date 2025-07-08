@@ -9,7 +9,9 @@ import {
 const LIMIT = 10;
 
 export const transactionAPI = {
-  fetchAllTransactions: async (offset: number): Promise<TransactionResponse> => {
+  fetchAllTransactions: async (
+    offset: number
+  ): Promise<TransactionResponse> => {
     const response = await apiInstance.get("/transaction", {
       params: { limit: LIMIT, offset },
     });
@@ -24,12 +26,17 @@ export const transactionAPI = {
       `/transaction/user/recent/${userId}?offset=1&limit=2`
     );
 
-    console.log("user transactions response data:", response.data.data);
+    // console.log("user transactions response data:", response.data.data);
     return response.data.data;
   },
   update: async (id: string, payload: TransactionStatusPayload) => {
     const response = await apiInstance.patch(`/transaction/${id}`, payload);
 
+    return response.data;
+  },
+  reverseTransaction: async (id: string) => {
+    const response = await apiInstance.patch(`/transaction/reversal/${id}`);
+    // console.log("reversal response data:", response.data);
     return response.data;
   },
   fetchTransactionVolume: async (
@@ -53,7 +60,7 @@ export const transactionAPI = {
       `/transaction/channel/update/${id}`,
       payload
     );
-    console.log("updated processor data:", response.data.data);
+    // console.log("updated processor data:", response.data.data);
     return response.data.data;
   },
   createTransactionChannel: async ({
@@ -64,10 +71,10 @@ export const transactionAPI = {
     const response = apiInstance.post("transaction/channel/create", {
       channel,
     });
-    console.log(
-      "transaction channel creation data:",
-      (await response).data.data
-    );
+    // console.log(
+    //   "transaction channel creation data:",
+    //   (await response).data.data
+    // );
     return (await response).data.data;
   },
 };

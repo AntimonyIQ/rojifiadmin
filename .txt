@@ -1487,3 +1487,22 @@ export default function PaymentChannelsForm({ data }: Props) {
                     ))}
                   </SelectContent>
                 </Select>
+
+                ///////
+                const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    mutate(
+      {
+        subject: values.title,
+        text: values.body,
+      },
+      {
+        onSuccess: () => {
+          form.reset();
+          onOpenChange(false);
+        },
+        onError: (error) => {
+          console.error("Error sending message:", error);
+        },
+      }
+    );
+  };

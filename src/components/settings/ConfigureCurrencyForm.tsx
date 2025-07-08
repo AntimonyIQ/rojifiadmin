@@ -186,6 +186,7 @@ export default function ConfigureCurrencyForm({ data }: Props) {
   const [editCurrencyCode, setEditCurrencyCode] = useState("");
   const [editCurrencyName, setEditCurrencyName] = useState("");
   const [editCurrencySymbol, setEditCurrencySymbol] = useState("");
+  // @ts-ignore
   const [editCurrencyExchangeRate, setEditCurrencyExchangeRate] = useState(1);
   const [editCurrencyCountry, setEditCurrencyCountry] = useState("");
   const [editCurrencyCountryCode, setEditCurrencyCountryCode] = useState("");
@@ -488,7 +489,7 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   <div className="space-y-3">
                     <Label
                       htmlFor="edit-currency-symbol"
@@ -506,7 +507,7 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                     />
                   </div>
 
-                  <div className="space-y-3">
+                  {/* <div className="space-y-3">
                     <Label
                       htmlFor="edit-exchange-rate"
                       className="text-sm font-medium text-gray-700"
@@ -523,12 +524,12 @@ export default function ConfigureCurrencyForm({ data }: Props) {
                         setEditCurrencyExchangeRate(parseFloat(e.target.value))
                       }
                       className="w-full"
-                      disabled={editCurrencyIsBaseCurrency} // Base currency always has exchange rate 1
+                      disabled={editCurrencyIsBaseCurrency} 
                     />
-                    {/* <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500">
                       Relative to {form.watch("baseCurrency")}
-                    </p> */}
-                  </div>
+                    </p>
+                  </div> */}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

@@ -1,20 +1,38 @@
+import {useState} from "react"
 import { motion } from "framer-motion";
 import UsersTable from "@/components/users/UsersTable";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Users as UsersIcon, UserCheck, UserX, TrendingUp } from "lucide-react";
-import { User } from "@/types";
 import { useFetchUsers } from "@/hooks/useUsers";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export default function UsersPage() {
-  const { data: users, isLoading } = useFetchUsers();
+  const [page, setPage] = useState(1);
+  const { data: users, isLoading } = useFetchUsers(page);
 
   // Calculate user statistics
-  const calculateUserStats = (users: User[] = []) => {
-    const total = users.length;
-    const active = users.filter((user) => user.status === "active").length;
-    const inactive = users.filter((user) => user.status === "inactive").length;
+  const calculateUserStats = (users: any = []) => {
+    const active = users?.users?.filter(
+      (user: any) => user.status === "active"
+    ).length;
+    const inactive = users?.users?.filter(
+      (user: any) => user.status === "inactive"
+    ).length;
+    const total = users?.metadata?.total;
 
     return { total, active, inactive };
   };
@@ -229,7 +247,13 @@ export default function UsersPage() {
 
       {/* Users Table */}
 
-      <UsersTable users={users || []} loading={isLoading} />
+      <UsersTable
+        users={users?.users || []}
+        loading={isLoading}
+        total={users?.metadata?.total || 0}
+        currentPage={page}
+        onPageChange={setPage}
+      />
     </motion.div>
   );
 }

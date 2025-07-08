@@ -1,10 +1,13 @@
 import { apiInstance } from "@/lib/apiInstance";
-import { User } from "@/types";
+
+const LIMIT = 10;
 
 export const userAPI = {
-  getAllUsers: async (): Promise<User[]> => {
-    const response = await apiInstance.get("/user/all");
-    return response.data.data;
+  getAllUsers: async (offset: number): Promise<any> => {
+    const response = await apiInstance.get("/user/all", {
+      params: { limit: LIMIT, offset },
+    });
+    return { users: response.data.data, metadata: response.data.metadata };
   },
   updateUser: async (id: string, payload: any) => {
     const response = await apiInstance.patch(`/user/update/${id}`, payload);

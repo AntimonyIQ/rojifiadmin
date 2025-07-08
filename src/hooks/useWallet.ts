@@ -20,3 +20,37 @@ export const useUpdateUserWallet = () => {
       queryClient.invalidateQueries({ queryKey: ["user_wallets"] }),
   });
 };
+
+export const useCreditUserWallet = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["credit_user_wallet"],
+    mutationFn: (payload: {
+      amount: number;
+      currency: string;
+      user_id: string;
+    }) => walletsAPI.creditUserWallet(payload),
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ["user_wallets", "transactions"],
+      }),
+  });
+};
+
+export const useDebitUserWallet = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["debit_user_wallet"],
+    mutationFn: (payload: {
+      amount: number;
+      currency: string;
+      user_id: string;
+    }) => walletsAPI.debitUserWallet(payload),
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ["user_wallets", "transactions"],
+      }),
+  });
+};

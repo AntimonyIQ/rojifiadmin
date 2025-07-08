@@ -24,7 +24,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useFetchUserWallets, useUpdateUserWallet } from "@/hooks/useWallet";
+import {
+  useCreditUserWallet,
+  useDebitUserWallet,
+  useFetchUserWallets,
+  useUpdateUserWallet,
+} from "@/hooks/useWallet";
 import { toast } from "@/hooks/use-toast";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -37,6 +42,7 @@ import {
   FormControl,
   FormMessage,
 } from "../ui/form";
+import { Input } from "../ui/input";
 
 const formSchema = z.object({
   post_no_debit: z.enum(["enabled", "disabled"]),
@@ -47,9 +53,20 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function WalletsComponent({ userId }: { userId: string }) {
+  const [openUpdateDialog, setOpenUpdateDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [selectedWallet, setSelectedWallet] = useState<any | null>(null);
+  const [creditOpen, setCreditOpen] = useState(false);
+  const [debitOpen, setDebitOpen] = useState(false);
+  const [amount, setAmount] = useState("");
+
   const { data: userWallets, isLoading } = useFetchUserWallets(userId);
   const { mutate: updateWalletFn, isPending: isWalletUpdating } =
     useUpdateUserWallet();
+  const { mutate: creditWallet, isPending: isCreditingWallet } =
+    useCreditUserWallet();
+  const { mutate: debitWallet, isPending: isDebitingWallet } =
+    useDebitUserWallet();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -59,10 +76,6 @@ export default function WalletsComponent({ userId }: { userId: string }) {
       status: "inactive",
     },
   });
-
-  const [openUpdateDialog, setOpenUpdateDialog] = useState(false);
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [selectedWallet, setSelectedWallet] = useState<any | null>(null);
 
   useEffect(() => {
     if (selectedWallet) {
@@ -126,6 +139,62 @@ export default function WalletsComponent({ userId }: { userId: string }) {
     setOpenDeleteDialog(false);
   };
 
+  const handleCredit = () => {
+    creditWallet(
+      {
+        amount: parseFloat(amount),
+        currency: selectedWallet.currency.id,
+        user_id: userId,
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Wallet Credited!",
+            description: `${selectedWallet.currency.name} wallet has been credited successfully.`,
+          });
+          setAmount("");
+          setCreditOpen(false);
+        },
+        onError: (error: any) => {
+          toast({
+            title: "Error",
+            description:
+              error?.response?.data?.message || "Failed to credit wallet.",
+            variant: "destructive",
+          });
+        },
+      }
+    );
+  };
+
+  const handleDebit = () => {
+    debitWallet(
+      {
+        amount: parseFloat(amount),
+        currency: selectedWallet.currency.id,
+        user_id: userId,
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Wallet Debited!",
+            description: `${selectedWallet.currency.name} wallet has been debited successfully.`,
+          });
+          setAmount("");
+          setDebitOpen(false);
+        },
+        onError: (error: any) => {
+          toast({
+            title: "Error",
+            description:
+              error?.response?.data?.message || "Failed to debit wallet.",
+            variant: "destructive",
+          });
+        },
+      }
+    );
+  };
+
   if (isLoading)
     return (
       <div className="w-full h-full flex items-center justify-center space-y-2 mt-10">
@@ -147,15 +216,84 @@ export default function WalletsComponent({ userId }: { userId: string }) {
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
+
               <DropdownMenuContent>
                 <DropdownMenuItem onClick={() => handleOpenUpdate(wallet)}>
                   Update
                 </DropdownMenuItem>
-                {/* <DropdownMenuItem onClick={() => handleOpenDelete(wallet)}>
-                  Delete
-                </DropdownMenuItem> */}
+                <DropdownMenuItem
+                  onClick={() => {
+                    setSelectedWallet(wallet);
+                    setCreditOpen(true);
+                  }}
+                >
+                  Credit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setSelectedWallet(wallet);
+                    setDebitOpen(true);
+                  }}
+                >
+                  Debit
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* Credit Dialog */}
+            <Dialog open={creditOpen} onOpenChange={setCreditOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Credit Wallet</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <label className="text-sm font-medium">Amount</label>
+                  <Input
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="Enter amount"
+                  />
+                </div>
+                <DialogFooter>
+                  <Button
+                    onClick={handleCredit}
+                    disabled={!amount || isCreditingWallet}
+                    className="disabled:bg-primary-500 disabled:cursor-not-allowed"
+                  >
+                    {isCreditingWallet ? "Crediting..." : "Credit wallet"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Debit Dialog */}
+            <Dialog open={debitOpen} onOpenChange={setDebitOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Debit Wallet</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <label className="text-sm font-medium">Amount</label>
+                  <Input
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="Enter amount"
+                  />
+                </div>
+                <DialogFooter>
+                  <Button
+                    variant="destructive"
+                    onClick={handleDebit}
+                    disabled={!amount || isDebitingWallet}
+                    className="disabled:bg-red-500 disabled:cursor-not-allowed"
+                  >
+                    {isDebitingWallet ? "Debiting..." : "Debit wallet"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
 
           <CardContent className="space-y-1 px-2 py-2">

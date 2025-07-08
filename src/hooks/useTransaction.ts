@@ -66,6 +66,27 @@ export const useUpdateTransaction = () => {
   });
 };
 
+export const useReverseTransaction = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationKey: ["reverse_transaction"],
+    mutationFn: (id: string) => transactionAPI.reverseTransaction(id),
+    onSuccess(_, id) {
+      queryClient.invalidateQueries({
+        queryKey: ["user_transaction", id],
+      });
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+
+      toast({
+        title: "Transaction reversed!",
+        description: `Reversed transaction with ID: ${id}`,
+      });
+    },
+  });
+};
+
 export const useCreateTransactionChannel = () => {
   const queryClient = useQueryClient();
 

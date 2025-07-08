@@ -8,6 +8,7 @@ export interface User {
   phone: any;
   avatar: string;
   status: any; // "active" | "inactive"
+  post_no_debit?: any;
   address_line_one: string;
   address_line_two: string;
   city: string;
@@ -27,26 +28,38 @@ export interface TransactionResponse {
 }
 
 export interface Transaction {
-  id: any; // string
+  id: string;
   created_at: string;
   reference: string;
-  amount: any; // string
+  amount: string;
   merchant_fee: string;
   net_amount: string;
   description: string;
   type: "debit" | "credit";
-  status: any; //  "successful" | "pending" | "failed" |"reversed"
+  status: "successful" | "pending" | "failed" | "reversed" | string;
+
   user: {
     id: string;
     fullname: string;
     email: string;
     avatar: string;
   };
+
   currency: {
     code: string;
     symbol: string;
     decimal_place: number;
   };
+
+  balance_before_tx?: string;
+  balance_after_tx?: string;
+  beneficiary_account_number?: string;
+  beneficiary_bank_name?: string;
+  beneficiary_account_name?: string;
+  sender_account_number?: string | null;
+  sender_account_name?: string | null;
+  reversed_by?: string | null;
+  completed_at?: string;
 }
 
 export interface TransactionStatusPayload {

@@ -43,7 +43,7 @@ function App() {
         <AppRoute path="/users" page={UsersPage} />
         <AppRoute path="/transactions" page={TransactionsPage} />
         <AppRoute path="/analytics" page={AnalyticsPage} />
-        {/* <AppRoute path="/messaging" page={MessagingPage} /> */}
+        <AppRoute path="/messaging" page={MessagingPage} />
         <AppRoute path="/settings" page={SettingsPage} />
         <AppRoute path="/staff" page={StaffManagementPage} />
         <Route path="*">

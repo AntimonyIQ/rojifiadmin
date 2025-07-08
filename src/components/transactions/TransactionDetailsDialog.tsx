@@ -15,11 +15,16 @@ import {
   XCircle,
   Clock,
   AlertTriangle,
+  Copy,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { useUpdateTransaction } from "@/hooks/useTransaction";
+import {
+  useReverseTransaction,
+  useUpdateTransaction,
+} from "@/hooks/useTransaction";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface TransactionDetailsDialogProps {
   transaction: Transaction | null;
@@ -35,7 +40,13 @@ export default function TransactionDetailsDialog({
   const [actionLoading, setActionLoading] = useState<
     "cancel" | "approve" | null
   >(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const { mutate, isPending } = useUpdateTransaction();
+
+  const { mutate: reverseTransaction, isPending: isTransactionReversing } =
+    useReverseTransaction();
+
+  const { toast } = useToast();
 
   if (!transaction) return null;
 
@@ -56,6 +67,24 @@ export default function TransactionDetailsDialog({
         },
       }
     );
+  };
+
+  const handleTransactionReversal = (id: string) => {
+    reverseTransaction(id!!, {
+      onSuccess: () => {
+        toast({
+          title: "Successful",
+          description: "Transaction reversed successfully!",
+        });
+        onOpenChange(false);
+      },
+    });
+  };
+
+  const handleCopyTransactionId = (id: string) => {
+    navigator.clipboard.writeText(id);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   const getStatusIcon = (status: string) => {
@@ -83,6 +112,8 @@ export default function TransactionDetailsDialog({
         return "bg-red-100 text-red-800";
       case "cancelled":
         return "bg-gray-100 text-gray-800";
+      case "reversed":
+        return "bg-orange-100 text-orange-800";
       default:
         return "bg-blue-100 text-blue-800";
     }
@@ -105,7 +136,6 @@ export default function TransactionDetailsDialog({
       "bg-pink-100 text-pink-700",
     ];
 
-    // Simple hash function to get consistent color for a name
     const hash = name.split("").reduce((acc, char) => {
       return acc + char.charCodeAt(0);
     }, 0);
@@ -115,7 +145,7 @@ export default function TransactionDetailsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto hide-scrollbar">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold flex items-center gap-2">
             <CreditCard className="h-5 w-5 text-primary" />
@@ -127,7 +157,19 @@ export default function TransactionDetailsDialog({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">Transaction ID</p>
-              <p className="text-lg font-semibold">{transaction.reference}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-lg font-semibold">{transaction.reference}</p>
+                {copiedId === transaction.reference ? (
+                  <span className="text-sm text-green-500">Copied ✓</span>
+                ) : (
+                  <Copy
+                    className="size-5 cursor-pointer"
+                    onClick={() =>
+                      handleCopyTransactionId(transaction.reference)
+                    }
+                  />
+                )}
+              </div>
             </div>
             <Badge
               className={cn("font-medium", getStatusColor(transaction.status))}
@@ -164,58 +206,103 @@ export default function TransactionDetailsDialog({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-sm text-gray-500">Amount</p>
-                <p className="text-base font-semibold">
+                <p className="text-gray-500">Amount</p>
+                <p className="font-semibold">
                   {transaction.currency.symbol} {transaction.amount}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Date</p>
-                <p className="text-base">
-                  {format(new Date(transaction.created_at), "MMM d, yyyy")}
+                <p className="text-gray-500">Merchant Fee</p>
+                <p>
+                  {transaction.currency.symbol} {transaction.merchant_fee}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Time</p>
-                <p className="text-base">
-                  {format(new Date(transaction.created_at), "h:mm a")}
+                <p className="text-gray-500">Net Amount</p>
+                <p>
+                  {transaction.currency.symbol} {transaction.net_amount}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Payment Method</p>
-                <p className="text-base">{transaction.description}</p>
+                <p className="text-gray-500">Type</p>
+                <p className="capitalize">{transaction.type}</p>
               </div>
+              <div>
+                <p className="text-gray-500">Balance Before</p>
+                <p>
+                  {transaction.currency.symbol} {transaction.balance_before_tx}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-500">Balance After</p>
+                <p>
+                  {transaction.currency.symbol} {transaction.balance_after_tx}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-500">Payment Description</p>
+                <p>{transaction.description}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">Created At</p>
+                <p>
+                  {format(
+                    new Date(transaction.created_at),
+                    "MMM d, yyyy h:mm a"
+                  )}
+                </p>
+              </div>
+              {transaction.completed_at && (
+                <div>
+                  <p className="text-gray-500">Completed At</p>
+                  <p>
+                    {format(
+                      new Date(transaction.completed_at),
+                      "MMM d, yyyy h:mm a"
+                    )}
+                  </p>
+                </div>
+              )}
+              {transaction.beneficiary_account_name && (
+                <div>
+                  <p className="text-gray-500">Beneficiary Name</p>
+                  <p>{transaction.beneficiary_account_name}</p>
+                </div>
+              )}
+              {transaction.beneficiary_account_number && (
+                <div>
+                  <p className="text-gray-500">Beneficiary Account</p>
+                  <p>{transaction.beneficiary_account_number}</p>
+                </div>
+              )}
+              {transaction.beneficiary_bank_name && (
+                <div>
+                  <p className="text-gray-500">Beneficiary Bank</p>
+                  <p>{transaction.beneficiary_bank_name}</p>
+                </div>
+              )}
+              {transaction.sender_account_name && (
+                <div>
+                  <p className="text-gray-500">Sender Name</p>
+                  <p>{transaction.sender_account_name}</p>
+                </div>
+              )}
+              {transaction.sender_account_number && (
+                <div>
+                  <p className="text-gray-500">Sender Account</p>
+                  <p>{transaction.sender_account_number}</p>
+                </div>
+              )}
+              {transaction.reversed_by && (
+                <div className="col-span-2">
+                  <p className="text-gray-500">Reversed By</p>
+                  <p>{transaction.reversed_by}</p>
+                </div>
+              )}
             </div>
           </div>
-
-          {/* {transaction.details && (
-            <>
-              <Separator />
-              <div>
-                <p className="text-sm text-gray-500 mb-2">Transaction Details</p>
-                <div className="grid grid-cols-2 gap-4">
-                  {transaction.details.map((detail, index) => (
-                    <div key={index}>
-                      <p className="text-sm text-gray-500">{detail.label}</p>
-                      <p className="text-base">{detail.value}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </>
-          )} */}
-
-          {/* {transaction.notes && (
-            <>
-              <Separator />
-              <div>
-                <p className="text-sm text-gray-500 mb-2">Notes</p>
-                <p className="text-sm bg-gray-50 p-3 rounded-md">{transaction.notes}</p>
-              </div>
-            </>
-          )} */}
         </div>
 
         <DialogFooter className="flex gap-2 sm:justify-between sm:gap-0">
@@ -226,7 +313,6 @@ export default function TransactionDetailsDialog({
                 size="sm"
                 onClick={() => handleTransactionUpdate("failed", "cancel")}
                 disabled={isPending}
-                className="disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {actionLoading === "cancel"
                   ? "Cancelling..."
@@ -236,7 +322,6 @@ export default function TransactionDetailsDialog({
                 size="sm"
                 onClick={() => handleTransactionUpdate("successful", "approve")}
                 disabled={isPending}
-                className="disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {actionLoading === "approve"
                   ? "Approving..."
@@ -244,12 +329,16 @@ export default function TransactionDetailsDialog({
               </Button>
             </>
           )}
-          {transaction.status !== "pending" && (
-            <div className="w-full flex justify-end">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Close
-              </Button>
-            </div>
+          {transaction.status !== "reversed" && (
+            <Button
+              size="sm"
+              variant={"secondary"}
+              onClick={() => handleTransactionReversal(transaction.id)}
+              disabled={isTransactionReversing}
+              className="disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isTransactionReversing ? "Reversing..." : "Reverse Transaction"}
+            </Button>
           )}
         </DialogFooter>
       </DialogContent>
