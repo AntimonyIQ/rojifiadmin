@@ -11,7 +11,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, Search, Filter, SquarePen } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  Filter,
+  SquarePen,
+} from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import UserDetailsDialog from "./UserDetailsDialog";
 import { User } from "@/types";
@@ -22,13 +28,17 @@ import UserDeleteDialog from "./UserDeleteDialog";
 interface UsersTableProps {
   users?: User[];
   loading?: boolean;
+  total?: number;
+  currentPage: number;
+  onPageChange: (page: number) => void;
 }
 
 export default function UsersTable({
   users = [],
   loading = false,
+  total = 0,
+  currentPage, onPageChange
 }: UsersTableProps) {
-  const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>(""); // "" = All, "active", "inactive"
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -36,6 +46,9 @@ export default function UsersTable({
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const itemsPerPage = 10;
+
+  console.log("total users:", total);
+  console.log("users:", users);
 
   // Filter users based on search and status
   const filteredUsers = users.filter((user) => {
@@ -55,11 +68,8 @@ export default function UsersTable({
     return matchesSearch && matchesStatus;
   });
 
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-  const paginatedUsers = filteredUsers.slice(
-    (page - 1) * itemsPerPage,
-    page * itemsPerPage
-  );
+  const totalPages = Math.ceil(total / itemsPerPage);
+
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -77,14 +87,14 @@ export default function UsersTable({
   };
 
   const handlePreviousPage = () => {
-    if (page > 1) {
-      setPage(page - 1);
+    if (currentPage > 1) {
+      onPageChange(currentPage - 1);
     }
   };
 
   const handleNextPage = () => {
-    if (page < totalPages) {
-      setPage(page + 1);
+    if (currentPage < totalPages) {
+      onPageChange(currentPage + 1);
     }
   };
 
@@ -302,7 +312,7 @@ export default function UsersTable({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedUsers.length === 0 ? (
+                {filteredUsers.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={6}
@@ -312,7 +322,7 @@ export default function UsersTable({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  paginatedUsers.map((user) => (
+                  filteredUsers.map((user) => (
                     <TableRow key={user.id}>
                       {/* <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {user.id}
@@ -387,21 +397,22 @@ export default function UsersTable({
               <div className="text-sm text-gray-700">
                 Showing{" "}
                 <span className="font-medium">
-                  {filteredUsers.length > 0 ? (page - 1) * itemsPerPage + 1 : 0}
+                  {filteredUsers.length > 0
+                    ? (currentPage - 1) * itemsPerPage + 1
+                    : 0}
                 </span>{" "}
                 to{" "}
                 <span className="font-medium">
-                  {Math.min(page * itemsPerPage, filteredUsers.length)}
+                  {Math.min(currentPage * itemsPerPage, total)}
                 </span>{" "}
-                of <span className="font-medium">{filteredUsers.length}</span>{" "}
-                users
+                of <span className="font-medium">{total}</span> users
               </div>
               <div className="flex space-x-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handlePreviousPage}
-                  disabled={page === 1}
+                  // disabled={page === 1}
                 >
                   <ChevronLeft className="h-4 w-4 mr-1" />
                   Previous
@@ -410,7 +421,7 @@ export default function UsersTable({
                   variant="outline"
                   size="sm"
                   onClick={handleNextPage}
-                  disabled={page >= totalPages}
+                  // disabled={page >= totalPages}
                 >
                   Next
                   <ChevronRight className="h-4 w-4 ml-1" />

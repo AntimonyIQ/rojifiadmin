@@ -1,10 +1,13 @@
 import { userAPI } from "@/services/users";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-export const useFetchUsers = () => {
+export const useFetchUsers = (page: number) => {
+  const limit = 10;
+  const offset = page === 1 ? (page - 1) * limit + 1 : page;
+
   return useQuery({
-    queryKey: ["users"],
-    queryFn: userAPI.getAllUsers,
+    queryKey: ["users", offset],
+    queryFn: () => userAPI.getAllUsers(offset),
   });
 };
 

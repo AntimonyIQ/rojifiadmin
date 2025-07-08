@@ -6,7 +6,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 // @ts-ignore
@@ -235,9 +234,9 @@ export default function UserDetailsDialog({
         </Tabs>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          {/* <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close
-          </Button>
+          </Button> */}
         </DialogFooter>
       </DialogContent>
     </Dialog>

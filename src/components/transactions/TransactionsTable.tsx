@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,10 +19,11 @@ import {
   Calendar,
   DollarSign,
   Check,
+  EllipsisVertical,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import TransactionDetailsDialog from "./TransactionDetailsDialog";
-import { Transaction } from "@/types";
+import { Transaction, TransactionStatusPayload } from "@/types";
 import { format } from "date-fns";
 import {
   Popover,
@@ -40,8 +41,27 @@ import { Separator } from "@/components/ui/separator";
 import { DateRange } from "react-day-picker";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { useFetchTransactions } from "@/hooks/useTransaction";
+import {
+  useFetchTransactions,
+  useReverseTransaction,
+  useUpdateTransaction,
+} from "@/hooks/useTransaction";
 import { useFetchAdminCurrencies } from "@/hooks/useCurrency";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 export default function TransactionsTable() {
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -63,7 +83,21 @@ export default function TransactionsTable() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const itemsPerPage = 10;
 
+  const [editOpen, setEditOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<any>();
+
   const { data: currencyList } = useFetchAdminCurrencies();
+  const { mutate, isPending } = useUpdateTransaction();
+  const { mutate: reverseTransaction, isPending: isTransactionReversing } =
+    useReverseTransaction();
+
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (selectedTransaction?.status) {
+      setSelectedStatus(selectedTransaction.status);
+    }
+  }, [selectedTransaction]);
 
   // Available currencies
   const currencies = currencyList?.map((i: any) => i.code);
@@ -134,14 +168,54 @@ export default function TransactionsTable() {
         return "bg-red-100 text-red-800";
       case "cancelled":
         return "bg-gray-100 text-gray-800";
-      default:
+      case "successful":
         return "bg-blue-100 text-blue-800";
+      default:
+        return "bg-orange-100 text-orange-800";
     }
   };
 
   const handleOpenDetails = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
+    // console.log("Selected transaction:", transaction);
     setDetailsOpen(true);
+  };
+
+  const handleOpenEditDialog = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    setEditOpen(true);
+  };
+
+  const handleUpdate = () => {
+    const payload: TransactionStatusPayload = {
+      status: selectedStatus,
+    };
+
+    if (selectedStatus === "reversed") {
+      reverseTransaction(selectedTransaction?.id!!, {
+        onSuccess: () => {
+          toast({
+            title: "Successful",
+            description: "Transaction reversed successfully!",
+          });
+          setEditOpen(false);
+        },
+      });
+      return;
+    } else {
+      mutate(
+        { id: selectedTransaction?.id!!, payload },
+        {
+          onSuccess: () => {
+            toast({
+              title: "Successful",
+              description: "Transaction status updated successfully!",
+            });
+            setEditOpen(false);
+          },
+        }
+      );
+    }
   };
 
   const handleResetFilters = () => {
@@ -586,13 +660,84 @@ export default function TransactionsTable() {
                         )}
                       </TableCell>
                       <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <Button
-                          variant="ghost"
-                          className="text-primary hover:text-primary/80"
-                          onClick={() => handleOpenDetails(transaction)}
-                        >
-                          View
-                        </Button>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              className="text-primary hover:text-primary/80 p-0 h-auto"
+                            >
+                              <EllipsisVertical className="w-5 h-5" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent
+                            className="w-32 p-2 space-y-2"
+                            align="end"
+                          >
+                            <Button
+                              variant="ghost"
+                              className="w-full justify-start text-sm"
+                              onClick={() => handleOpenDetails(transaction)}
+                            >
+                              View
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              className="w-full justify-start text-sm"
+                              onClick={() => handleOpenEditDialog(transaction)}
+                            >
+                              Edit
+                            </Button>
+                          </PopoverContent>
+                        </Popover>
+
+                        {/* Edit Dialog */}
+                        <Dialog open={editOpen} onOpenChange={setEditOpen}>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Edit Transaction Status</DialogTitle>
+                            </DialogHeader>
+
+                            <div className="space-y-4">
+                              <label className="text-sm font-medium text-gray-700">
+                                Status
+                              </label>
+                              <Select
+                                value={selectedStatus}
+                                onValueChange={(value) =>
+                                  setSelectedStatus(value)
+                                }
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Select status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="successful">
+                                    Successful
+                                  </SelectItem>
+                                  <SelectItem value="pending">
+                                    Pending
+                                  </SelectItem>
+                                  <SelectItem value="failed">Failed</SelectItem>
+                                  <SelectItem value="reversed">
+                                    Reversed
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <DialogFooter>
+                              <Button
+                                onClick={handleUpdate}
+                                disabled={isPending || isTransactionReversing}
+                                className="disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {isPending || isTransactionReversing
+                                  ? "Updating status..."
+                                  : "Update status"}
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
                       </TableCell>
                     </TableRow>
                   ))

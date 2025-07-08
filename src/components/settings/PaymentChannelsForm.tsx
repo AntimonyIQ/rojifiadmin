@@ -485,10 +485,10 @@ export default function PaymentChannelsForm({ data }: Props) {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-medium text-gray-900">
-                  Manage Processors
+                  Manage Payment Channels
                 </h3>
                 <p className="text-sm text-gray-500 mt-1">
-                  Configure payment processors (Fincra, Korapay, Paga, Paystack)
+                  Configure payment channels (Bank Transfer, Deposit, Swap, Withdrawal, Mobile Money Transafer)
                   and assign currencies to each processor.
                 </p>
               </div>

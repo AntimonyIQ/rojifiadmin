@@ -33,6 +33,7 @@ const formSchema = z.object({
   email: z.string().email(),
   phone: z.string().min(6, "Phone number too short"),
   status: z.enum(["active", "inactive"]),
+  post_no_debit: z.enum(["enabled", "disabled"]),
   address_line_one: z.string().optional(),
   address_line_two: z.string().optional(),
   city: z.string().optional(),
@@ -63,6 +64,7 @@ export default function UserEditDialog({
       email: "",
       phone: "",
       status: "inactive",
+      post_no_debit: "disabled",
       address_line_one: "",
       address_line_two: "",
       city: "",
@@ -79,6 +81,7 @@ export default function UserEditDialog({
         email: user.email ?? "",
         phone: user.phone ?? "",
         status: user.status ?? "inactive",
+        post_no_debit: user.post_no_debit ?? "disabled",
         address_line_one: user.address_line_one ?? "",
         address_line_two: user.address_line_two ?? "",
         city: user.city ?? "",
@@ -189,31 +192,59 @@ export default function UserEditDialog({
               />
             </div>
 
-            {/* Status */}
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-2">
+              {/* Status */}
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Post No Debit */}
+              <FormField
+                control={form.control}
+                name="post_no_debit"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Post No Debit</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select state" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="enabled">Enabled</SelectItem>
+                        <SelectItem value="disabled">Disabled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             {/* Address Fields */}
             <FormField
