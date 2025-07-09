@@ -26,7 +26,6 @@ export const transactionAPI = {
       `/transaction/user/recent/${userId}?offset=1&limit=2`
     );
 
-    // console.log("user transactions response data:", response.data.data);
     return response.data.data;
   },
   update: async (id: string, payload: TransactionStatusPayload) => {
@@ -36,7 +35,6 @@ export const transactionAPI = {
   },
   reverseTransaction: async (id: string) => {
     const response = await apiInstance.patch(`/transaction/reversal/${id}`);
-    // console.log("reversal response data:", response.data);
     return response.data;
   },
   fetchTransactionVolume: async (
@@ -47,12 +45,10 @@ export const transactionAPI = {
       `/transaction/volume/all?start_date=${start_date}&end_date=${end_date}`
     );
 
-    // console.log("transaction volume response data:", response.data.data);
     return response.data.data;
   },
   fetchTransactionChannels: async (): Promise<TransactionChannelsProps[]> => {
     const response = await apiInstance.get("/transaction/channel/all");
-    // console.log("transaction channels response data:", response.data.data);
     return response.data.data;
   },
   updateTransactionChannel: async (id: string, payload: any) => {
@@ -60,7 +56,6 @@ export const transactionAPI = {
       `/transaction/channel/update/${id}`,
       payload
     );
-    // console.log("updated processor data:", response.data.data);
     return response.data.data;
   },
   createTransactionChannel: async ({
@@ -71,10 +66,7 @@ export const transactionAPI = {
     const response = apiInstance.post("transaction/channel/create", {
       channel,
     });
-    // console.log(
-    //   "transaction channel creation data:",
-    //   (await response).data.data
-    // );
+
     return (await response).data.data;
   },
 };
