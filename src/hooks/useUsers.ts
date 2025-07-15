@@ -21,3 +21,10 @@ export const useUpdateUser = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["users"] }),
   });
 };
+
+export const useUserOverview = () => {
+  return useQuery({
+    queryKey: ["users_overview"],
+    queryFn: userAPI.getUsersOverview,
+  });
+};

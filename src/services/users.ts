@@ -11,7 +11,12 @@ export const userAPI = {
   },
   updateUser: async (id: string, payload: any) => {
     const response = await apiInstance.patch(`/user/update/${id}`, payload);
-    console.log("user updated details:", response.data);
+    // console.log("user updated details:", response.data);
     return response.data;
+  },
+  getUsersOverview: async () => {
+    const response = await apiInstance.get(`user/overview/all`);
+    // console.log("user overview:", response.data.data);
+    return response.data.data;
   },
 };
