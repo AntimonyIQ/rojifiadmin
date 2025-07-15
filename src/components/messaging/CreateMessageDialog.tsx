@@ -64,10 +64,13 @@ export default function CreateMessageDialog({
   const { toast } = useToast();
 
   const highlightTemplateVars = (text: string) => {
-    return text.replace(
-      /{{(.*?)}}/g,
-      `<span class="bg-yellow-200 text-black font-medium px-1 py-0.5 rounded-sm">{{\$1}}</span>`
-    );
+    const allowed = ["firstname", "lastname", "fullname"];
+    return text.replace(/{{(.*?)}}/g, (match, p1) => {
+      if (allowed.includes(p1.trim())) {
+        return `<mark class="bg-yellow-200 text-black rounded px-1">${match}</mark>`;
+      }
+      return match;
+    });
   };
 
   // Sync subject & body highlights
