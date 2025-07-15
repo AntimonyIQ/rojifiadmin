@@ -16,7 +16,7 @@ import {
   ChevronRight,
   Search,
   Filter,
-  SquarePen,
+  MoreVertical,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import UserDetailsDialog from "./UserDetailsDialog";
@@ -24,6 +24,9 @@ import { User } from "@/types";
 import { format } from "date-fns";
 import UserEditDialog from "./UserEditDialog";
 import UserDeleteDialog from "./UserDeleteDialog";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import UserAccountsDialog from "./UserAccountsDialog";
+import UserIssueVirtualAccountDialog from "./UserIssueVirtualAccountDialog";
 
 interface UsersTableProps {
   users?: User[];
@@ -37,7 +40,8 @@ export default function UsersTable({
   users = [],
   loading = false,
   total = 0,
-  currentPage, onPageChange
+  currentPage,
+  onPageChange,
 }: UsersTableProps) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>(""); // "" = All, "active", "inactive"
@@ -45,10 +49,14 @@ export default function UsersTable({
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [virtualAccountsDialogOpen, setVirtualAccountsDialogOpen] =
+    useState(false);
+  const [issueVirtualAccountsDialogOpen, setIssueVirtualAccountsDialogOpen] =
+    useState(false);
   const itemsPerPage = 10;
 
-  console.log("total users:", total);
-  console.log("users:", users);
+  // console.log("total users:", total);
+  // console.log("users:", users);
 
   // Filter users based on search and status
   const filteredUsers = users.filter((user) => {
@@ -69,7 +77,6 @@ export default function UsersTable({
   });
 
   const totalPages = Math.ceil(total / itemsPerPage);
-
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -101,6 +108,16 @@ export default function UsersTable({
   const handleOpenDetails = (user: User) => {
     setSelectedUser(user);
     setDetailsOpen(true);
+  };
+
+  const handleOPenVirtualAccounts = (user: User) => {
+    setSelectedUser(user);
+    setVirtualAccountsDialogOpen(true);
+  };
+
+  const handleIssueVirtualAccount = (user: User) => {
+    setSelectedUser(user);
+    setIssueVirtualAccountsDialogOpen(true);
   };
 
   const handleOpenEditUser = (user: User) => {
@@ -308,7 +325,7 @@ export default function UsersTable({
                   <TableHead className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </TableHead>
-                  <TableHead className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"></TableHead>
+                  {/* <TableHead className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"></TableHead> */}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -362,15 +379,52 @@ export default function UsersTable({
                         {format(new Date(user.joined_at), "MMM d, yyyy")}
                       </TableCell>
                       <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <Button
-                          variant="ghost"
-                          className="text-primary hover:text-primary/80"
-                          onClick={() => handleOpenDetails(user)}
-                        >
-                          View
-                        </Button>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button className="p-1 rounded-md hover:bg-muted">
+                              <MoreVertical className="size-5 text-gray-600" />
+                            </button>
+                          </PopoverTrigger>
+
+                          <PopoverContent
+                            className="w-[200px] p-2"
+                            align="end"
+                            side="bottom"
+                          >
+                            <div className="space-y-1 ">
+                              <Button
+                                variant="ghost"
+                                className="text-gray-700 hover:text-gray-700/80"
+                                onClick={() => handleOpenDetails(user)}
+                              >
+                                View User Info
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                className="text-gray-700 hover:text-gray-700/80"
+                                onClick={() => handleOPenVirtualAccounts(user)}
+                              >
+                                View Accounts
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                className="text-gray-700 hover:text-gray-700/80"
+                                onClick={() => handleIssueVirtualAccount(user)}
+                              >
+                                Issue Virtual Account
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                className="text-gray-700 hover:text-gray-700/80"
+                                onClick={() => handleOpenEditUser(user)}
+                              >
+                                Edit User Info
+                              </Button>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                       </TableCell>
-                      <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      {/* <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <Button
                           variant="ghost"
                           className="text-primary hover:text-primary/80"
@@ -378,14 +432,14 @@ export default function UsersTable({
                         >
                           <SquarePen />
                         </Button>
-                        {/* <Button
+                        <Button
                           variant="ghost"
                           className="text-red-600 hover:text-red-500/80"
                           onClick={() => handleOpenDeleteUser(user)}
                         >
                           <Trash />
-                        </Button> */}
-                      </TableCell>
+                        </Button>
+                      </TableCell> */}
                     </TableRow>
                   ))
                 )}
@@ -431,11 +485,22 @@ export default function UsersTable({
           </div>
         </CardContent>
       </Card>
-
       <UserDetailsDialog
         user={selectedUser}
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
+      />
+      {/* user accounts - virtual accounts & linked bank accounts */}
+      <UserAccountsDialog
+        user={selectedUser}
+        open={virtualAccountsDialogOpen}
+        onOpenChange={setVirtualAccountsDialogOpen}
+      />
+      {/* issue virtual account */}
+      <UserIssueVirtualAccountDialog
+        user={selectedUser}
+        open={issueVirtualAccountsDialogOpen}
+        onOpenChange={setIssueVirtualAccountsDialogOpen}
       />
 
       {/* user edit dialog */}
@@ -444,7 +509,6 @@ export default function UsersTable({
         open={editModalOpen}
         onOpenChange={setEditModalOpen}
       />
-
       {/* user delete dialog */}
       <UserDeleteDialog
         user={selectedUser}

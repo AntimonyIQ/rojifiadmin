@@ -1,4 +1,4 @@
-import {useState} from "react"
+import { useState } from "react";
 import { motion } from "framer-motion";
 import UsersTable from "@/components/users/UsersTable";
 import {
@@ -8,8 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Users as UsersIcon, UserCheck, UserX, TrendingUp } from "lucide-react";
-import { useFetchUsers } from "@/hooks/useUsers";
+import { Users as UsersIcon, UserCheck, UserX } from "lucide-react";
+import { useFetchUsers, useUserOverview } from "@/hooks/useUsers";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -23,21 +23,7 @@ import {
 export default function UsersPage() {
   const [page, setPage] = useState(1);
   const { data: users, isLoading } = useFetchUsers(page);
-
-  // Calculate user statistics
-  const calculateUserStats = (users: any = []) => {
-    const active = users?.users?.filter(
-      (user: any) => user.status === "active"
-    ).length;
-    const inactive = users?.users?.filter(
-      (user: any) => user.status === "inactive"
-    ).length;
-    const total = users?.metadata?.total;
-
-    return { total, active, inactive };
-  };
-
-  const userStats = calculateUserStats(users);
+  const { data: usersOverviewData } = useUserOverview();
 
   if (isLoading && !users) {
     return (
@@ -173,18 +159,18 @@ export default function UsersPage() {
                   Total Users
                 </p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {userStats.total}
+                  {usersOverviewData.total_users}
                 </p>
               </div>
               <div className="h-12 w-12 bg-primary-50 rounded-full flex items-center justify-center">
                 <UsersIcon className="h-6 w-6 text-primary" />
               </div>
             </div>
-            <div className="mt-4 flex items-center text-sm text-gray-500">
+            {/* <div className="mt-4 flex items-center text-sm text-gray-500">
               <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
               <span className="text-green-500 font-medium">12%</span>
               <span className="ml-1">from last month</span>
-            </div>
+            </div> */}
           </CardContent>
         </Card>
 
@@ -197,14 +183,14 @@ export default function UsersPage() {
                   Active Users
                 </p>
                 <p className="text-3xl font-bold text-green-600">
-                  {userStats.active}
+                  {usersOverviewData.active_users}
                 </p>
               </div>
               <div className="h-12 w-12 bg-green-50 rounded-full flex items-center justify-center">
                 <UserCheck className="h-6 w-6 text-green-600" />
               </div>
             </div>
-            <div className="mt-4 flex items-center text-sm text-gray-500">
+            {/* <div className="mt-4 flex items-center text-sm text-gray-500">
               <span className="text-green-500 font-medium">
                 {users && users.length > 0
                   ? Math.round((userStats.active / userStats.total) * 100)
@@ -212,7 +198,7 @@ export default function UsersPage() {
                 %
               </span>
               <span className="ml-1">of total users</span>
-            </div>
+            </div> */}
           </CardContent>
         </Card>
 
@@ -225,14 +211,14 @@ export default function UsersPage() {
                   Inactive Users
                 </p>
                 <p className="text-3xl font-bold text-gray-600">
-                  {userStats.inactive}
+                  {usersOverviewData.inactive_users}
                 </p>
               </div>
               <div className="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center">
                 <UserX className="h-6 w-6 text-gray-600" />
               </div>
             </div>
-            <div className="mt-4 flex items-center text-sm text-gray-500">
+            {/* <div className="mt-4 flex items-center text-sm text-gray-500">
               <span className="text-gray-600 font-medium">
                 {users && users.length > 0
                   ? Math.round((userStats.inactive / userStats.total) * 100)
@@ -240,7 +226,7 @@ export default function UsersPage() {
                 %
               </span>
               <span className="ml-1">of total users</span>
-            </div>
+            </div> */}
           </CardContent>
         </Card>
       </div>
