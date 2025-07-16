@@ -159,7 +159,7 @@ export default function UsersPage() {
                   Total Users
                 </p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {usersOverviewData.total_users}
+                  {usersOverviewData && usersOverviewData.total_users}
                 </p>
               </div>
               <div className="h-12 w-12 bg-primary-50 rounded-full flex items-center justify-center">
@@ -183,7 +183,7 @@ export default function UsersPage() {
                   Active Users
                 </p>
                 <p className="text-3xl font-bold text-green-600">
-                  {usersOverviewData.active_users}
+                  {usersOverviewData && usersOverviewData.active_users}
                 </p>
               </div>
               <div className="h-12 w-12 bg-green-50 rounded-full flex items-center justify-center">
@@ -211,7 +211,7 @@ export default function UsersPage() {
                   Inactive Users
                 </p>
                 <p className="text-3xl font-bold text-gray-600">
-                  {usersOverviewData.inactive_users}
+                  {usersOverviewData && usersOverviewData.inactive_users}
                 </p>
               </div>
               <div className="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center">
