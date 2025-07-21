@@ -4,6 +4,7 @@ const env = {
       ? "https://rojifi.qurulab.com/api/v1"
       : "https://kd56qjzw-8081.uks1.devtunnels.ms/api/v1",
   ENV: import.meta.env.MODE,
+  
 };
 
 export default env;
