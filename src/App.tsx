@@ -15,43 +15,43 @@ import { ProtectedRoute } from "./app/ProtectedRoute";
 import { RedirectIfAuthenticated } from "./app/RedirectIfAuthenticated";
 
 function AppRoute({
-  path,
-  page: Page,
+    path,
+    page: Page,
 }: {
-  path: string;
-  page: React.ComponentType;
+    path: string;
+    page: React.ComponentType;
 }) {
-  return (
-    <ProtectedRoute path={path}>
-      <DashboardLayout>
-        <Page />
-      </DashboardLayout>
-    </ProtectedRoute>
-  );
+    return (
+        <ProtectedRoute path={path}>
+            <DashboardLayout>
+                <Page />
+            </DashboardLayout>
+        </ProtectedRoute>
+    );
 }
 
 
 function App() {
-  return (
-    <AnimatePresence mode="wait">
-      <Switch>
-        {/* <Route path="/" component={LoginPage} /> */}
-        <RedirectIfAuthenticated path="/">
-          <LoginPage />
-        </RedirectIfAuthenticated>
-        <AppRoute path="/dashboard" page={DashboardPage} />
-        <AppRoute path="/users" page={UsersPage} />
-        <AppRoute path="/transactions" page={TransactionsPage} />
-        <AppRoute path="/analytics" page={AnalyticsPage} />
-        <AppRoute path="/messaging" page={MessagingPage} />
-        <AppRoute path="/settings" page={SettingsPage} />
-        <AppRoute path="/staff" page={StaffManagementPage} />
-        <Route path="*">
-          <NotFound />
-        </Route>
-      </Switch>
-    </AnimatePresence>
-  );
+    return (
+        <AnimatePresence mode="wait">
+            <Switch>
+                {/* <Route path="/" component={LoginPage} /> */}
+                <RedirectIfAuthenticated path="/">
+                    <LoginPage />
+                </RedirectIfAuthenticated>
+                <AppRoute path="/dashboard" page={DashboardPage} />
+                <AppRoute path="/users" page={UsersPage} />
+                <AppRoute path="/transactions" page={TransactionsPage} />
+                <AppRoute path="/analytics" page={AnalyticsPage} />
+                <AppRoute path="/messaging" page={MessagingPage} />
+                <AppRoute path="/settings" page={SettingsPage} />
+                <AppRoute path="/staff" page={StaffManagementPage} />
+                <Route path="*">
+                    <NotFound />
+                </Route>
+            </Switch>
+        </AnimatePresence>
+    );
 }
 
 export default App;

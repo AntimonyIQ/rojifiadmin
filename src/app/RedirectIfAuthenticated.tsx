@@ -1,21 +1,21 @@
-import { useAuth } from "@/hooks/useAuth";
+import { session, SessionData } from "@/session/session";
 import { Redirect, useRoute } from "wouter";
 
 export function RedirectIfAuthenticated({
-  path,
-  children,
+    path,
+    children,
 }: {
-  path: string;
-  children: React.ReactNode;
+    path: string;
+    children: React.ReactNode;
 }) {
-  const { isAuthenticated } = useAuth();
-  const [match] = useRoute(path);
+    const sd: SessionData = session.getUserData();
+    const [match] = useRoute(path);
 
-  if (!match) return null;
+    if (!match) return null;
 
-  if (isAuthenticated) {
-    return <Redirect to="/dashboard" />;
-  }
+    if (sd && sd.isLoggedIn) {
+        return <Redirect to="/dashboard" />;
+    }
 
-  return <>{children}</>;
+    return <>{children}</>;
 }
