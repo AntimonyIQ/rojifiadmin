@@ -1,444 +1,152 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import { MoreVertical, Wallet } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  useCreditUserWallet,
-  useDebitUserWallet,
-  useFetchUserWallets,
-  useUpdateUserWallet,
-} from "@/hooks/useWallet";
-import { toast } from "@/hooks/use-toast";
-import * as z from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "../ui/form";
-import { Input } from "../ui/input";
-
-const formSchema = z.object({
-  post_no_debit: z.enum(["enabled", "disabled"]),
-  post_no_credit: z.enum(["enabled", "disabled"]),
-  status: z.enum(["active", "inactive"]),
-});
-
-type FormValues = z.infer<typeof formSchema>;
+// Read-only wallets table - no card or input UI required
+import { IPagination, IResponse, IWallet } from "@/interface/interface";
+import { session, SessionData } from "@/session/session";
+import Defaults from "@/defaults/defaults";
+import { Status } from "@/enums/enums";
 
 export default function WalletsComponent({ userId }: { userId: string }) {
-  const [openUpdateDialog, setOpenUpdateDialog] = useState(false);
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [selectedWallet, setSelectedWallet] = useState<any | null>(null);
-  const [creditOpen, setCreditOpen] = useState(false);
-  const [debitOpen, setDebitOpen] = useState(false);
-  const [amount, setAmount] = useState("");
+    const [wallets, setWallets] = useState<Array<IWallet>>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    // Read-only list UI: no dialogs or manipulation state
+    const [_pagination, setPagination] = useState<IPagination>({
+        total: 0,
+        totalPages: 0,
+        page: 1,
+        limit: 10,
+    });
+    const sd: SessionData = session.getUserData();
 
-  const { data: userWallets, isLoading } = useFetchUserWallets(userId);
-  const { mutate: updateWalletFn, isPending: isWalletUpdating } =
-    useUpdateUserWallet();
-  const { mutate: creditWallet, isPending: isCreditingWallet } =
-    useCreditUserWallet();
-  const { mutate: debitWallet, isPending: isDebitingWallet } =
-    useDebitUserWallet();
-
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      post_no_debit: "disabled",
-      post_no_credit: "disabled",
-      status: "inactive",
-    },
-  });
-
-  useEffect(() => {
-    if (selectedWallet) {
-      form.reset({
-        post_no_debit: selectedWallet.post_no_debit ?? "disabled",
-        post_no_credit: selectedWallet.post_no_credit ?? "disabled",
-        status: selectedWallet.status ?? "inactive",
-      });
-    }
-  }, [form, openUpdateDialog, selectedWallet]);
-
-  const handleOpenUpdate = (wallet: any) => {
-    setSelectedWallet(wallet);
-    setOpenUpdateDialog(true);
-  };
-
-  const onSubmit = (values: FormValues) => {
-    if (!selectedWallet?.id) {
-      console.log("Selected Wallet does not have an ID");
-      setOpenUpdateDialog(false);
-    }
-
-    // return;
-
-    try {
-      updateWalletFn(
-        {
-          id: selectedWallet.id,
-          data: values,
-        },
-        {
-          onSuccess: () => {
-            toast({
-              title: "Wallet Updated!",
-              description: `${selectedWallet.currency.name} wallet has been updated successfully.`,
-            });
-            setOpenUpdateDialog(false);
-          },
-          onError: (error: any) => {
-            toast({
-              title: "Error",
-              description:
-                error?.response?.data?.message || "Failed to update user.",
-              variant: "destructive",
-            });
-          },
+    useEffect(() => {
+        if (sd) {
+            fetchWallets();
         }
-      );
-    } catch (error) {
-      console.error("Error updating wallet:", error);
-    }
-  };
+    }, [sd]);
 
-  //   const handleOpenDelete = (wallet: any) => {
-  //     setSelectedWallet(wallet);
-  //     setOpenDeleteDialog(true);
-  //   };
+    const fetchWallets = async () => {
+        try {
+            setLoading(true)
 
-  const handleDeleteWallet = () => {
-    console.log("Deleting wallet with ID:", selectedWallet?.id);
-    setOpenDeleteDialog(false);
-  };
+            Defaults.LOGIN_STATUS();
+            const url: string = `${Defaults.API_BASE_URL}/admin/wallet/list?userId=${userId}`;
 
-  const handleCredit = () => {
-    creditWallet(
-      {
-        amount: parseFloat(amount),
-        currency: selectedWallet.currency.id,
-        user_id: userId,
-      },
-      {
-        onSuccess: () => {
-          toast({
-            title: "Wallet Credited!",
-            description: `${selectedWallet.currency.name} wallet has been credited successfully.`,
-          });
-          setAmount("");
-          setCreditOpen(false);
-        },
-        onError: (error: any) => {
-          toast({
-            title: "Error",
-            description:
-              error?.response?.data?.message || "Failed to credit wallet.",
-            variant: "destructive",
-          });
-        },
-      }
-    );
-  };
+            const res = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    ...Defaults.HEADERS,
+                    "Content-Type": "application/json",
+                    'x-rojifi-handshake': sd.client.publicKey,
+                    'x-rojifi-deviceid': sd.deviceid,
+                    Authorization: `Bearer ${sd.authorization}`,
+                },
+            });
+            const data: IResponse = await res.json();
+            if (data.status === Status.ERROR) throw new Error(data.message || data.error);
+            if (data.status === Status.SUCCESS) {
+                if (!data.handshake) throw new Error('Unable to process login response right now, please try again.');
+                const parseData: Array<IWallet> = Defaults.PARSE_DATA(data.data, sd.client.privateKey, data.handshake);
+                setWallets(parseData);
+                if (data.pagination) {
+                    setPagination(data.pagination);
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching wallets:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  const handleDebit = () => {
-    debitWallet(
-      {
-        amount: parseFloat(amount),
-        currency: selectedWallet.currency.id,
-        user_id: userId,
-      },
-      {
-        onSuccess: () => {
-          toast({
-            title: "Wallet Debited!",
-            description: `${selectedWallet.currency.name} wallet has been debited successfully.`,
-          });
-          setAmount("");
-          setDebitOpen(false);
-        },
-        onError: (error: any) => {
-          toast({
-            title: "Error",
-            description:
-              error?.response?.data?.message || "Failed to debit wallet.",
-            variant: "destructive",
-          });
-        },
-      }
-    );
-  };
+    // No-op handlers — UI is read-only
 
-  if (isLoading)
-    return (
-      <div className="w-full h-full flex items-center justify-center space-y-2 mt-10">
-        <div className="flex flex-col items-center space-y-2">
-          <div className="border-b border-primary rounded-full w-10 h-10 animate-spin duration-300"></div>
-          <p className="text-center text-sm">Fetching Wallets...</p>
-        </div>
-      </div>
-    );
-
-  return (
-    <div className="grid grid-cols-1 gap-3">
-      {userWallets.map((wallet: any) => (
-        <Card key={wallet.id} className="relative">
-          <div className="ml-auto w-fit">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => handleOpenUpdate(wallet)}>
-                  Update
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    setSelectedWallet(wallet);
-                    setCreditOpen(true);
-                  }}
-                >
-                  Credit
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    setSelectedWallet(wallet);
-                    setDebitOpen(true);
-                  }}
-                >
-                  Debit
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Credit Dialog */}
-            <Dialog open={creditOpen} onOpenChange={setCreditOpen}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Credit Wallet</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <label className="text-sm font-medium">Amount</label>
-                  <Input
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="Enter amount"
-                  />
+    if (loading)
+        return (
+            <div className="w-full h-full flex items-center justify-center space-y-2 mt-10">
+                <div className="flex flex-col items-center space-y-2">
+                    <div className="border-b border-primary rounded-full w-10 h-10 animate-spin duration-300"></div>
+                    <p className="text-center text-sm">Fetching Wallets...</p>
                 </div>
-                <DialogFooter>
-                  <Button
-                    onClick={handleCredit}
-                    disabled={!amount || isCreditingWallet}
-                    className="disabled:bg-primary-500 disabled:cursor-not-allowed"
-                  >
-                    {isCreditingWallet ? "Crediting..." : "Credit wallet"}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
-            {/* Debit Dialog */}
-            <Dialog open={debitOpen} onOpenChange={setDebitOpen}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Debit Wallet</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <label className="text-sm font-medium">Amount</label>
-                  <Input
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="Enter amount"
-                  />
-                </div>
-                <DialogFooter>
-                  <Button
-                    variant="destructive"
-                    onClick={handleDebit}
-                    disabled={!amount || isDebitingWallet}
-                    className="disabled:bg-red-500 disabled:cursor-not-allowed"
-                  >
-                    {isDebitingWallet ? "Debiting..." : "Debit wallet"}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
-
-          <CardContent className="space-y-1 px-2 py-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500">
-                  {wallet.currency.name}
-                </p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {wallet.formatted_balance}
-                </p>
-              </div>
-              <div className="h-12 w-12 bg-primary-50 rounded-full flex items-center justify-center">
-                <Wallet className="h-6 w-6 text-primary" />
-              </div>
             </div>
-          </CardContent>
-        </Card>
-      ))}
+        );
 
-      {/* Update Wallet Dialog */}
-      <Dialog open={openUpdateDialog} onOpenChange={setOpenUpdateDialog}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>{`Update Wallet Settings`}</DialogTitle>
-          </DialogHeader>
+    const formatBalance = (wallet: any) => {
+        const symbol = wallet.symbol ?? (wallet.currency && (wallet.currency as any).symbol) ?? '';
+        const value = typeof wallet.balance === 'number' ? wallet.balance : Number(wallet.balance || 0);
+        const formatted = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(value);
+        return `${symbol}${formatted}`;
+    };
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
-              <div className="space-y-4 py-4">
-                {/* Post No Debit */}
-                <FormField
-                  control={form.control}
-                  name="post_no_debit"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Post No Debit</FormLabel>
-                      <FormControl>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="enabled">Enabled</SelectItem>
-                            <SelectItem value="disabled">Disabled</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+    return (
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-700">Wallets</h3>
+                <p className="text-sm text-gray-500">{wallets.length} wallets</p>
+            </div>
 
-                {/* Post No Credit */}
-                <FormField
-                  control={form.control}
-                  name="post_no_credit"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Post No Credit</FormLabel>
-                      <FormControl>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="enabled">Enabled</SelectItem>
-                            <SelectItem value="disabled">Disabled</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            <div className="overflow-x-auto">
+                <div className="min-w-full align-middle">
+                    <div className="overflow-hidden shadow-sm ring-1 ring-black ring-opacity-5 rounded-lg bg-white">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Wallet</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Currency</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-100">
+                                {wallets.map((wallet: any, idx: number) => (
+                                    <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex-shrink-0">
+                                                    {wallet.icon ? (
+                                                        <img src={wallet.icon} alt={wallet.name ?? 'icon'} className="h-6 w-6 rounded-full object-cover" />
+                                                    ) : (
+                                                        <div className="h-9 w-9 rounded-full bg-primary-50 flex items-center justify-center text-primary">⚡</div>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm font-medium text-gray-900">{wallet.name ?? (wallet.currency && (wallet.currency as any).toString()) ?? '-'}</div>
+                                                    <div className="text-xs text-gray-500">{wallet.userId?.fullName ?? '-'}</div>
+                                                </div>
+                                            </div>
+                                        </td>
 
-                {/* Status */}
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <FormControl>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="active">Active</SelectItem>
-                            <SelectItem value="inactive">Inactive</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm font-semibold text-gray-900">{formatBalance(wallet)}</div>
+                                        </td>
 
-              <Button
-                type="submit"
-                disabled={isWalletUpdating}
-                className="mt-4 bg-primary text-white py-2 px-4 rounded w-full disabled:bg-primary/60 disabled:cursor-not-allowed"
-              >
-                {isWalletUpdating ? "Updating..." : "Update Wallet"}
-              </Button>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center gap-2">
+                                                {wallet.icon ? (
+                                                    <img src={wallet.icon} alt={wallet.name ?? 'icon'} className="h-6 w-6 rounded-full object-cover" />
+                                                ) : null}
+                                                <div className="text-sm text-gray-700">{(wallet.currency && (wallet.currency as any).toString()) ?? '-'}</div>
+                                            </div>
+                                        </td>
 
-      {/* Delete Wallet Dialog. May not later use this */}
-      <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle>Delete Wallet</DialogTitle>
-          </DialogHeader>
-          <div className="py-4 text-sm">
-            Are you sure you want to delete wallet{" "}
-            <strong>{selectedWallet?.currency?.name}</strong>? This action
-            cannot be undone.
-          </div>
-          <DialogFooter className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setOpenDeleteDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteWallet}>
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            {wallet.status ? (
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${wallet.status === 'active' || wallet.activated ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                                                    {wallet.status ?? (wallet.activated ? 'active' : 'inactive')}
+                                                </span>
+                                            ) : (
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${wallet.activated ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                                                    {wallet.activated ? 'active' : 'inactive'}
+                                                </span>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 }

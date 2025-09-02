@@ -106,17 +106,19 @@ export default function LoginPage() {
                 if (userdata.status === Status.ERROR) throw new Error(userdata.message || userdata.error);
                 if (userdata.status === Status.SUCCESS) {
                     if (!userdata.handshake) throw new Error('Unable to process login response right now, please try again.');
-                    const parseData: ILoginFormProps = Defaults.PARSE_DATA(userdata.data, sd.client.privateKey, userdata.handshake);
+                    const parseData = Defaults.PARSE_DATA(userdata.data, sd.client.privateKey, userdata.handshake);
                     toast({
                         title: "Successfully logged in!",
                         description: "Welcome to Rojifi Admin Dashboard",
                     });
 
+                    console.log(parseData);
+
                     session.login({
                         ...sd,
                         authorization: authorization,
                         isLoggedIn: true,
-                        user: parseData.user,
+                        user: parseData,
                     });
 
                     window.location.href = "/dashboard";

@@ -308,7 +308,7 @@ export default function UsersTable({
                                         User
                                     </TableHead>
                                     <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Phone
+                                        Country
                                     </TableHead>
                                     <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Status
@@ -358,7 +358,7 @@ export default function UsersTable({
                                                 </div>
                                             </TableCell>
                                             <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {user.phoneNumber === null ? "N/A" : user.phoneNumber}
+                                                {user.country === null ? "N/A" : user.country}
                                             </TableCell>
                                             <TableCell className="px-6 py-4 whitespace-nowrap">
                                                 <Badge

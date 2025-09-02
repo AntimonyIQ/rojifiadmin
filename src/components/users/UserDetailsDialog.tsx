@@ -73,7 +73,7 @@ export default function UserDetailsDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-auto hide-scrollbar">
+            <DialogContent className="sm:max-w-[750px] max-h-[90vh] overflow-auto hide-scrollbar">
                 <DialogHeader>
                     <DialogTitle className="text-xl font-semibold">
                         User Details
@@ -196,33 +196,6 @@ export default function UserDetailsDialog({
                                 <h3 className="text-sm font-medium">Activity Log</h3>
                                 <p className="text-xs text-gray-500">Last 7 days</p>
                             </div>
-                            {/* {user.activityLog && user.activityLog.length > 0 ? (
-                <div className="divide-y">
-                  {user.activityLog.map((log, i) => (
-                    <div key={i} className="px-4 py-3 flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0 mt-0.5">
-                        {log.type === "login" ? (
-                          <UserIcon className="h-4 w-4 text-gray-700" />
-                        ) : log.type === "transaction" ? (
-                          <CreditCard className="h-4 w-4 text-gray-700" />
-                        ) : (
-                          <Clock className="h-4 w-4 text-gray-700" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">{log.description}</p>
-                        <p className="text-xs text-gray-500">{format(new Date(log.timestamp), "MMM d, yyyy, h:mm a")}</p>
-                        {log.details && <p className="text-xs text-gray-600 mt-1">{log.details}</p>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="py-8 text-center text-gray-500 flex flex-col items-center">
-                  <AlertCircle className="h-8 w-8 text-gray-400 mb-2" />
-                  <p>No activity logs found</p>
-                </div>
-              )} */}
                         </div>
                     </TabsContent>
                     <TabsContent value="wallets">
@@ -234,9 +207,7 @@ export default function UserDetailsDialog({
                 </Tabs>
 
                 <DialogFooter>
-                    {/* <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Close
-          </Button> */}
+
                 </DialogFooter>
             </DialogContent>
         </Dialog>

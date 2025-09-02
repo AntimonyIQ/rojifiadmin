@@ -33,7 +33,7 @@ export default function TransactionDetailsDialog({
     open,
     onOpenChange,
 }: TransactionDetailsDialogProps) {
-    const [actionLoading, setActionLoading] = useState<
+    const [actionLoading, _setActionLoading] = useState<
         "cancel" | "approve" | null
     >(null);
     const [copiedId, setCopiedId] = useState<string | null>(null);

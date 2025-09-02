@@ -271,15 +271,6 @@ export default function UsersPage() {
                                 <UserX className="h-6 w-6 text-gray-600" />
                             </div>
                         </div>
-                        {/* <div className="mt-4 flex items-center text-sm text-gray-500">
-              <span className="text-gray-600 font-medium">
-                {users && users.length > 0
-                  ? Math.round((userStats.inactive / userStats.total) * 100)
-                  : 0}
-                %
-              </span>
-              <span className="ml-1">of total users</span>
-            </div> */}
                     </CardContent>
                 </Card>
             </div>

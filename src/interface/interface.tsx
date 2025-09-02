@@ -66,7 +66,7 @@ export interface ICopyright {
 
 export interface IWallet {
     currency: Fiat | Coin;
-    userId: string;
+    userId: IUser;
     type: WalletType;
     walletId: string; // Unique wallet identifier
     balance: number; // Current available balance
