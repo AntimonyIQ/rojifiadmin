@@ -11,6 +11,11 @@ export enum Status {
     SERVICE_UNAVAILABLE = "service_unavailable",
 }
 
+export enum Engine {
+    AUTOMATIC = "automatic",
+    MANUAL = "manual",
+}
+
 export enum Coin {
     BTC = "BTC",
     ETH = "ETH",

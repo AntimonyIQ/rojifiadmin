@@ -13,6 +13,9 @@ import {
     ReceiptText,
     Projector,
     Wallet,
+    UserPlus,
+    Mail,
+    FileText,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
@@ -115,9 +118,29 @@ export default function Sidebar() {
             label: "Wallets",
         },
         {
+            href: "/providers",
+            icon: <Building className="h-5 w-5" />,
+            label: "Providers",
+        },
+        {
             href: "/transactions",
             icon: <ReceiptText className="h-5 w-5" />,
             label: "Transactions",
+        },
+        {
+            href: "/requested-access",
+            icon: <UserPlus className="h-5 w-5" />,
+            label: "Requested Access",
+        },
+        {
+            href: "/contact-messages",
+            icon: <Mail className="h-5 w-5" />,
+            label: "Contact Messages",
+        },
+        {
+            href: "/newsletters",
+            icon: <FileText className="h-5 w-5" />,
+            label: "Newsletters",
         },
         {
             href: "/messaging",

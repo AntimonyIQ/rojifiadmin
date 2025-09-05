@@ -17,6 +17,10 @@ import WalletsPage from "./app/wallets/page";
 import OTCPage from "./app/otc/page";
 import VirtualCardPage from "./app/virtualcard/page";
 import SendersPage from "./app/senders/page";
+import NewslettersPage from "./app/newsletters/page";
+import ContactMessagesPage from "./app/contact-messages/page";
+import RequestedAccessPage from "./app/requested-access/page";
+import ProvidersPage from "./app/providers/page";
 
 function AppRoute({
     path,
@@ -54,6 +58,10 @@ function App() {
                 <AppRoute path="/otc" page={OTCPage} />
                 <AppRoute path="/virtual-card" page={VirtualCardPage} />
                 <AppRoute path="/senders" page={SendersPage} />
+                <AppRoute path="/newsletters" page={NewslettersPage} />
+                <AppRoute path="/contact-messages" page={ContactMessagesPage} />
+                <AppRoute path="/requested-access" page={RequestedAccessPage} />
+                <AppRoute path="/providers" page={ProvidersPage} />
                 <Route path="*">
                     <NotFound />
                 </Route>

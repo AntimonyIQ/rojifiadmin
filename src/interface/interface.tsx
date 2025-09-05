@@ -1,4 +1,4 @@
-import { AccountTier, AffiliationStatus, BiometricType, BlockchainNetwork, BooleanString, Coin, Fiat, PaymentRail, RequestStatus, Role, SenderStatus, Status, TeamRole, TeamStatus, TransactionStatus, TransactionType, UserType, WalletStatus, WalletType } from "@/enums/enums";
+import { AccountTier, AffiliationStatus, BiometricType, BlockchainNetwork, BooleanString, Coin, Engine, Fiat, PaymentRail, RequestStatus, Role, SenderStatus, Status, TeamRole, TeamStatus, TransactionStatus, TransactionType, UserType, WalletStatus, WalletType } from "@/enums/enums";
 
 
 export interface IHandshakeClient {
@@ -65,7 +65,7 @@ export interface ICopyright {
 }
 
 export interface IWallet {
-    _id: string;
+    _id?: string;
     currency: Fiat | Coin;
     userId: IUser;
     type: WalletType;
@@ -75,7 +75,7 @@ export interface IWallet {
     status: WalletStatus; // Wallet status
     isPrimary: boolean; // Is this the user's primary wallet?
     icon: string; // Icon representing the wallet
-    symbol: "₦" | "$" | "€" | "£",
+    symbol: "₦" | "$" | "€" | "£";
     activated: boolean;
     name: string;
     deposit: Array<{
@@ -93,15 +93,37 @@ export interface IWallet {
     requested: Array<{
         currency: Fiat;
         status: RequestStatus;
-        senderId: string;
-        userId: string;
+        senderId: IUser;
+        userId: IUser;
+    }>;
+    uniqueFee: Array<{
+        currency: Coin | Fiat;
+        amount: number;
     }>;
     createdAt: Date;
     updatedAt: Date;
+};
+
+export interface IProvider extends IWallet {
+    wxfee: number;
+    rojifiFee: number;
+    cryptofee: number;
+    sellrate: number;
+    buyrate: number;
+    active: boolean;
+    price: number;
+    mnemonic: string;
+    engine: Engine;
+    threshold: number;
+    tier0: number;
+    tier1: number;
+    tier2: number;
+    tier3: number;
+    tier4: number;
 }
 
-
 export interface IContactUs {
+    _id?: string;
     firstname: string;
     lastname: string;
     email: string;
@@ -118,10 +140,13 @@ export interface IContactUs {
     respondedAt: Date | null;
     deletedAt: Date | null;
     ArchivedAt: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
     metadata: Record<string, any>;
 }
 
 export interface IRequestAccess {
+    _id: string;
     rojifiId: string;
     firstname: string;
     lastname: string;
@@ -145,6 +170,8 @@ export interface IRequestAccess {
     approvedAt: Date | null;
     deletedAt: Date | null;
     archivedAt: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
     metadata: Record<string, any>;
 }
 
