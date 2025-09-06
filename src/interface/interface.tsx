@@ -29,6 +29,9 @@ export interface IRequestAccess {
     deleted: boolean;
     archived: boolean;
     approvedAt: Date | null;
+    approvedBy: IUser | null;
+    rejectedAt: Date | null;
+    rejectedBy: IUser | null;
     deletedAt: Date | null;
     archivedAt: Date | null;
     metadata: Record<string, any>;

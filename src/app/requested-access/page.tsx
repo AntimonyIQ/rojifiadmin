@@ -459,7 +459,6 @@ export default function RequestedAccessPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Rojifi ID</TableHead>
                                     <TableHead>Name</TableHead>
                                     <TableHead>Business</TableHead>
                                     <TableHead>Email</TableHead>
@@ -482,9 +481,6 @@ export default function RequestedAccessPage() {
                                 ) : (
                                     requestedAccess.map((request) => (
                                         <TableRow key={request._id}>
-                                            <TableCell className="font-medium">
-                                                {request.rojifiId}
-                                            </TableCell>
                                             <TableCell>
                                                 {`${request.firstname} ${request.lastname}`}
                                             </TableCell>
@@ -635,10 +631,38 @@ export default function RequestedAccessPage() {
                                                                                 <span className="font-semibold">This request has been approved</span>
                                                                             </div>
                                                                             {selectedRequest.approvedAt && (
-                                                                                <p className="text-sm text-gray-500 mt-1">
-                                                                                    Approved on {formatDate(selectedRequest.approvedAt)}
-                                                                                </p>
+                                                                                <div className="text-sm text-gray-500 mt-1 space-y-1">
+                                                                                    <p><strong>Approved On:</strong> {formatDate(selectedRequest.approvedAt)}</p>
+                                                                                    <p><strong>Approved By:</strong> {selectedRequest.approvedBy ? `${selectedRequest.approvedBy.firstname} ${selectedRequest.approvedBy.lastname} (${selectedRequest.approvedBy.email})` : "N/A"}</p>
+                                                                                </div>
                                                                             )}
+                                                                            <div className="mt-3">
+                                                                                <Tooltip>
+                                                                                    <TooltipTrigger asChild>
+                                                                                        <Button
+                                                                                            variant="destructive"
+                                                                                            size="sm"
+                                                                                            onClick={() => handleReject(selectedRequest)}
+                                                                                            disabled={loadingStates[selectedRequest._id]}
+                                                                                        >
+                                                                                            {loadingStates[selectedRequest._id] ? (
+                                                                                                <>
+                                                                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                                                                    Rejecting...
+                                                                                                </>
+                                                                                            ) : (
+                                                                                                <>
+                                                                                                    <X className="mr-2 h-4 w-4" />
+                                                                                                    Reject Request
+                                                                                                </>
+                                                                                            )}
+                                                                                        </Button>
+                                                                                    </TooltipTrigger>
+                                                                                    <TooltipContent>
+                                                                                        <p>Reject this approved request</p>
+                                                                                    </TooltipContent>
+                                                                                </Tooltip>
+                                                                            </div>
                                                                         </div>
                                                                     )}
                                                                     {selectedRequest.deleted && (
