@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,12 +21,23 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Eye, Check, X, Download, Search, Loader2, ChevronLeft, ChevronRight, UserPlus } from "lucide-react";
+import { Eye, Check, X, Download, Search, Loader2, ChevronLeft, ChevronRight, UserPlus, ChevronDown, ChevronUp, Monitor, Smartphone, Globe } from "lucide-react";
 import { IPagination, IResponse, IRequestAccess } from "@/interface/interface";
 import { session, SessionData } from "@/session/session";
 import Defaults from "@/defaults/defaults";
@@ -38,8 +49,9 @@ export default function RequestedAccessPage() {
     const [loading, setLoading] = useState(true);
     const [selectedRequest, setSelectedRequest] = useState<IRequestAccess | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
+    const [showMetadata, setShowMetadata] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
-    const [loadingStates, setLoadingStates] = useState<{ [key: string]: boolean }>({});
+    const [loadingStates, setLoadingStates] = useState<{ [key: string]: { approve: boolean; reject: boolean } }>({});
     const [statusFilter, setStatusFilter] = useState<string>("all");
     const [pagination, setPagination] = useState<IPagination>({
         page: 1,
@@ -104,7 +116,13 @@ export default function RequestedAccessPage() {
 
     const approveRequestedAccess = async (id: string) => {
         try {
-            setLoadingStates(prev => ({ ...prev, [id]: true }));
+            setLoadingStates(prev => ({
+                ...prev,
+                [id]: {
+                    approve: true,
+                    reject: prev[id]?.reject || false
+                }
+            }));
             const res = await fetch(`${Defaults.API_BASE_URL}/admin/requestaccess/approve/${id}`, {
                 method: 'GET',
                 headers: {
@@ -132,13 +150,25 @@ export default function RequestedAccessPage() {
                 variant: "destructive",
             });
         } finally {
-            setLoadingStates(prev => ({ ...prev, [id]: false }));
+            setLoadingStates(prev => ({
+                ...prev,
+                [id]: {
+                    approve: false,
+                    reject: prev[id]?.reject || false
+                }
+            }));
         }
     }
 
     const rejectRequestedAccess = async (id: string) => {
         try {
-            setLoadingStates(prev => ({ ...prev, [id]: true }));
+            setLoadingStates(prev => ({
+                ...prev,
+                [id]: {
+                    approve: prev[id]?.approve || false,
+                    reject: true
+                }
+            }));
             const res = await fetch(`${Defaults.API_BASE_URL}/admin/requestaccess/reject/${id}`, {
                 method: 'GET',
                 headers: {
@@ -166,7 +196,13 @@ export default function RequestedAccessPage() {
                 variant: "destructive",
             });
         } finally {
-            setLoadingStates(prev => ({ ...prev, [id]: false }));
+            setLoadingStates(prev => ({
+                ...prev,
+                [id]: {
+                    approve: prev[id]?.approve || false,
+                    reject: false
+                }
+            }));
         }
     }
 
@@ -221,6 +257,42 @@ export default function RequestedAccessPage() {
             hour: '2-digit',
             minute: '2-digit'
         }).format(new Date(date));
+    };
+
+    const renderMetadataValue = (_key: string, value: any): React.ReactNode => {
+        if (value === null || value === undefined) return "N/A";
+
+        if (typeof value === 'object') {
+            return (
+                <div className="ml-4 space-y-2">
+                    {Object.entries(value).map(([subKey, subValue]) => (
+                        <div key={subKey} className="flex flex-col space-y-1">
+                            <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">{subKey}:</span>
+                            <span className="text-sm">{renderMetadataValue(subKey, subValue)}</span>
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+
+        if (typeof value === 'boolean') return value ? "Yes" : "No";
+        if (typeof value === 'string' && value.length > 50) {
+            return (
+                <div className="text-sm bg-gray-50 p-2 rounded border max-h-20 overflow-y-auto">
+                    {value}
+                </div>
+            );
+        }
+
+        return String(value);
+    };
+
+    const getDeviceIcon = (deviceType: string) => {
+        switch (deviceType?.toLowerCase()) {
+            case 'mobile': return <Smartphone className="h-4 w-4" />;
+            case 'tablet': return <Monitor className="h-4 w-4" />;
+            default: return <Monitor className="h-4 w-4" />;
+        }
     };
 
     if (loading) {
@@ -571,17 +643,111 @@ export default function RequestedAccessPage() {
                                                                         <label className="font-semibold">Message:</label>
                                                                         <p className="text-sm text-gray-600">{selectedRequest.message}</p>
                                                                     </div>
+
+                                                                    {/* Metadata Section */}
+                                                                    {selectedRequest.metadata && (
+                                                                        <div className="col-span-2 border-t pt-4">
+                                                                            <div className="flex items-center justify-between mb-3">
+                                                                                <label className="font-semibold flex items-center">
+                                                                                    <Globe className="h-4 w-4 mr-2" />
+                                                                                    Technical Information
+                                                                                </label>
+                                                                                <Button
+                                                                                    variant="outline"
+                                                                                    size="sm"
+                                                                                    onClick={() => setShowMetadata(!showMetadata)}
+                                                                                >
+                                                                                    {showMetadata ? (
+                                                                                        <>
+                                                                                            <ChevronUp className="h-4 w-4 mr-1" />
+                                                                                            Hide Details
+                                                                                        </>
+                                                                                    ) : (
+                                                                                        <>
+                                                                                            <ChevronDown className="h-4 w-4 mr-1" />
+                                                                                            Show Details
+                                                                                        </>
+                                                                                    )}
+                                                                                </Button>
+                                                                            </div>
+
+                                                                            {showMetadata && (
+                                                                                <div className="bg-gray-50 p-4 rounded-lg space-y-4 max-h-96 overflow-y-auto">
+                                                                                    {/* Location Information */}
+                                                                                    {selectedRequest.metadata.location && (
+                                                                                        <div className="bg-white p-3 rounded border">
+                                                                                            <h4 className="font-medium text-green-700 mb-2 flex items-center">
+                                                                                                <Globe className="h-4 w-4 mr-2" />
+                                                                                                Location Information
+                                                                                            </h4>
+                                                                                            <div className="grid grid-cols-2 gap-2 text-sm">
+                                                                                                <div><strong>IP Address:</strong> {selectedRequest.metadata.location.ip || "N/A"}</div>
+                                                                                                <div><strong>City:</strong> {selectedRequest.metadata.location.city || "N/A"}</div>
+                                                                                                <div><strong>Region:</strong> {selectedRequest.metadata.location.region || "N/A"}</div>
+                                                                                                <div><strong>Country:</strong> {selectedRequest.metadata.location.country_name || "N/A"}</div>
+                                                                                                <div><strong>Timezone:</strong> {selectedRequest.metadata.location.timezone || "N/A"}</div>
+                                                                                                <div><strong>ISP:</strong> {selectedRequest.metadata.location.org || "N/A"}</div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    )}
+
+                                                                                    {/* Device Information */}
+                                                                                    {selectedRequest.metadata.device && (
+                                                                                        <div className="bg-white p-3 rounded border">
+                                                                                            <h4 className="font-medium text-blue-700 mb-2 flex items-center">
+                                                                                                {getDeviceIcon(selectedRequest.metadata.device.device?.type)}
+                                                                                                <span className="ml-2">Device Information</span>
+                                                                                            </h4>
+                                                                                            <div className="space-y-2 text-sm">
+                                                                                                <div><strong>Device Type:</strong> {selectedRequest.metadata.device.device?.type || "N/A"}</div>
+                                                                                                <div><strong>Platform:</strong> {selectedRequest.metadata.device.device?.platform || "N/A"}</div>
+                                                                                                <div><strong>Operating System:</strong> {selectedRequest.metadata.device.system?.os || "N/A"}</div>
+                                                                                                <div><strong>Browser:</strong> {selectedRequest.metadata.device.browser?.name || "N/A"} {selectedRequest.metadata.device.browser?.version || ""}</div>
+                                                                                                <div><strong>Language:</strong> {selectedRequest.metadata.device.browser?.language || "N/A"}</div>
+                                                                                                <div><strong>Screen Resolution:</strong> {selectedRequest.metadata.device.device?.screen ? `${selectedRequest.metadata.device.device.screen.width}x${selectedRequest.metadata.device.device.screen.height}` : "N/A"}</div>
+                                                                                                <div><strong>Timezone:</strong> {selectedRequest.metadata.device.system?.timezone || "N/A"}</div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    )}
+
+                                                                                    {/* Submission Information */}
+                                                                                    {selectedRequest.metadata.submission && (
+                                                                                        <div className="bg-white p-3 rounded border">
+                                                                                            <h4 className="font-medium text-purple-700 mb-2">Submission Details</h4>
+                                                                                            <div className="space-y-2 text-sm">
+                                                                                                <div><strong>Timestamp:</strong> {selectedRequest.metadata.submission.timestamp ? new Date(selectedRequest.metadata.submission.timestamp).toLocaleString() : "N/A"}</div>
+                                                                                                <div><strong>Referrer:</strong> {selectedRequest.metadata.submission.referrer || "Direct"}</div>
+                                                                                                <div><strong>Page URL:</strong> {selectedRequest.metadata.submission.url || "N/A"}</div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    )}
+
+                                                                                    {/* Raw Metadata (fallback for any additional data) */}
+                                                                                    <details className="bg-white p-3 rounded border">
+                                                                                        <summary className="font-medium text-gray-700 cursor-pointer">Raw Metadata (Technical)</summary>
+                                                                                        <div className="mt-2 space-y-2">
+                                                                                            {Object.entries(selectedRequest.metadata).map(([key, value]) => (
+                                                                                                <div key={key} className="border-l-2 border-gray-200 pl-3">
+                                                                                                    <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">{key}:</span>
+                                                                                                    <div className="mt-1">{renderMetadataValue(key, value)}</div>
+                                                                                                </div>
+                                                                                            ))}
+                                                                                        </div>
+                                                                                    </details>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
                                                                     {!selectedRequest.approved && !selectedRequest.deleted && (
                                                                         <div className="col-span-2 flex gap-2 mt-4 pt-4 border-t">
-                                                                            <Tooltip>
-                                                                                <TooltipTrigger asChild>
+                                                                            <AlertDialog>
+                                                                                <AlertDialogTrigger asChild>
                                                                                     <Button
                                                                                         variant="default"
                                                                                         className="text-white bg-green-600 hover:bg-green-700"
-                                                                                        onClick={() => handleApprove(selectedRequest)}
-                                                                                        disabled={loadingStates[selectedRequest._id]}
+                                                                                        disabled={loadingStates[selectedRequest._id]?.approve || loadingStates[selectedRequest._id]?.reject}
                                                                                     >
-                                                                                        {loadingStates[selectedRequest._id] ? (
+                                                                                        {loadingStates[selectedRequest._id]?.approve ? (
                                                                                             <>
                                                                                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                                                                                 Approving...
@@ -593,19 +759,34 @@ export default function RequestedAccessPage() {
                                                                                             </>
                                                                                         )}
                                                                                     </Button>
-                                                                                </TooltipTrigger>
-                                                                                <TooltipContent>
-                                                                                    <p>Approve this access request</p>
-                                                                                </TooltipContent>
-                                                                            </Tooltip>
-                                                                            <Tooltip>
-                                                                                <TooltipTrigger asChild>
+                                                                                </AlertDialogTrigger>
+                                                                                <AlertDialogContent>
+                                                                                    <AlertDialogHeader>
+                                                                                        <AlertDialogTitle>Approve Access Request</AlertDialogTitle>
+                                                                                        <AlertDialogDescription>
+                                                                                            Are you sure you want to approve this access request for <strong>{selectedRequest.firstname} {selectedRequest.lastname}</strong> from <strong>{selectedRequest.businessName}</strong>?
+                                                                                            This will grant them access to the platform and send them an approval email.
+                                                                                        </AlertDialogDescription>
+                                                                                    </AlertDialogHeader>
+                                                                                    <AlertDialogFooter>
+                                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                                        <AlertDialogAction
+                                                                                            onClick={() => handleApprove(selectedRequest)}
+                                                                                            className="bg-green-600 hover:bg-green-700"
+                                                                                        >
+                                                                                            Yes, Approve
+                                                                                        </AlertDialogAction>
+                                                                                    </AlertDialogFooter>
+                                                                                </AlertDialogContent>
+                                                                            </AlertDialog>
+
+                                                                            <AlertDialog>
+                                                                                <AlertDialogTrigger asChild>
                                                                                     <Button
                                                                                         variant="destructive"
-                                                                                        onClick={() => handleReject(selectedRequest)}
-                                                                                        disabled={loadingStates[selectedRequest._id]}
+                                                                                        disabled={loadingStates[selectedRequest._id]?.approve || loadingStates[selectedRequest._id]?.reject}
                                                                                     >
-                                                                                        {loadingStates[selectedRequest._id] ? (
+                                                                                        {loadingStates[selectedRequest._id]?.reject ? (
                                                                                             <>
                                                                                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                                                                                 Rejecting...
@@ -617,11 +798,26 @@ export default function RequestedAccessPage() {
                                                                                             </>
                                                                                         )}
                                                                                     </Button>
-                                                                                </TooltipTrigger>
-                                                                                <TooltipContent>
-                                                                                    <p>Reject this access request</p>
-                                                                                </TooltipContent>
-                                                                            </Tooltip>
+                                                                                </AlertDialogTrigger>
+                                                                                <AlertDialogContent>
+                                                                                    <AlertDialogHeader>
+                                                                                        <AlertDialogTitle>Reject Access Request</AlertDialogTitle>
+                                                                                        <AlertDialogDescription>
+                                                                                            Are you sure you want to reject this access request for <strong>{selectedRequest.firstname} {selectedRequest.lastname}</strong> from <strong>{selectedRequest.businessName}</strong>?
+                                                                                            This action cannot be undone and they will not receive access to the platform.
+                                                                                        </AlertDialogDescription>
+                                                                                    </AlertDialogHeader>
+                                                                                    <AlertDialogFooter>
+                                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                                        <AlertDialogAction
+                                                                                            onClick={() => handleReject(selectedRequest)}
+                                                                                            className="bg-red-600 hover:bg-red-700"
+                                                                                        >
+                                                                                            Yes, Reject
+                                                                                        </AlertDialogAction>
+                                                                                    </AlertDialogFooter>
+                                                                                </AlertDialogContent>
+                                                                            </AlertDialog>
                                                                         </div>
                                                                     )}
                                                                     {selectedRequest.approved && (
@@ -637,15 +833,14 @@ export default function RequestedAccessPage() {
                                                                                 </div>
                                                                             )}
                                                                             <div className="mt-3">
-                                                                                <Tooltip>
-                                                                                    <TooltipTrigger asChild>
+                                                                                <AlertDialog>
+                                                                                    <AlertDialogTrigger asChild>
                                                                                         <Button
                                                                                             variant="destructive"
                                                                                             size="sm"
-                                                                                            onClick={() => handleReject(selectedRequest)}
-                                                                                            disabled={loadingStates[selectedRequest._id]}
+                                                                                            disabled={loadingStates[selectedRequest._id]?.approve || loadingStates[selectedRequest._id]?.reject}
                                                                                         >
-                                                                                            {loadingStates[selectedRequest._id] ? (
+                                                                                            {loadingStates[selectedRequest._id]?.reject ? (
                                                                                                 <>
                                                                                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                                                                                     Rejecting...
@@ -657,11 +852,26 @@ export default function RequestedAccessPage() {
                                                                                                 </>
                                                                                             )}
                                                                                         </Button>
-                                                                                    </TooltipTrigger>
-                                                                                    <TooltipContent>
-                                                                                        <p>Reject this approved request</p>
-                                                                                    </TooltipContent>
-                                                                                </Tooltip>
+                                                                                    </AlertDialogTrigger>
+                                                                                    <AlertDialogContent>
+                                                                                        <AlertDialogHeader>
+                                                                                            <AlertDialogTitle>Reject Approved Request</AlertDialogTitle>
+                                                                                            <AlertDialogDescription>
+                                                                                                Are you sure you want to reject this previously approved request for <strong>{selectedRequest.firstname} {selectedRequest.lastname}</strong> from <strong>{selectedRequest.businessName}</strong>?
+                                                                                                This will revoke their access and they will no longer be able to use the platform.
+                                                                                            </AlertDialogDescription>
+                                                                                        </AlertDialogHeader>
+                                                                                        <AlertDialogFooter>
+                                                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                                            <AlertDialogAction
+                                                                                                onClick={() => handleReject(selectedRequest)}
+                                                                                                className="bg-red-600 hover:bg-red-700"
+                                                                                            >
+                                                                                                Yes, Reject
+                                                                                            </AlertDialogAction>
+                                                                                        </AlertDialogFooter>
+                                                                                    </AlertDialogContent>
+                                                                                </AlertDialog>
                                                                             </div>
                                                                         </div>
                                                                     )}
@@ -682,50 +892,6 @@ export default function RequestedAccessPage() {
                                                             )}
                                                         </DialogContent>
                                                     </Dialog>
-                                                    {!request.approved && !request.deleted && (
-                                                        <>
-                                                            <Tooltip>
-                                                                <TooltipTrigger asChild>
-                                                                    <Button
-                                                                        variant="outline"
-                                                                        size="sm"
-                                                                        className="text-green-600 hover:text-green-700"
-                                                                        onClick={() => handleApprove(request)}
-                                                                        disabled={loadingStates[request._id]}
-                                                                    >
-                                                                        {loadingStates[request._id] ? (
-                                                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                                                        ) : (
-                                                                            <Check className="h-4 w-4" />
-                                                                        )}
-                                                                    </Button>
-                                                                </TooltipTrigger>
-                                                                <TooltipContent>
-                                                                    <p>Approve access request</p>
-                                                                </TooltipContent>
-                                                            </Tooltip>
-                                                            <Tooltip>
-                                                                <TooltipTrigger asChild>
-                                                                    <Button
-                                                                        variant="outline"
-                                                                        size="sm"
-                                                                        className="text-red-600 hover:text-red-700"
-                                                                        onClick={() => handleReject(request)}
-                                                                        disabled={loadingStates[request._id]}
-                                                                    >
-                                                                        {loadingStates[request._id] ? (
-                                                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                                                        ) : (
-                                                                            <X className="h-4 w-4" />
-                                                                        )}
-                                                                    </Button>
-                                                                </TooltipTrigger>
-                                                                <TooltipContent>
-                                                                    <p>Reject access request</p>
-                                                                </TooltipContent>
-                                                            </Tooltip>
-                                                        </>
-                                                    )}
                                                 </div>
                                             </TableCell>
                                         </TableRow>
