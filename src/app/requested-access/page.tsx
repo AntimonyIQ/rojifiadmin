@@ -106,7 +106,7 @@ export default function RequestedAccessPage() {
         try {
             setLoadingStates(prev => ({ ...prev, [id]: true }));
             const res = await fetch(`${Defaults.API_BASE_URL}/admin/requestaccess/approve/${id}`, {
-                method: 'POST',
+                method: 'GET',
                 headers: {
                     ...Defaults.HEADERS,
                     'x-rojifi-handshake': sd.client.publicKey,
@@ -140,7 +140,7 @@ export default function RequestedAccessPage() {
         try {
             setLoadingStates(prev => ({ ...prev, [id]: true }));
             const res = await fetch(`${Defaults.API_BASE_URL}/admin/requestaccess/reject/${id}`, {
-                method: 'POST',
+                method: 'GET',
                 headers: {
                     ...Defaults.HEADERS,
                     'x-rojifi-handshake': sd.client.publicKey,
