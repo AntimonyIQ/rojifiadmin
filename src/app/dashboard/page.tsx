@@ -1,32 +1,20 @@
 import { motion } from "framer-motion";
-// @ts-ignore
-import { Users, CreditCard, DollarSign, UserCheck, Receipt, ReceiptText, ArrowUpRight } from "lucide-react";
+import { Users, UserCheck, ArrowUpRight } from "lucide-react";
 import KpiCard from "@/components/dashboard/KpiCard";
-// @ts-ignore
-import RevenueChart from "@/components/dashboard/RevenueChart";
 import TransactionVolumeChart from "@/components/dashboard/TransactionVolumeChart";
 import RecentTransactionsTable from "@/components/dashboard/RecentTransactionsTable";
-// @ts-ignore
-import { useQueries } from "@tanstack/react-query";
-// @ts-ignore
-import { fetchDashboardStats, fetchRecentTransactions, fetchChartData, } from "@/services/api";
 import { useFetchDashboardOverview } from "@/hooks/useStaff";
 import { ITransaction } from "@/interface/interface";
 import { useEffect, useState } from "react";
 import {
     Dialog,
-    DialogClose,
     DialogContent,
     DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button";
-import { Country, ICountry } from "country-state-city";
 
 export default function DashboardPage() {
     const [transactions, setTransactions] = useState<Array<ITransaction>>([]);

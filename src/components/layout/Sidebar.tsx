@@ -25,6 +25,14 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import { session, SessionData } from "@/session/session";
 import { useEffect, useState } from "react";
 import { IUser } from "@/interface/interface";
@@ -89,6 +97,7 @@ export default function Sidebar() {
     const { collapsed, toggleSidebar } = useSidebar();
     const [location] = useLocation();
     const [user, setUser] = useState<IUser | null>(null);
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
     const sd: SessionData = session.getUserData();
 
     useEffect(() => {
@@ -99,6 +108,20 @@ export default function Sidebar() {
 
     const handleLogout = () => {
         session.logout();
+        window.location.href = "/";
+    };
+
+    const openLogoutModal = () => {
+        setShowLogoutModal(true);
+    };
+
+    const closeLogoutModal = () => {
+        setShowLogoutModal(false);
+    };
+
+    const confirmLogout = () => {
+        setShowLogoutModal(false);
+        handleLogout();
     };
 
     const navigationItems = [
@@ -259,7 +282,7 @@ export default function Sidebar() {
                                     </p>
                                 </div>
                                 <Button
-                                    onClick={handleLogout}
+                                    onClick={openLogoutModal}
                                     variant="ghost"
                                     size="icon"
                                     className="ml-auto p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full"
@@ -284,6 +307,39 @@ export default function Sidebar() {
                     </div>
                 </div>
             </div>
+
+            {/* Logout Confirmation Modal */}
+            <Dialog open={showLogoutModal} onOpenChange={setShowLogoutModal}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <LogOut className="h-5 w-5 text-red-500" />
+                            Confirm Logout
+                        </DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to logout from your admin account? You will need to sign in again to access the dashboard.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={closeLogoutModal}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            onClick={confirmLogout}
+                            className="bg-red-600 hover:bg-red-700"
+                        >
+                            <LogOut className="h-4 w-4 mr-2" />
+                            Logout
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </motion.aside>
     );
 }

@@ -78,7 +78,7 @@ export default function RequestedAccessPage() {
                     'x-rojifi-handshake': sd.client.publicKey,
                     'x-rojifi-deviceid': sd.deviceid,
                     Authorization: `Bearer ${sd.authorization}`,
-                },
+                }
             });
 
             const data: IResponse = await res.json();
