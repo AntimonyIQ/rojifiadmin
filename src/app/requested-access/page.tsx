@@ -37,12 +37,15 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Eye, Check, X, Download, Search, Loader2, ChevronLeft, ChevronRight, UserPlus, ChevronDown, ChevronUp, Monitor, Smartphone, Globe } from "lucide-react";
+import { Eye, Check, X, Download, Search, Loader2, ChevronLeft, ChevronRight, UserPlus, ChevronDown, ChevronUp, Monitor, Smartphone, Globe, Settings, CreditCard } from "lucide-react";
 import { IPagination, IResponse, IRequestAccess } from "@/interface/interface";
 import { session, SessionData } from "@/session/session";
 import Defaults from "@/defaults/defaults";
 import { Status } from "@/enums/enums";
 import { toast } from "@/hooks/use-toast";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function RequestedAccessPage() {
     const [requestedAccess, setRequestedAccess] = useState<IRequestAccess[]>([]);
@@ -59,6 +62,24 @@ export default function RequestedAccessPage() {
         totalPages: 1,
         total: 0,
     });
+
+    // Tailor Service modal states
+    const [tailorServiceModalOpen, setTailorServiceModalOpen] = useState(false);
+    const [serviceSettings, setServiceSettings] = useState({
+        onRamp: {
+            enabled: false,
+            supportedFiats: [] as string[]
+        },
+        offRamp: {
+            enabled: false,
+            supportedFiats: [] as string[]
+        }
+    });
+    const [savingServices, setSavingServices] = useState(false);
+
+    // Available fiat currencies
+    const availableFiats = ["USD", "EUR", "GBP", "NGN", "GHS", "KES", "ZAR", "EGP", "UGX"];
+
     const sd: SessionData = session.getUserData();
 
     // Fetch newsletters with filters and pagination
@@ -223,6 +244,91 @@ export default function RequestedAccessPage() {
     const openModal = (request: IRequestAccess) => {
         setSelectedRequest(request);
         setModalOpen(true);
+    };
+
+    const openTailorServiceModal = (request: IRequestAccess) => {
+        setSelectedRequest(request);
+        // Initialize service settings from request data or defaults
+        setServiceSettings({
+            onRamp: {
+                enabled: request.services?.onRamp?.enabled || false,
+                supportedFiats: request.services?.onRamp?.supportedFiats || []
+            },
+            offRamp: {
+                enabled: request.services?.offRamp?.enabled || false,
+                supportedFiats: request.services?.offRamp?.supportedFiats || []
+            }
+        });
+        setTailorServiceModalOpen(true);
+    };
+
+    const handleServiceToggle = (serviceType: 'onRamp' | 'offRamp', enabled: boolean) => {
+        setServiceSettings(prev => ({
+            ...prev,
+            [serviceType]: {
+                ...prev[serviceType],
+                enabled
+            }
+        }));
+    };
+
+    const handleFiatToggle = (serviceType: 'onRamp' | 'offRamp', fiat: string, checked: boolean) => {
+        setServiceSettings(prev => ({
+            ...prev,
+            [serviceType]: {
+                ...prev[serviceType],
+                supportedFiats: checked
+                    ? [...prev[serviceType].supportedFiats, fiat]
+                    : prev[serviceType].supportedFiats.filter(f => f !== fiat)
+            }
+        }));
+    };
+
+    const saveServiceSettings = async () => {
+        if (!selectedRequest?._id) return;
+
+        try {
+            setSavingServices(true);
+
+            const res = await fetch(`${Defaults.API_BASE_URL}/admin/requestaccess/update-services/${selectedRequest._id}`, {
+                method: 'PUT',
+                headers: {
+                    ...Defaults.HEADERS,
+                    "Content-Type": "application/json",
+                    'x-rojifi-handshake': sd.client.publicKey,
+                    'x-rojifi-deviceid': sd.deviceid,
+                    Authorization: `Bearer ${sd.authorization}`,
+                },
+                body: JSON.stringify({
+                    services: {
+                        onRamp: serviceSettings.onRamp,
+                        offRamp: serviceSettings.offRamp,
+                        lastUpdated: new Date(),
+                        updatedBy: sd.rojifiId
+                    }
+                })
+            });
+
+            const data: IResponse = await res.json();
+            if (data.status === Status.ERROR) throw new Error(data.message || data.error);
+            if (data.status === Status.SUCCESS) {
+                toast({
+                    title: "Services updated successfully",
+                    description: `Service configuration has been saved for ${selectedRequest.firstname} ${selectedRequest.lastname}.`,
+                    variant: "default",
+                });
+                setTailorServiceModalOpen(false);
+                await fetchRequestAccess(); // Refresh the list
+            }
+        } catch (error: any) {
+            toast({
+                title: "Error updating services",
+                description: error.message,
+                variant: "destructive",
+            });
+        } finally {
+            setSavingServices(false);
+        }
     };
 
     // Debounced search
@@ -584,260 +690,207 @@ export default function RequestedAccessPage() {
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
-                                                <div className="flex gap-2">
-                                                    <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-                                                        <DialogTrigger asChild>
-                                                            <Tooltip>
-                                                                <TooltipTrigger asChild>
-                                                                    <Button
-                                                                        variant="outline"
-                                                                        size="sm"
-                                                                        onClick={() => openModal(request)}
-                                                                    >
-                                                                        <Eye className="h-4 w-4" />
-                                                                    </Button>
-                                                                </TooltipTrigger>
-                                                                <TooltipContent>
-                                                                    <p>View request details</p>
-                                                                </TooltipContent>
-                                                            </Tooltip>
-                                                        </DialogTrigger>
-                                                        <DialogContent className="max-w-2xl">
-                                                            <DialogHeader>
-                                                                <DialogTitle>Request Details</DialogTitle>
-                                                                <DialogDescription>
-                                                                    Full details of the access request
-                                                                </DialogDescription>
-                                                            </DialogHeader>
-                                                            {selectedRequest && (
-                                                                <div className="grid grid-cols-2 gap-4">
-                                                                    <div>
-                                                                        <label className="font-semibold">Full Name:</label>
-                                                                        <p>{`${selectedRequest.firstname} ${selectedRequest.middlename} ${selectedRequest.lastname}`}</p>
-                                                                    </div>
-                                                                    <div>
-                                                                        <label className="font-semibold">Email:</label>
-                                                                        <p>{selectedRequest.email}</p>
-                                                                    </div>
-                                                                    <div>
-                                                                        <label className="font-semibold">Business:</label>
-                                                                        <p>{selectedRequest.businessName}</p>
-                                                                    </div>
-                                                                    <div>
-                                                                        <label className="font-semibold">Website:</label>
-                                                                        <p>{selectedRequest.businessWebsite}</p>
-                                                                    </div>
-                                                                    <div>
-                                                                        <label className="font-semibold">Phone:</label>
-                                                                        <p>{`${selectedRequest.phoneCode} ${selectedRequest.phoneNumber}`}</p>
-                                                                    </div>
-                                                                    <div>
-                                                                        <label className="font-semibold">Weekly Volume:</label>
-                                                                        <p>{formatCurrency(selectedRequest.weeklyVolume)}</p>
-                                                                    </div>
-                                                                    <div className="col-span-2">
-                                                                        <label className="font-semibold">Address:</label>
-                                                                        <p>{`${selectedRequest.address}, ${selectedRequest.city}, ${selectedRequest.state}, ${selectedRequest.country} ${selectedRequest.postalCode}`}</p>
-                                                                    </div>
-                                                                    <div className="col-span-2">
-                                                                        <label className="font-semibold">Message:</label>
-                                                                        <p className="text-sm text-gray-600">{selectedRequest.message}</p>
-                                                                    </div>
+                                                <div className="flex gap-2 justify-between">
+                                                    <div className="flex gap-2">
+                                                        <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+                                                            <DialogTrigger asChild>
+                                                                <Tooltip>
+                                                                    <TooltipTrigger asChild>
+                                                                        <Button
+                                                                            variant="outline"
+                                                                            size="sm"
+                                                                            onClick={() => openModal(request)}
+                                                                        >
+                                                                            <Eye className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </TooltipTrigger>
+                                                                    <TooltipContent>
+                                                                        <p>View request details</p>
+                                                                    </TooltipContent>
+                                                                </Tooltip>
+                                                            </DialogTrigger>
+                                                            <DialogContent className="max-w-2xl">
+                                                                <DialogHeader>
+                                                                    <DialogTitle>Request Details</DialogTitle>
+                                                                    <DialogDescription>
+                                                                        Full details of the access request
+                                                                    </DialogDescription>
+                                                                </DialogHeader>
+                                                                {selectedRequest && (
+                                                                    <div className="grid grid-cols-2 gap-4">
+                                                                        <div>
+                                                                            <label className="font-semibold">Full Name:</label>
+                                                                            <p>{`${selectedRequest.firstname} ${selectedRequest.middlename} ${selectedRequest.lastname}`}</p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <label className="font-semibold">Email:</label>
+                                                                            <p>{selectedRequest.email}</p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <label className="font-semibold">Business:</label>
+                                                                            <p>{selectedRequest.businessName}</p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <label className="font-semibold">Website:</label>
+                                                                            <p>{selectedRequest.businessWebsite}</p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <label className="font-semibold">Phone:</label>
+                                                                            <p>{`${selectedRequest.phoneCode} ${selectedRequest.phoneNumber}`}</p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <label className="font-semibold">Weekly Volume:</label>
+                                                                            <p>{formatCurrency(selectedRequest.weeklyVolume)}</p>
+                                                                        </div>
+                                                                        <div className="col-span-2">
+                                                                            <label className="font-semibold">Address:</label>
+                                                                            <p>{`${selectedRequest.address}, ${selectedRequest.city}, ${selectedRequest.state}, ${selectedRequest.country} ${selectedRequest.postalCode}`}</p>
+                                                                        </div>
+                                                                        <div className="col-span-2">
+                                                                            <label className="font-semibold">Message:</label>
+                                                                            <p className="text-sm text-gray-600">{selectedRequest.message}</p>
+                                                                        </div>
 
-                                                                    {/* Metadata Section */}
-                                                                    {selectedRequest.metadata && (
-                                                                        <div className="col-span-2 border-t pt-4">
-                                                                            <div className="flex items-center justify-between mb-3">
-                                                                                <label className="font-semibold flex items-center">
-                                                                                    <Globe className="h-4 w-4 mr-2" />
-                                                                                    Technical Information
-                                                                                </label>
-                                                                                <Button
-                                                                                    variant="outline"
-                                                                                    size="sm"
-                                                                                    onClick={() => setShowMetadata(!showMetadata)}
-                                                                                >
-                                                                                    {showMetadata ? (
-                                                                                        <>
-                                                                                            <ChevronUp className="h-4 w-4 mr-1" />
-                                                                                            Hide Details
-                                                                                        </>
-                                                                                    ) : (
-                                                                                        <>
-                                                                                            <ChevronDown className="h-4 w-4 mr-1" />
-                                                                                            Show Details
-                                                                                        </>
-                                                                                    )}
-                                                                                </Button>
-                                                                            </div>
+                                                                        {/* Metadata Section */}
+                                                                        {selectedRequest.metadata && (
+                                                                            <div className="col-span-2 border-t pt-4">
+                                                                                <div className="flex items-center justify-between mb-3">
+                                                                                    <label className="font-semibold flex items-center">
+                                                                                        <Globe className="h-4 w-4 mr-2" />
+                                                                                        Technical Information
+                                                                                    </label>
+                                                                                    <Button
+                                                                                        variant="outline"
+                                                                                        size="sm"
+                                                                                        onClick={() => setShowMetadata(!showMetadata)}
+                                                                                    >
+                                                                                        {showMetadata ? (
+                                                                                            <>
+                                                                                                <ChevronUp className="h-4 w-4 mr-1" />
+                                                                                                Hide Details
+                                                                                            </>
+                                                                                        ) : (
+                                                                                            <>
+                                                                                                <ChevronDown className="h-4 w-4 mr-1" />
+                                                                                                Show Details
+                                                                                            </>
+                                                                                        )}
+                                                                                    </Button>
+                                                                                </div>
 
-                                                                            {showMetadata && (
-                                                                                <div className="bg-gray-50 p-4 rounded-lg space-y-4 max-h-96 overflow-y-auto">
-                                                                                    {/* Location Information */}
-                                                                                    {selectedRequest.metadata.location && (
-                                                                                        <div className="bg-white p-3 rounded border">
-                                                                                            <h4 className="font-medium text-green-700 mb-2 flex items-center">
-                                                                                                <Globe className="h-4 w-4 mr-2" />
-                                                                                                Location Information
-                                                                                            </h4>
-                                                                                            <div className="grid grid-cols-2 gap-2 text-sm">
-                                                                                                <div><strong>IP Address:</strong> {selectedRequest.metadata.location.ip || "N/A"}</div>
-                                                                                                <div><strong>City:</strong> {selectedRequest.metadata.location.city || "N/A"}</div>
-                                                                                                <div><strong>Region:</strong> {selectedRequest.metadata.location.region || "N/A"}</div>
-                                                                                                <div><strong>Country:</strong> {selectedRequest.metadata.location.country_name || "N/A"}</div>
-                                                                                                <div><strong>Timezone:</strong> {selectedRequest.metadata.location.timezone || "N/A"}</div>
-                                                                                                <div><strong>ISP:</strong> {selectedRequest.metadata.location.org || "N/A"}</div>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    )}
-
-                                                                                    {/* Device Information */}
-                                                                                    {selectedRequest.metadata.device && (
-                                                                                        <div className="bg-white p-3 rounded border">
-                                                                                            <h4 className="font-medium text-blue-700 mb-2 flex items-center">
-                                                                                                {getDeviceIcon(selectedRequest.metadata.device.device?.type)}
-                                                                                                <span className="ml-2">Device Information</span>
-                                                                                            </h4>
-                                                                                            <div className="space-y-2 text-sm">
-                                                                                                <div><strong>Device Type:</strong> {selectedRequest.metadata.device.device?.type || "N/A"}</div>
-                                                                                                <div><strong>Platform:</strong> {selectedRequest.metadata.device.device?.platform || "N/A"}</div>
-                                                                                                <div><strong>Operating System:</strong> {selectedRequest.metadata.device.system?.os || "N/A"}</div>
-                                                                                                <div><strong>Browser:</strong> {selectedRequest.metadata.device.browser?.name || "N/A"} {selectedRequest.metadata.device.browser?.version || ""}</div>
-                                                                                                <div><strong>Language:</strong> {selectedRequest.metadata.device.browser?.language || "N/A"}</div>
-                                                                                                <div><strong>Screen Resolution:</strong> {selectedRequest.metadata.device.device?.screen ? `${selectedRequest.metadata.device.device.screen.width}x${selectedRequest.metadata.device.device.screen.height}` : "N/A"}</div>
-                                                                                                <div><strong>Timezone:</strong> {selectedRequest.metadata.device.system?.timezone || "N/A"}</div>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    )}
-
-                                                                                    {/* Submission Information */}
-                                                                                    {selectedRequest.metadata.submission && (
-                                                                                        <div className="bg-white p-3 rounded border">
-                                                                                            <h4 className="font-medium text-purple-700 mb-2">Submission Details</h4>
-                                                                                            <div className="space-y-2 text-sm">
-                                                                                                <div><strong>Timestamp:</strong> {selectedRequest.metadata.submission.timestamp ? new Date(selectedRequest.metadata.submission.timestamp).toLocaleString() : "N/A"}</div>
-                                                                                                <div><strong>Referrer:</strong> {selectedRequest.metadata.submission.referrer || "Direct"}</div>
-                                                                                                <div><strong>Page URL:</strong> {selectedRequest.metadata.submission.url || "N/A"}</div>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    )}
-
-                                                                                    {/* Raw Metadata (fallback for any additional data) */}
-                                                                                    <details className="bg-white p-3 rounded border">
-                                                                                        <summary className="font-medium text-gray-700 cursor-pointer">Raw Metadata (Technical)</summary>
-                                                                                        <div className="mt-2 space-y-2">
-                                                                                            {Object.entries(selectedRequest.metadata).map(([key, value]) => (
-                                                                                                <div key={key} className="border-l-2 border-gray-200 pl-3">
-                                                                                                    <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">{key}:</span>
-                                                                                                    <div className="mt-1">{renderMetadataValue(key, value)}</div>
+                                                                                {showMetadata && (
+                                                                                    <div className="bg-gray-50 p-4 rounded-lg space-y-4 max-h-96 overflow-y-auto">
+                                                                                        {/* Location Information */}
+                                                                                        {selectedRequest.metadata.location && (
+                                                                                            <div className="bg-white p-3 rounded border">
+                                                                                                <h4 className="font-medium text-green-700 mb-2 flex items-center">
+                                                                                                    <Globe className="h-4 w-4 mr-2" />
+                                                                                                    Location Information
+                                                                                                </h4>
+                                                                                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                                                                                    <div><strong>IP Address:</strong> {selectedRequest.metadata.location.ip || "N/A"}</div>
+                                                                                                    <div><strong>City:</strong> {selectedRequest.metadata.location.city || "N/A"}</div>
+                                                                                                    <div><strong>Region:</strong> {selectedRequest.metadata.location.region || "N/A"}</div>
+                                                                                                    <div><strong>Country:</strong> {selectedRequest.metadata.location.country_name || "N/A"}</div>
+                                                                                                    <div><strong>Timezone:</strong> {selectedRequest.metadata.location.timezone || "N/A"}</div>
+                                                                                                    <div><strong>ISP:</strong> {selectedRequest.metadata.location.org || "N/A"}</div>
                                                                                                 </div>
-                                                                                            ))}
-                                                                                        </div>
-                                                                                    </details>
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                    )}
-                                                                    {!selectedRequest.approved && !selectedRequest.deleted && (
-                                                                        <div className="col-span-2 flex gap-2 mt-4 pt-4 border-t">
-                                                                            <AlertDialog>
-                                                                                <AlertDialogTrigger asChild>
-                                                                                    <Button
-                                                                                        variant="default"
-                                                                                        className="text-white bg-green-600 hover:bg-green-700"
-                                                                                        disabled={loadingStates[selectedRequest._id]?.approve || loadingStates[selectedRequest._id]?.reject}
-                                                                                    >
-                                                                                        {loadingStates[selectedRequest._id]?.approve ? (
-                                                                                            <>
-                                                                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                                                                Approving...
-                                                                                            </>
-                                                                                        ) : (
-                                                                                            <>
-                                                                                                <Check className="mr-2 h-4 w-4" />
-                                                                                                Approve Request
-                                                                                            </>
+                                                                                            </div>
                                                                                         )}
-                                                                                    </Button>
-                                                                                </AlertDialogTrigger>
-                                                                                <AlertDialogContent>
-                                                                                    <AlertDialogHeader>
-                                                                                        <AlertDialogTitle>Approve Access Request</AlertDialogTitle>
-                                                                                        <AlertDialogDescription>
-                                                                                            Are you sure you want to approve this access request for <strong>{selectedRequest.firstname} {selectedRequest.lastname}</strong> from <strong>{selectedRequest.businessName}</strong>?
-                                                                                            This will grant them access to the platform and send them an approval email.
-                                                                                        </AlertDialogDescription>
-                                                                                    </AlertDialogHeader>
-                                                                                    <AlertDialogFooter>
-                                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                                                        <AlertDialogAction
-                                                                                            onClick={() => handleApprove(selectedRequest)}
-                                                                                            className="bg-green-600 hover:bg-green-700"
-                                                                                        >
-                                                                                            Yes, Approve
-                                                                                        </AlertDialogAction>
-                                                                                    </AlertDialogFooter>
-                                                                                </AlertDialogContent>
-                                                                            </AlertDialog>
 
-                                                                            <AlertDialog>
-                                                                                <AlertDialogTrigger asChild>
-                                                                                    <Button
-                                                                                        variant="destructive"
-                                                                                        disabled={loadingStates[selectedRequest._id]?.approve || loadingStates[selectedRequest._id]?.reject}
-                                                                                    >
-                                                                                        {loadingStates[selectedRequest._id]?.reject ? (
-                                                                                            <>
-                                                                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                                                                Rejecting...
-                                                                                            </>
-                                                                                        ) : (
-                                                                                            <>
-                                                                                                <X className="mr-2 h-4 w-4" />
-                                                                                                Reject Request
-                                                                                            </>
+                                                                                        {/* Device Information */}
+                                                                                        {selectedRequest.metadata.device && (
+                                                                                            <div className="bg-white p-3 rounded border">
+                                                                                                <h4 className="font-medium text-blue-700 mb-2 flex items-center">
+                                                                                                    {getDeviceIcon(selectedRequest.metadata.device.device?.type)}
+                                                                                                    <span className="ml-2">Device Information</span>
+                                                                                                </h4>
+                                                                                                <div className="space-y-2 text-sm">
+                                                                                                    <div><strong>Device Type:</strong> {selectedRequest.metadata.device.device?.type || "N/A"}</div>
+                                                                                                    <div><strong>Platform:</strong> {selectedRequest.metadata.device.device?.platform || "N/A"}</div>
+                                                                                                    <div><strong>Operating System:</strong> {selectedRequest.metadata.device.system?.os || "N/A"}</div>
+                                                                                                    <div><strong>Browser:</strong> {selectedRequest.metadata.device.browser?.name || "N/A"} {selectedRequest.metadata.device.browser?.version || ""}</div>
+                                                                                                    <div><strong>Language:</strong> {selectedRequest.metadata.device.browser?.language || "N/A"}</div>
+                                                                                                    <div><strong>Screen Resolution:</strong> {selectedRequest.metadata.device.device?.screen ? `${selectedRequest.metadata.device.device.screen.width}x${selectedRequest.metadata.device.device.screen.height}` : "N/A"}</div>
+                                                                                                    <div><strong>Timezone:</strong> {selectedRequest.metadata.device.system?.timezone || "N/A"}</div>
+                                                                                                </div>
+                                                                                            </div>
                                                                                         )}
-                                                                                    </Button>
-                                                                                </AlertDialogTrigger>
-                                                                                <AlertDialogContent>
-                                                                                    <AlertDialogHeader>
-                                                                                        <AlertDialogTitle>Reject Access Request</AlertDialogTitle>
-                                                                                        <AlertDialogDescription>
-                                                                                            Are you sure you want to reject this access request for <strong>{selectedRequest.firstname} {selectedRequest.lastname}</strong> from <strong>{selectedRequest.businessName}</strong>?
-                                                                                            This action cannot be undone and they will not receive access to the platform.
-                                                                                        </AlertDialogDescription>
-                                                                                    </AlertDialogHeader>
-                                                                                    <AlertDialogFooter>
-                                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                                                        <AlertDialogAction
-                                                                                            onClick={() => handleReject(selectedRequest)}
-                                                                                            className="bg-red-600 hover:bg-red-700"
-                                                                                        >
-                                                                                            Yes, Reject
-                                                                                        </AlertDialogAction>
-                                                                                    </AlertDialogFooter>
-                                                                                </AlertDialogContent>
-                                                                            </AlertDialog>
-                                                                        </div>
-                                                                    )}
-                                                                    {selectedRequest.approved && (
-                                                                        <div className="col-span-2 mt-4 pt-4 border-t">
-                                                                            <div className="flex items-center text-green-600">
-                                                                                <Check className="mr-2 h-4 w-4" />
-                                                                                <span className="font-semibold">This request has been approved</span>
+
+                                                                                        {/* Submission Information */}
+                                                                                        {selectedRequest.metadata.submission && (
+                                                                                            <div className="bg-white p-3 rounded border">
+                                                                                                <h4 className="font-medium text-purple-700 mb-2">Submission Details</h4>
+                                                                                                <div className="space-y-2 text-sm">
+                                                                                                    <div><strong>Timestamp:</strong> {selectedRequest.metadata.submission.timestamp ? new Date(selectedRequest.metadata.submission.timestamp).toLocaleString() : "N/A"}</div>
+                                                                                                    <div><strong>Referrer:</strong> {selectedRequest.metadata.submission.referrer || "Direct"}</div>
+                                                                                                    <div><strong>Page URL:</strong> {selectedRequest.metadata.submission.url || "N/A"}</div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        )}
+
+                                                                                        {/* Raw Metadata (fallback for any additional data) */}
+                                                                                        <details className="bg-white p-3 rounded border">
+                                                                                            <summary className="font-medium text-gray-700 cursor-pointer">Raw Metadata (Technical)</summary>
+                                                                                            <div className="mt-2 space-y-2">
+                                                                                                {Object.entries(selectedRequest.metadata).map(([key, value]) => (
+                                                                                                    <div key={key} className="border-l-2 border-gray-200 pl-3">
+                                                                                                        <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">{key}:</span>
+                                                                                                        <div className="mt-1">{renderMetadataValue(key, value)}</div>
+                                                                                                    </div>
+                                                                                                ))}
+                                                                                            </div>
+                                                                                        </details>
+                                                                                    </div>
+                                                                                )}
                                                                             </div>
-                                                                            {selectedRequest.approvedAt && (
-                                                                                <div className="text-sm text-gray-500 mt-1 space-y-1">
-                                                                                    <p><strong>Approved On:</strong> {formatDate(selectedRequest.approvedAt)}</p>
-                                                                                    <p><strong>Approved By:</strong> {selectedRequest.approvedBy ? `${selectedRequest.approvedBy.firstname} ${selectedRequest.approvedBy.lastname} (${selectedRequest.approvedBy.email})` : "N/A"}</p>
-                                                                                </div>
-                                                                            )}
-                                                                            <div className="mt-3">
+                                                                        )}
+                                                                        {!selectedRequest.approved && !selectedRequest.deleted && (
+                                                                            <div className="col-span-2 flex gap-2 mt-4 pt-4 border-t">
+                                                                                <AlertDialog>
+                                                                                    <AlertDialogTrigger asChild>
+                                                                                        <Button
+                                                                                            variant="default"
+                                                                                            className="text-white bg-green-600 hover:bg-green-700"
+                                                                                            disabled={loadingStates[selectedRequest._id]?.approve || loadingStates[selectedRequest._id]?.reject}
+                                                                                        >
+                                                                                            {loadingStates[selectedRequest._id]?.approve ? (
+                                                                                                <>
+                                                                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                                                                    Approving...
+                                                                                                </>
+                                                                                            ) : (
+                                                                                                <>
+                                                                                                    <Check className="mr-2 h-4 w-4" />
+                                                                                                    Approve Request
+                                                                                                </>
+                                                                                            )}
+                                                                                        </Button>
+                                                                                    </AlertDialogTrigger>
+                                                                                    <AlertDialogContent>
+                                                                                        <AlertDialogHeader>
+                                                                                            <AlertDialogTitle>Approve Access Request</AlertDialogTitle>
+                                                                                            <AlertDialogDescription>
+                                                                                                Are you sure you want to approve this access request for <strong>{selectedRequest.firstname} {selectedRequest.lastname}</strong> from <strong>{selectedRequest.businessName}</strong>?
+                                                                                                This will grant them access to the platform and send them an approval email.
+                                                                                            </AlertDialogDescription>
+                                                                                        </AlertDialogHeader>
+                                                                                        <AlertDialogFooter>
+                                                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                                            <AlertDialogAction
+                                                                                                onClick={() => handleApprove(selectedRequest)}
+                                                                                                className="bg-green-600 hover:bg-green-700"
+                                                                                            >
+                                                                                                Yes, Approve
+                                                                                            </AlertDialogAction>
+                                                                                        </AlertDialogFooter>
+                                                                                    </AlertDialogContent>
+                                                                                </AlertDialog>
+
                                                                                 <AlertDialog>
                                                                                     <AlertDialogTrigger asChild>
                                                                                         <Button
                                                                                             variant="destructive"
-                                                                                            size="sm"
                                                                                             disabled={loadingStates[selectedRequest._id]?.approve || loadingStates[selectedRequest._id]?.reject}
                                                                                         >
                                                                                             {loadingStates[selectedRequest._id]?.reject ? (
@@ -855,10 +908,10 @@ export default function RequestedAccessPage() {
                                                                                     </AlertDialogTrigger>
                                                                                     <AlertDialogContent>
                                                                                         <AlertDialogHeader>
-                                                                                            <AlertDialogTitle>Reject Approved Request</AlertDialogTitle>
+                                                                                            <AlertDialogTitle>Reject Access Request</AlertDialogTitle>
                                                                                             <AlertDialogDescription>
-                                                                                                Are you sure you want to reject this previously approved request for <strong>{selectedRequest.firstname} {selectedRequest.lastname}</strong> from <strong>{selectedRequest.businessName}</strong>?
-                                                                                                This will revoke their access and they will no longer be able to use the platform.
+                                                                                                Are you sure you want to reject this access request for <strong>{selectedRequest.firstname} {selectedRequest.lastname}</strong> from <strong>{selectedRequest.businessName}</strong>?
+                                                                                                This action cannot be undone and they will not receive access to the platform.
                                                                                             </AlertDialogDescription>
                                                                                         </AlertDialogHeader>
                                                                                         <AlertDialogFooter>
@@ -873,25 +926,99 @@ export default function RequestedAccessPage() {
                                                                                     </AlertDialogContent>
                                                                                 </AlertDialog>
                                                                             </div>
-                                                                        </div>
-                                                                    )}
-                                                                    {selectedRequest.deleted && (
-                                                                        <div className="col-span-2 mt-4 pt-4 border-t">
-                                                                            <div className="flex items-center text-red-600">
-                                                                                <X className="mr-2 h-4 w-4" />
-                                                                                <span className="font-semibold">This request has been rejected</span>
+                                                                        )}
+                                                                        {selectedRequest.approved && (
+                                                                            <div className="col-span-2 mt-4 pt-4 border-t">
+                                                                                <div className="flex items-center text-green-600">
+                                                                                    <Check className="mr-2 h-4 w-4" />
+                                                                                    <span className="font-semibold">This request has been approved</span>
+                                                                                </div>
+                                                                                {selectedRequest.approvedAt && (
+                                                                                    <div className="text-sm text-gray-500 mt-1 space-y-1">
+                                                                                        <p><strong>Approved On:</strong> {formatDate(selectedRequest.approvedAt)}</p>
+                                                                                        <p><strong>Approved By:</strong> {selectedRequest.approvedBy ? `${selectedRequest.approvedBy.firstname} ${selectedRequest.approvedBy.lastname} (${selectedRequest.approvedBy.email})` : "N/A"}</p>
+                                                                                    </div>
+                                                                                )}
+                                                                                <div className="flex gap-2 mt-3">
+                                                                                    <AlertDialog>
+                                                                                        <AlertDialogTrigger asChild>
+                                                                                            <Button
+                                                                                                variant="destructive"
+                                                                                                size="sm"
+                                                                                                disabled={loadingStates[selectedRequest._id]?.approve || loadingStates[selectedRequest._id]?.reject}
+                                                                                            >
+                                                                                                {loadingStates[selectedRequest._id]?.reject ? (
+                                                                                                    <>
+                                                                                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                                                                        Rejecting...
+                                                                                                    </>
+                                                                                                ) : (
+                                                                                                    <>
+                                                                                                        <X className="mr-2 h-4 w-4" />
+                                                                                                        Reject Request
+                                                                                                    </>
+                                                                                                )}
+                                                                                            </Button>
+                                                                                        </AlertDialogTrigger>
+                                                                                        <AlertDialogContent>
+                                                                                            <AlertDialogHeader>
+                                                                                                <AlertDialogTitle>Reject Approved Request</AlertDialogTitle>
+                                                                                                <AlertDialogDescription>
+                                                                                                    Are you sure you want to reject this previously approved request for <strong>{selectedRequest.firstname} {selectedRequest.lastname}</strong> from <strong>{selectedRequest.businessName}</strong>?
+                                                                                                    This will revoke their access and they will no longer be able to use the platform.
+                                                                                                </AlertDialogDescription>
+                                                                                            </AlertDialogHeader>
+                                                                                            <AlertDialogFooter>
+                                                                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                                                <AlertDialogAction
+                                                                                                    onClick={() => handleReject(selectedRequest)}
+                                                                                                    className="bg-red-600 hover:bg-red-700"
+                                                                                                >
+                                                                                                    Yes, Reject
+                                                                                                </AlertDialogAction>
+                                                                                            </AlertDialogFooter>
+                                                                                        </AlertDialogContent>
+                                                                                    </AlertDialog>
+                                                                                </div>
                                                                             </div>
-                                                                            {selectedRequest.deletedAt && (
-                                                                                <p className="text-sm text-gray-500 mt-1">
-                                                                                    Rejected on {formatDate(selectedRequest.deletedAt)}
-                                                                                </p>
-                                                                            )}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                        </DialogContent>
-                                                    </Dialog>
+                                                                        )}
+                                                                        {selectedRequest.deleted && (
+                                                                            <div className="col-span-2 mt-4 pt-4 border-t">
+                                                                                <div className="flex items-center text-red-600">
+                                                                                    <X className="mr-2 h-4 w-4" />
+                                                                                    <span className="font-semibold">This request has been rejected</span>
+                                                                                </div>
+                                                                                {selectedRequest.deletedAt && (
+                                                                                    <p className="text-sm text-gray-500 mt-1">
+                                                                                        Rejected on {formatDate(selectedRequest.deletedAt)}
+                                                                                    </p>
+                                                                                )}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                )}
+                                                            </DialogContent>
+                                                        </Dialog>
+                                                    </div>
+
+                                                    {/* Tailor Service Button - Always visible, positioned at the right */}
+                                                    <div>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => openTailorServiceModal(request)}
+                                                                    className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                                                                >
+                                                                    <Settings className="h-4 w-4" />
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>
+                                                                <p>Tailor service configuration</p>
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </div>
                                                 </div>
                                             </TableCell>
                                         </TableRow>
@@ -949,6 +1076,177 @@ export default function RequestedAccessPage() {
                         </div>
                     </div>
                 </Card>
+
+                {/* Tailor Service Modal */}
+                <Dialog open={tailorServiceModalOpen} onOpenChange={setTailorServiceModalOpen}>
+                    <DialogContent className="max-w-2xl">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                                <Settings className="h-5 w-5" />
+                                Tailor Service Configuration
+                            </DialogTitle>
+                            <DialogDescription>
+                                Configure on-ramp and off-ramp services for {selectedRequest?.firstname} {selectedRequest?.lastname} from {selectedRequest?.businessName}
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        {selectedRequest && (
+                            <div className="space-y-6">
+                                {/* On-Ramp Service */}
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <CreditCard className="h-4 w-4 text-green-600" />
+                                            On-Ramp Service
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="flex items-center space-x-2">
+                                            <Switch
+                                                id="onramp-enabled"
+                                                checked={serviceSettings.onRamp.enabled}
+                                                onCheckedChange={(checked) => handleServiceToggle('onRamp', checked)}
+                                            />
+                                            <Label htmlFor="onramp-enabled" className="text-sm font-medium">
+                                                Enable On-Ramp Service
+                                            </Label>
+                                        </div>
+
+                                        {serviceSettings.onRamp.enabled && (
+                                            <div>
+                                                <Label className="text-sm font-medium mb-3 block">
+                                                    Supported Fiat Currencies:
+                                                </Label>
+                                                <div className="grid grid-cols-3 gap-3">
+                                                    {availableFiats.map((fiat) => (
+                                                        <div key={`onramp-${fiat}`} className="flex items-center space-x-2">
+                                                            <Checkbox
+                                                                id={`onramp-${fiat}`}
+                                                                checked={serviceSettings.onRamp.supportedFiats.includes(fiat)}
+                                                                onCheckedChange={(checked) =>
+                                                                    handleFiatToggle('onRamp', fiat, checked as boolean)
+                                                                }
+                                                            />
+                                                            <Label htmlFor={`onramp-${fiat}`} className="text-sm">
+                                                                {fiat}
+                                                            </Label>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+
+                                {/* Off-Ramp Service */}
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <CreditCard className="h-4 w-4 text-blue-600" />
+                                            Off-Ramp Service
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="flex items-center space-x-2">
+                                            <Switch
+                                                id="offramp-enabled"
+                                                checked={serviceSettings.offRamp.enabled}
+                                                onCheckedChange={(checked) => handleServiceToggle('offRamp', checked)}
+                                            />
+                                            <Label htmlFor="offramp-enabled" className="text-sm font-medium">
+                                                Enable Off-Ramp Service
+                                            </Label>
+                                        </div>
+
+                                        {serviceSettings.offRamp.enabled && (
+                                            <div>
+                                                <Label className="text-sm font-medium mb-3 block">
+                                                    Supported Fiat Currencies:
+                                                </Label>
+                                                <div className="grid grid-cols-3 gap-3">
+                                                    {availableFiats.map((fiat) => (
+                                                        <div key={`offramp-${fiat}`} className="flex items-center space-x-2">
+                                                            <Checkbox
+                                                                id={`offramp-${fiat}`}
+                                                                checked={serviceSettings.offRamp.supportedFiats.includes(fiat)}
+                                                                onCheckedChange={(checked) =>
+                                                                    handleFiatToggle('offRamp', fiat, checked as boolean)
+                                                                }
+                                                            />
+                                                            <Label htmlFor={`offramp-${fiat}`} className="text-sm">
+                                                                {fiat}
+                                                            </Label>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+
+                                {/* Current Service Status */}
+                                {selectedRequest.services && (
+                                    <Card className="bg-gray-50">
+                                        <CardHeader>
+                                            <CardTitle className="text-sm">Current Configuration</CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="text-sm space-y-2">
+                                            <div>
+                                                <strong>On-Ramp:</strong> {selectedRequest.services.onRamp?.enabled ? 'Enabled' : 'Disabled'}
+                                                {selectedRequest.services.onRamp?.enabled && selectedRequest.services.onRamp?.supportedFiats.length > 0 && (
+                                                    <span className="ml-2">
+                                                        ({selectedRequest.services.onRamp.supportedFiats.join(', ')})
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <strong>Off-Ramp:</strong> {selectedRequest.services.offRamp?.enabled ? 'Enabled' : 'Disabled'}
+                                                {selectedRequest.services.offRamp?.enabled && selectedRequest.services.offRamp?.supportedFiats.length > 0 && (
+                                                    <span className="ml-2">
+                                                        ({selectedRequest.services.offRamp.supportedFiats.join(', ')})
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {selectedRequest.services.lastUpdated && (
+                                                <div className="text-xs text-gray-500 pt-2 border-t">
+                                                    Last updated: {formatDate(selectedRequest.services.lastUpdated)}
+                                                </div>
+                                            )}
+                                        </CardContent>
+                                    </Card>
+                                )}
+
+                                {/* Action Buttons */}
+                                <div className="flex justify-end gap-3 pt-4 border-t">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setTailorServiceModalOpen(false)}
+                                        disabled={savingServices}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        onClick={saveServiceSettings}
+                                        disabled={savingServices}
+                                        className="bg-blue-600 hover:bg-blue-700"
+                                    >
+                                        {savingServices ? (
+                                            <>
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                Saving...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Check className="mr-2 h-4 w-4" />
+                                                Save Configuration
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </DialogContent>
+                </Dialog>
             </div>
         </TooltipProvider>
     );

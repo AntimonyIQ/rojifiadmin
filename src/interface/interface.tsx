@@ -35,6 +35,20 @@ export interface IRequestAccess {
     deletedAt: Date | null;
     archivedAt: Date | null;
     metadata: Record<string, any>;
+
+    // Service customization fields
+    services?: {
+        onRamp?: {
+            enabled: boolean;
+            supportedFiats: string[]; // Array of supported fiat currencies
+        };
+        offRamp?: {
+            enabled: boolean;
+            supportedFiats: string[]; // Array of supported fiat currencies
+        };
+        lastUpdated?: Date;
+        updatedBy?: string; // Admin who last updated the services
+    };
 }
 
 export interface IResponse<Data = any, Error = any> {
@@ -176,6 +190,20 @@ export interface IRequestAccess {
     createdAt: Date;
     updatedAt: Date;
     metadata: Record<string, any>;
+
+    // Service customization fields
+    services?: {
+        onRamp?: {
+            enabled: boolean;
+            supportedFiats: string[]; // Array of supported fiat currencies
+        };
+        offRamp?: {
+            enabled: boolean;
+            supportedFiats: string[]; // Array of supported fiat currencies
+        };
+        lastUpdated?: Date;
+        updatedBy?: string; // Admin who last updated the services
+    };
 }
 
 export interface IUser extends IRequestAccess {
@@ -374,7 +402,67 @@ export interface ISender {
     businessProofOfAddressKyc: string;
     businessProofOfAddressKycVerified: boolean;
     businessProofOfAddressKycVerifiedAt: Date | null;
+
+    // Smile ID verification status for documents
+    businessMemorandumAndArticlesOfAssociationSmileIdStatus: "pending" | "verified" | "failed";
+    businessMemorandumAndArticlesOfAssociationSmileIdVerifiedAt: Date | null;
+    businessCertificateOfIncorporationSmileIdStatus: "pending" | "verified" | "failed";
+    businessCertificateOfIncorporationSmileIdVerifiedAt: Date | null;
+    businessCertificateOfIncorporationStatusReportSmileIdStatus: "pending" | "verified" | "failed";
+    businessCertificateOfIncorporationStatusReportSmileIdVerifiedAt: Date | null;
+    businessProofOfAddressSmileIdStatus: "pending" | "verified" | "failed";
+    businessProofOfAddressSmileIdVerifiedAt: Date | null;
+
+    // Nilos integration
+    nilosStatus: "pending" | "approved" | "rejected" | "under_review";
+    nilosId: string | null;
+    nilosApprovedAt: Date | null;
+    nilosRejectedAt: Date | null;
+
     status: SenderStatus;
+
+    // Additional fields from business details form
+    // Company basic info
+    name?: string; // Company name (might be same as businessName)
+    website?: string;
+    legalForm?: string;
+    companyActivity?: string;
+    registrationDate?: Date;
+    onboardingDate?: Date;
+    tradingName?: string;
+
+    // Detailed address fields (in addition to existing businessAddress)
+    streetAddress?: string;
+    streetAddress2?: string;
+    city?: string; // More specific than businessCity
+    state?: string; // More specific than businessState
+    region?: string;
+    postalCode?: string; // More specific than businessPostalCode
+
+    // Financial information
+    shareCapital?: number;
+    lastYearTurnover?: number;
+    companyAssets?: number;
+    expectedMonthlyInboundCryptoPayments?: number;
+    expectedMonthlyOutboundCryptoPayments?: number;
+    expectedMonthlyInboundFiatPayments?: number;
+    expectedMonthlyOutboundFiatPayments?: number;
+
+    // Risk and compliance
+    riskLevel?: string;
+    additionalDueDiligenceConducted?: string;
+
+    // Multi-select arrays
+    requestedNilosServices?: string[];
+    sourceOfWealth?: string[];
+    anticipatedSourceOfFundsOnNilos?: string[];
+
+    // Boolean compliance fields
+    actualOperationsAndRegisteredAddressesMatch?: boolean;
+    companyProvideRegulatedFinancialServices?: boolean;
+    directorOrBeneficialOwnerIsPEPOrUSPerson?: boolean;
+    immediateApprove?: boolean;
+
     createdAt: Date;
     updatedAt: Date;
 }
