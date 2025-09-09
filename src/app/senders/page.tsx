@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { IPagination, IResponse, ISender } from "@/interface/interface";
 import Defaults from "@/defaults/defaults";
 import { session, SessionData } from "@/session/session";
-import { Status } from "@/enums/enums";
+import { Status, WhichDocument } from "@/enums/enums";
 
 import {
     Dialog,
@@ -18,7 +18,7 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Check, MessageSquare, X, Loader2, Eye, Edit, FileText, Send } from "lucide-react";
+import { MoreHorizontal, Check, MessageSquare, X, Loader2, Eye, Edit, FileText, Send, Users, User, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,7 +53,7 @@ export default function SendersPage() {
         limit: 10,
     });
 
-    // 3-Stage Validation Modal States
+    // 4-Stage Validation Modal States
     const [isValidationModalOpen, setIsValidationModalOpen] = useState<boolean>(false);
     const [currentStage, setCurrentStage] = useState<number>(1);
     const [validationLoading, setValidationLoading] = useState<boolean>(false);
@@ -107,17 +107,152 @@ export default function SendersPage() {
         }
     }
 
+    // Sample directors and shareholders data for testing
+    const sampleDirectorsAndShareholders = [
+        {
+            senderId: "sample123",
+            firstName: "John",
+            lastName: "Smith",
+            middleName: "Michael",
+            email: "john.smith@company.com",
+            jobTitle: "Chief Executive Officer",
+            role: "Director and Shareholder",
+            isDirector: true,
+            isShareholder: true,
+            shareholderPercentage: 45,
+            dateOfBirth: new Date("1980-05-15"),
+            nationality: "United States",
+            phoneCode: "1",
+            phoneNumber: "5551234567",
+            idType: "passport" as const,
+            idNumber: "P123456789",
+            issuedCountry: "United States",
+            issueDate: new Date("2020-01-15"),
+            expiryDate: new Date("2030-01-15"),
+            streetAddress: "123 Business Ave",
+            city: "New York",
+            state: "NY",
+            postalCode: "10001",
+            country: "United States",
+            idDocumentVerified: true,
+            proofOfAddressVerified: true
+        },
+        {
+            senderId: "sample123",
+            firstName: "Sarah",
+            lastName: "Johnson",
+            middleName: "Elizabeth",
+            email: "sarah.johnson@company.com",
+            jobTitle: "Chief Financial Officer",
+            role: "Director and Shareholder",
+            isDirector: true,
+            isShareholder: true,
+            shareholderPercentage: 35,
+            dateOfBirth: new Date("1985-08-22"),
+            nationality: "United Kingdom",
+            phoneCode: "44",
+            phoneNumber: "7700123456",
+            idType: "drivers_license" as const,
+            idNumber: "DL987654321",
+            issuedCountry: "United Kingdom",
+            issueDate: new Date("2021-03-10"),
+            expiryDate: new Date("2031-03-10"),
+            streetAddress: "456 Finance Street",
+            city: "London",
+            state: "Greater London",
+            postalCode: "SW1A 1AA",
+            country: "United Kingdom",
+            idDocumentVerified: false,
+            proofOfAddressVerified: true
+        }
+    ];
+
+    // Sample documents for testing
+    const sampleDocuments = [
+        {
+            which: WhichDocument.MEMORANDUM_ARTICLES,
+            name: "Memorandum and Articles of Association.pdf",
+            type: "application/pdf",
+            url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+            size: 1024576,
+            uploadedAt: new Date(),
+            kycVerified: false,
+            kycVerifiedAt: null,
+            smileIdStatus: "pending" as const,
+            smileIdVerifiedAt: null,
+            smileIdJobId: null,
+            smileIdUploadId: null,
+            isRequired: true
+        },
+        {
+            which: WhichDocument.CERTIFICATE_INCORPORATION,
+            name: "Certificate of Incorporation.pdf",
+            type: "application/pdf",
+            url: "https://file-examples.com/storage/fe86dd34ee608e883312ec6/2017/10/file_example_JPG_100kB.jpg",
+            size: 2048576,
+            uploadedAt: new Date(),
+            kycVerified: true,
+            kycVerifiedAt: new Date(),
+            smileIdStatus: "verified" as const,
+            smileIdVerifiedAt: new Date(),
+            smileIdJobId: "job_123",
+            smileIdUploadId: "upload_456",
+            isRequired: true
+        },
+        {
+            which: WhichDocument.INCORPORATION_STATUS,
+            name: "Incorporation Status Report.docx",
+            type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            url: "https://calibre-ebook.com/downloads/demos/demo.docx",
+            size: 512000,
+            uploadedAt: new Date(),
+            kycVerified: true,
+            kycVerifiedAt: new Date(),
+            smileIdStatus: "failed" as const,
+            smileIdVerifiedAt: null,
+            smileIdJobId: "job_789",
+            smileIdUploadId: "upload_101",
+            isRequired: true
+        },
+        {
+            which: WhichDocument.PROOF_ADDRESS,
+            name: "Proof of Address.pdf",
+            type: "application/pdf",
+            url: "https://www.learningcontainer.com/wp-content/uploads/2019/09/sample-pdf-file.pdf",
+            size: 768000,
+            uploadedAt: new Date(),
+            kycVerified: false,
+            kycVerifiedAt: null,
+            smileIdStatus: "verified" as const,
+            smileIdVerifiedAt: new Date(),
+            smileIdJobId: "job_112",
+            smileIdUploadId: "upload_113",
+            isRequired: true
+        }
+    ];
+
     // Helper function to open validation modal
     const openValidationModal = (sender: ISender) => {
-        setSelectedSender(sender);
-        setEditableFormData(sender);
+        // Add sample directors and shareholders and documents for demonstration
+        const senderWithSampleData = {
+            ...sender,
+            directorsAndShareholders: sender.directorsAndShareholders?.length
+                ? sender.directorsAndShareholders
+                : sampleDirectorsAndShareholders,
+            // Add sample documents if none exist
+            documents: sender.documents?.length
+                ? sender.documents
+                : sampleDocuments
+        };
+        setSelectedSender(senderWithSampleData);
+        setEditableFormData(senderWithSampleData);
         setCurrentStage(1);
         setIsValidationModalOpen(true);
     };
 
     // Helper function to proceed to next stage
     const proceedToNextStage = () => {
-        if (currentStage < 3) {
+        if (currentStage < 4) {
             setCurrentStage(currentStage + 1);
         }
     };
@@ -130,10 +265,19 @@ export default function SendersPage() {
     };
 
     // Helper function to handle document viewing
-    const viewDocument = (type: string, url: string, verified: boolean) => {
-        setSelectedDocument({ type, url, verified });
+    const viewDocument = (document: any) => {
+        setSelectedDocument({
+            type: document.name,
+            url: document.url,
+            verified: document.kycVerified
+        });
         setDocumentModalOpen(true);
     };
+
+    // Helper function to get document by type
+    // const getDocumentByType = (documents: any[], documentType: WhichDocument) => {
+    //     return documents?.find(doc => doc.which === documentType);
+    // };
 
     // Helper function to handle form input changes
     const handleFormInputChange = (field: keyof ISender, value: any) => {
@@ -143,18 +287,18 @@ export default function SendersPage() {
         }));
     };
 
-    // Helper function to submit to Nilos
-    const submitToNilos = async () => {
+    // Helper function to submit to Bank
+    const submitToBank = async () => {
         try {
             setValidationLoading(true);
-            // TODO: Implement API call to submit to Nilos
-            console.log('Submitting to Nilos:', selectedSender);
+            // TODO: Implement API call to submit to Bank
+            console.log('Submitting to Bank:', selectedSender);
             // Simulate API call
             await new Promise(resolve => setTimeout(resolve, 2000));
             setIsValidationModalOpen(false);
             setCurrentStage(1);
         } catch (error) {
-            console.error('Error submitting to Nilos:', error);
+            console.error('Error submitting to Bank:', error);
         } finally {
             setValidationLoading(false);
         }
@@ -278,7 +422,7 @@ export default function SendersPage() {
                                 </DialogContent>
                             </Dialog>
 
-                            {/* 3-Stage Validation Modal */}
+                            {/* 4-Stage Validation Modal */}
                             <Dialog open={isValidationModalOpen} onOpenChange={setIsValidationModalOpen}>
                                 <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                                     <DialogHeader>
@@ -290,10 +434,10 @@ export default function SendersPage() {
                                             <div className="flex items-center justify-between mb-2">
                                                 <span className="text-sm font-medium">Progress</span>
                                                 <span className="text-sm text-muted-foreground">
-                                                    Stage {currentStage} of 3
+                                                    Stage {currentStage} of 4
                                                 </span>
                                             </div>
-                                            <Progress value={(currentStage / 3) * 100} className="w-full" />
+                                            <Progress value={(currentStage / 4) * 100} className="w-full" />
                                             <div className="flex justify-between mt-2 text-xs text-muted-foreground">
                                                 <span className={currentStage >= 1 ? "text-primary font-medium" : ""}>
                                                     Form Validation
@@ -302,6 +446,9 @@ export default function SendersPage() {
                                                     Document Review
                                                 </span>
                                                 <span className={currentStage >= 3 ? "text-primary font-medium" : ""}>
+                                                    Directors & Shareholders
+                                                </span>
+                                                <span className={currentStage >= 4 ? "text-primary font-medium" : ""}>
                                                     Final Review
                                                 </span>
                                             </div>
@@ -719,44 +866,16 @@ export default function SendersPage() {
                                                         </CardTitle>
                                                     </CardHeader>
                                                     <CardContent className="space-y-4">
-                                                        {[
-                                                            {
-                                                                name: 'Certificate of Incorporation',
-                                                                field: 'businessCertificateOfIncorporationKyc',
-                                                                verified: selectedSender?.businessCertificateOfIncorporationKycVerified,
-                                                                url: selectedSender?.businessCertificateOfIncorporationKyc,
-                                                                smileIdStatus: selectedSender?.businessCertificateOfIncorporationSmileIdStatus || 'pending'
-                                                            },
-                                                            {
-                                                                name: 'Memorandum & Articles of Association',
-                                                                field: 'businessMemorandumAndArticlesOfAssociationKyc',
-                                                                verified: selectedSender?.businessMemorandumAndArticlesOfAssociationKycVerified,
-                                                                url: selectedSender?.businessMemorandumAndArticlesOfAssociationKyc,
-                                                                smileIdStatus: selectedSender?.businessMemorandumAndArticlesOfAssociationSmileIdStatus || 'pending'
-                                                            },
-                                                            {
-                                                                name: 'Status Report',
-                                                                field: 'businessCertificateOfIncorporationStatusReportKyc',
-                                                                verified: selectedSender?.businessCertificateOfIncorporationStatusReportKycVerified,
-                                                                url: selectedSender?.businessCertificateOfIncorporationStatusReportKyc,
-                                                                smileIdStatus: selectedSender?.businessCertificateOfIncorporationStatusReportSmileIdStatus || 'pending'
-                                                            },
-                                                            {
-                                                                name: 'Proof of Address',
-                                                                field: 'businessProofOfAddressKyc',
-                                                                verified: selectedSender?.businessProofOfAddressKycVerified,
-                                                                url: selectedSender?.businessProofOfAddressKyc,
-                                                                smileIdStatus: selectedSender?.businessProofOfAddressSmileIdStatus || 'pending'
-                                                            }
-                                                        ].map((doc, index) => (
+                                                        {selectedSender?.documents?.map((doc, index) => (
                                                             <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
                                                                 <div className="flex items-center gap-3">
                                                                     <FileText className="h-5 w-5 text-gray-500" />
                                                                     <div>
                                                                         <p className="font-medium">{doc.name}</p>
+                                                                        <p className="text-sm text-gray-500">{doc.which?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
                                                                         <div className="flex items-center gap-2 mt-1">
-                                                                            <Badge variant={doc.verified ? "default" : "secondary"}>
-                                                                                {doc.verified ? 'Verified' : 'Pending'}
+                                                                            <Badge variant={doc.kycVerified ? "default" : "secondary"}>
+                                                                                {doc.kycVerified ? 'Verified' : 'Pending'}
                                                                             </Badge>
                                                                             <Badge
                                                                                 variant={
@@ -774,8 +893,7 @@ export default function SendersPage() {
                                                                     <Button
                                                                         variant="outline"
                                                                         size="sm"
-                                                                        onClick={() => viewDocument(doc.name, doc.url || '', doc.verified || false)}
-                                                                    // View button is always enabled for admin review
+                                                                        onClick={() => viewDocument(doc)}
                                                                     >
                                                                         <Eye className="h-4 w-4 mr-1" />
                                                                         View
@@ -783,7 +901,6 @@ export default function SendersPage() {
                                                                     <Button
                                                                         variant="outline"
                                                                         size="sm"
-                                                                        // Only disable when Smile ID status is 'verified' (successful)
                                                                         disabled={doc.smileIdStatus === 'verified'}
                                                                         onClick={async () => {
                                                                             if (!selectedSender) return;
@@ -792,7 +909,7 @@ export default function SendersPage() {
                                                                                 // TODO: Call API to send document to Smile ID
                                                                                 console.log('Sending to Smile ID:', {
                                                                                     senderId: selectedSender._id,
-                                                                                    documentType: doc.field,
+                                                                                    documentType: doc.which,
                                                                                     documentUrl: doc.url
                                                                                 });
 
@@ -815,20 +932,186 @@ export default function SendersPage() {
                                                                     </Button>
                                                                 </div>
                                                             </div>
-                                                        ))}
+                                                        )) || (
+                                                                <div className="text-center py-8 text-gray-500">
+                                                                    <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                                                                    <p>No documents uploaded yet</p>
+                                                                </div>
+                                                            )}
                                                     </CardContent>
                                                 </Card>
                                             </div>
                                         )}
 
-                                        {/* Stage 3: Final Review */}
+                                        {/* Stage 3: Directors & Shareholders */}
                                         {currentStage === 3 && (
                                             <div className="space-y-6">
                                                 <Card>
                                                     <CardHeader>
                                                         <CardTitle className="flex items-center gap-2">
+                                                            <Users className="h-4 w-4" />
+                                                            Directors & Shareholders Management
+                                                        </CardTitle>
+                                                    </CardHeader>
+                                                    <CardContent className="space-y-4">
+                                                        {selectedSender?.directorsAndShareholders && selectedSender.directorsAndShareholders.length > 0 ? (
+                                                            <>
+                                                                <div className="flex items-center justify-between mb-4">
+                                                                    <h4 className="font-medium">
+                                                                        Directors & Shareholders ({selectedSender.directorsAndShareholders.length})
+                                                                    </h4>
+                                                                    <Badge variant="default" className="bg-green-100 text-green-800">
+                                                                        {selectedSender.directorsAndShareholders.length} Added
+                                                                    </Badge>
+                                                                </div>
+
+                                                                {selectedSender.directorsAndShareholders.map((person, index) => (
+                                                                    <div key={index} className="border rounded-lg p-4 space-y-3">
+                                                                        <div className="flex items-center justify-between">
+                                                                            <div className="flex items-center gap-3">
+                                                                                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                                                                    <User className="h-5 w-5 text-blue-600" />
+                                                                                </div>
+                                                                                <div>
+                                                                                    <h5 className="font-medium">
+                                                                                        {person.firstName} {person.middleName ? person.middleName + ' ' : ''}{person.lastName}
+                                                                                    </h5>
+                                                                                    <p className="text-sm text-gray-600">{person.jobTitle}</p>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="flex items-center gap-2">
+                                                                                {person.isDirector && (
+                                                                                    <Badge variant="outline" className="text-xs">Director</Badge>
+                                                                                )}
+                                                                                {person.isShareholder && (
+                                                                                    <Badge variant="outline" className="text-xs">
+                                                                                        Shareholder ({person.shareholderPercentage}%)
+                                                                                    </Badge>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                                                            <div>
+                                                                                <strong>Email:</strong> {person.email}
+                                                                            </div>
+                                                                            <div>
+                                                                                <strong>Phone:</strong> +{person.phoneCode} {person.phoneNumber}
+                                                                            </div>
+                                                                            <div>
+                                                                                <strong>Nationality:</strong> {person.nationality}
+                                                                            </div>
+                                                                            <div>
+                                                                                <strong>ID Type:</strong> {person.idType === 'passport' ? 'Passport' : 'Driver\'s License'}
+                                                                            </div>
+                                                                            <div>
+                                                                                <strong>ID Number:</strong> {person.idNumber}
+                                                                            </div>
+                                                                            <div>
+                                                                                <strong>Country:</strong> {person.country}
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {/* Document Verification Status */}
+                                                                        <div className="border-t pt-3 mt-3">
+                                                                            <h6 className="font-medium mb-2 text-sm">Document Verification</h6>
+                                                                            <div className="flex items-center gap-4 text-sm">
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <FileText className="h-4 w-4 text-gray-500" />
+                                                                                    <span>ID Document:</span>
+                                                                                    <Badge variant={person.idDocumentVerified ? "default" : "secondary"}>
+                                                                                        {person.idDocumentVerified ? 'Verified' : 'Pending'}
+                                                                                    </Badge>
+                                                                                </div>
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <MapPin className="h-4 w-4 text-gray-500" />
+                                                                                    <span>Proof of Address:</span>
+                                                                                    <Badge variant={person.proofOfAddressVerified ? "default" : "secondary"}>
+                                                                                        {person.proofOfAddressVerified ? 'Verified' : 'Pending'}
+                                                                                    </Badge>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {/* Action Buttons */}
+                                                                        <div className="flex items-center gap-2 pt-2 border-t">
+                                                                            <Button
+                                                                                variant="outline"
+                                                                                size="sm"
+                                                                                onClick={() => {
+                                                                                    // TODO: View ID document
+                                                                                    console.log('Viewing ID document for:', person.firstName, person.lastName);
+                                                                                }}
+                                                                            >
+                                                                                <Eye className="h-4 w-4 mr-1" />
+                                                                                View ID
+                                                                            </Button>
+                                                                            <Button
+                                                                                variant="outline"
+                                                                                size="sm"
+                                                                                onClick={() => {
+                                                                                    // TODO: View proof of address
+                                                                                    console.log('Viewing proof of address for:', person.firstName, person.lastName);
+                                                                                }}
+                                                                            >
+                                                                                <MapPin className="h-4 w-4 mr-1" />
+                                                                                View Address
+                                                                            </Button>
+                                                                            <Button
+                                                                                variant="outline"
+                                                                                size="sm"
+                                                                                disabled={person.idDocumentVerified}
+                                                                                onClick={async () => {
+                                                                                    try {
+                                                                                        // TODO: Send to Smile ID for verification
+                                                                                        console.log('Sending to Smile ID for verification:', person);
+                                                                                        alert(`${person.firstName} ${person.lastName}'s documents sent to Smile ID for verification.`);
+                                                                                    } catch (error) {
+                                                                                        console.error('Error sending to Smile ID:', error);
+                                                                                        alert('Failed to send to Smile ID. Please try again.');
+                                                                                    }
+                                                                                }}
+                                                                                className={person.idDocumentVerified ?
+                                                                                    "bg-green-600 hover:bg-green-700 text-white" :
+                                                                                    "bg-blue-600 hover:bg-blue-700 text-white"
+                                                                                }
+                                                                            >
+                                                                                <Send className="h-4 w-4 mr-1" />
+                                                                                {person.idDocumentVerified ? 'Verified by Smile ID' : 'Send to Smile ID'}
+                                                                            </Button>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </>
+                                                        ) : (
+                                                            <div className="text-center py-8">
+                                                                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                                    <Users className="h-8 w-8 text-gray-400" />
+                                                                </div>
+                                                                <h4 className="font-medium text-gray-900 mb-2">No Directors & Shareholders Found</h4>
+                                                                <p className="text-sm text-gray-600 mb-4">
+                                                                    Directors and shareholders have not been added to the system for this sender.
+                                                                </p>
+                                                                <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg">
+                                                                    <p className="text-sm text-amber-800">
+                                                                        <strong>Action Required:</strong> Request the sender to complete their Directors & Shareholders information before proceeding with the verification process.
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </CardContent>
+                                                </Card>
+                                            </div>
+                                        )}
+
+                                        {/* Stage 4: Final Review */}
+                                        {currentStage === 4 && (
+                                            <div className="space-y-6">
+                                                <Card>
+                                                    <CardHeader>
+                                                        <CardTitle className="flex items-center gap-2">
                                                             <Send className="h-4 w-4" />
-                                                            Final Review & Submit to Nilos
+                                                            Final Review & Submit to Bank
                                                         </CardTitle>
                                                     </CardHeader>
                                                     <CardContent className="space-y-6">
@@ -915,7 +1198,7 @@ export default function SendersPage() {
                                                             <h4 className="font-medium mb-3">Services and Sources</h4>
                                                             <div className="space-y-2 text-sm">
                                                                 <div>
-                                                                    <strong>Requested Nilos Services:</strong>
+                                                                    <strong>Requested Bank Services:</strong>
                                                                     <span className="ml-2">{editableFormData.requestedNilosServices?.join(', ') || 'None specified'}</span>
                                                                 </div>
                                                                 <div>
@@ -933,36 +1216,85 @@ export default function SendersPage() {
                                                         <div className="bg-muted p-4 rounded-lg">
                                                             <h4 className="font-medium mb-3">Document Verification Status</h4>
                                                             <div className="space-y-2 text-sm">
-                                                                <div className="flex justify-between items-center">
-                                                                    <span>Certificate of Incorporation</span>
-                                                                    <Badge variant={selectedSender?.businessCertificateOfIncorporationKycVerified ? "default" : "secondary"}>
-                                                                        {selectedSender?.businessCertificateOfIncorporationKycVerified ? 'Verified' : 'Pending'}
-                                                                    </Badge>
-                                                                </div>
-                                                                <div className="flex justify-between items-center">
-                                                                    <span>Memorandum & Articles</span>
-                                                                    <Badge variant={selectedSender?.businessMemorandumAndArticlesOfAssociationKycVerified ? "default" : "secondary"}>
-                                                                        {selectedSender?.businessMemorandumAndArticlesOfAssociationKycVerified ? 'Verified' : 'Pending'}
-                                                                    </Badge>
-                                                                </div>
-                                                                <div className="flex justify-between items-center">
-                                                                    <span>Status Report</span>
-                                                                    <Badge variant={selectedSender?.businessCertificateOfIncorporationStatusReportKycVerified ? "default" : "secondary"}>
-                                                                        {selectedSender?.businessCertificateOfIncorporationStatusReportKycVerified ? 'Verified' : 'Pending'}
-                                                                    </Badge>
-                                                                </div>
-                                                                <div className="flex justify-between items-center">
-                                                                    <span>Proof of Address</span>
-                                                                    <Badge variant={selectedSender?.businessProofOfAddressKycVerified ? "default" : "secondary"}>
-                                                                        {selectedSender?.businessProofOfAddressKycVerified ? 'Verified' : 'Pending'}
-                                                                    </Badge>
-                                                                </div>
+                                                                {selectedSender?.documents?.map((doc, index) => (
+                                                                    <div key={index} className="flex justify-between items-center">
+                                                                        <span>{doc.which?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <Badge variant={doc.kycVerified ? "default" : "secondary"}>
+                                                                                {doc.kycVerified ? 'Verified' : 'Pending'}
+                                                                            </Badge>
+                                                                            <Badge
+                                                                                variant={
+                                                                                    doc.smileIdStatus === 'verified' ? "default" :
+                                                                                        doc.smileIdStatus === 'failed' ? "destructive" :
+                                                                                            "secondary"
+                                                                                }
+                                                                                className="text-xs"
+                                                                            >
+                                                                                Smile ID: {doc.smileIdStatus}
+                                                                            </Badge>
+                                                                        </div>
+                                                                    </div>
+                                                                )) || (
+                                                                        <div className="text-center py-4 text-gray-500">
+                                                                            <p>No documents uploaded yet</p>
+                                                                        </div>
+                                                                    )}
                                                             </div>
+                                                        </div>
+
+                                                        {/* Directors & Shareholders Summary */}
+                                                        <div className="bg-muted p-4 rounded-lg">
+                                                            <h4 className="font-medium mb-3">Directors & Shareholders</h4>
+                                                            {selectedSender?.directorsAndShareholders && selectedSender.directorsAndShareholders.length > 0 ? (
+                                                                <div className="space-y-2 text-sm">
+                                                                    <div className="flex justify-between items-center mb-2">
+                                                                        <span><strong>Total Added:</strong></span>
+                                                                        <Badge variant="default" className="bg-green-100 text-green-800">
+                                                                            {selectedSender.directorsAndShareholders.length} People
+                                                                        </Badge>
+                                                                    </div>
+                                                                    {selectedSender.directorsAndShareholders.map((person, index) => (
+                                                                        <div key={index} className="flex justify-between items-center py-1 border-b border-gray-200 last:border-b-0">
+                                                                            <div>
+                                                                                <span className="font-medium">
+                                                                                    {person.firstName} {person.lastName}
+                                                                                </span>
+                                                                                <span className="text-gray-600 ml-2">
+                                                                                    ({person.jobTitle})
+                                                                                </span>
+                                                                            </div>
+                                                                            <div className="flex gap-1">
+                                                                                {person.isDirector && (
+                                                                                    <Badge variant="outline" className="text-xs">Director</Badge>
+                                                                                )}
+                                                                                {person.isShareholder && (
+                                                                                    <Badge variant="outline" className="text-xs">
+                                                                                        {person.shareholderPercentage}% Share
+                                                                                    </Badge>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                                    <div className="pt-2 text-xs text-gray-600">
+                                                                        <div className="flex justify-between">
+                                                                            <span>Documents Verified:</span>
+                                                                            <span>
+                                                                                {selectedSender.directorsAndShareholders.filter(p => p.idDocumentVerified && p.proofOfAddressVerified).length} / {selectedSender.directorsAndShareholders.length}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="text-sm text-amber-700 bg-amber-50 p-3 rounded border border-amber-200">
+                                                                    <strong>⚠️ Warning:</strong> No Directors & Shareholders have been added to the system.
+                                                                </div>
+                                                            )}
                                                         </div>
 
                                                         <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg">
                                                             <p className="text-sm text-amber-800">
-                                                                <strong>Note:</strong> By submitting to Nilos, this sender will be processed for final approval.
+                                                                <strong>Note:</strong> By submitting to Bank, this sender will be processed for final approval.
                                                                 Make sure all information is accurate and all documents are properly verified.
                                                             </p>
                                                         </div>
@@ -984,13 +1316,13 @@ export default function SendersPage() {
                                             <Button variant="outline" onClick={() => setIsValidationModalOpen(false)}>
                                                 Cancel
                                             </Button>
-                                            {currentStage < 3 ? (
+                                            {currentStage < 4 ? (
                                                 <Button onClick={proceedToNextStage}>
                                                     Next Stage
                                                 </Button>
                                             ) : (
                                                 <Button
-                                                    onClick={submitToNilos}
+                                                    onClick={submitToBank}
                                                     disabled={validationLoading}
                                                     className="bg-green-600 hover:bg-green-700"
                                                 >
@@ -1002,7 +1334,7 @@ export default function SendersPage() {
                                                     ) : (
                                                         <>
                                                             <Send className="mr-2 h-4 w-4" />
-                                                            Submit to Nilos
+                                                            Submit to Bank
                                                         </>
                                                     )}
                                                 </Button>
@@ -1014,37 +1346,102 @@ export default function SendersPage() {
 
                             {/* Document Viewer Modal */}
                             <Dialog open={documentModalOpen} onOpenChange={setDocumentModalOpen}>
-                                <DialogContent className="max-w-4xl max-h-[90vh]">
+                                <DialogContent className="max-w-6xl max-h-[95vh]">
                                     <DialogHeader>
                                         <DialogTitle className="flex items-center justify-between">
                                             <span>Document Viewer - {selectedDocument?.type}</span>
-                                            <Badge variant={selectedDocument?.verified ? "default" : "secondary"}>
-                                                {selectedDocument?.verified ? 'Verified' : 'Pending'}
-                                            </Badge>
+                                            <div className="flex items-center gap-2">
+                                                <Badge variant={selectedDocument?.verified ? "default" : "secondary"}>
+                                                    {selectedDocument?.verified ? 'Verified' : 'Pending'}
+                                                </Badge>
+                                                {selectedDocument?.url && (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => window.open(selectedDocument.url, '_blank')}
+                                                    >
+                                                        <Eye className="h-4 w-4 mr-1" />
+                                                        Open Original
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </DialogTitle>
                                     </DialogHeader>
-                                    <div className="flex-1 min-h-[500px] bg-gray-100 rounded-lg flex items-center justify-center">
+                                    <div className="flex-1 min-h-[70vh] bg-gray-100 rounded-lg flex items-center justify-center">
                                         {selectedDocument?.url ? (
                                             <iframe
-                                                src={selectedDocument.url}
-                                                className="w-full h-[500px] border-0 rounded"
+                                                src={`https://docs.google.com/gview?url=${encodeURIComponent(selectedDocument.url)}&embedded=true`}
+                                                className="w-full h-[70vh] border-0 rounded"
                                                 title="Document Viewer"
+                                                onError={(e) => {
+                                                    console.error('Document viewer error:', e);
+                                                    // Fallback: show direct link if Google Viewer fails
+                                                }}
                                             />
                                         ) : (
                                             <div className="text-center text-gray-500">
                                                 <FileText className="h-12 w-12 mx-auto mb-2" />
-                                                <p>Document not available</p>
+                                                <p className="text-lg font-medium">Document not available</p>
+                                                <p className="text-sm text-gray-400 mt-1">No document URL provided</p>
                                             </div>
                                         )}
                                     </div>
-                                    <DialogFooter>
-                                        <Button variant="outline" onClick={() => setDocumentModalOpen(false)}>
-                                            Close
-                                        </Button>
-                                        <Button>
-                                            <Check className="mr-2 h-4 w-4" />
-                                            Mark as Verified
-                                        </Button>
+
+                                    {/* Fallback message for unsupported files */}
+                                    {selectedDocument?.url && (
+                                        <div className="text-xs text-gray-500 text-center py-2 bg-gray-50 rounded">
+                                            <p>
+                                                If the document doesn't load properly, click "Open Original" to view it directly.
+                                                Supported formats: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, and image files.
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    <DialogFooter className="flex justify-between">
+                                        <div className="flex gap-2">
+                                            <Button variant="outline" onClick={() => setDocumentModalOpen(false)}>
+                                                Close
+                                            </Button>
+                                            {selectedDocument?.url && (
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                        // Copy document URL to clipboard
+                                                        navigator.clipboard.writeText(selectedDocument.url);
+                                                        alert('Document URL copied to clipboard');
+                                                    }}
+                                                >
+                                                    <Eye className="mr-2 h-4 w-4" />
+                                                    Copy URL
+                                                </Button>
+                                            )}
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => {
+                                                    // TODO: Implement reject/flag document
+                                                    console.log('Flagging document as problematic:', selectedDocument);
+                                                    alert('Document flagged for review');
+                                                }}
+                                                className="text-red-600 border-red-300 hover:bg-red-50"
+                                            >
+                                                <X className="mr-2 h-4 w-4" />
+                                                Flag Issue
+                                            </Button>
+                                            <Button
+                                                onClick={() => {
+                                                    // TODO: Implement document verification API call
+                                                    console.log('Marking document as verified:', selectedDocument);
+                                                    alert('Document marked as verified');
+                                                    setDocumentModalOpen(false);
+                                                }}
+                                                className="bg-green-600 hover:bg-green-700"
+                                            >
+                                                <Check className="mr-2 h-4 w-4" />
+                                                Mark as Verified
+                                            </Button>
+                                        </div>
                                     </DialogFooter>
                                 </DialogContent>
                             </Dialog>

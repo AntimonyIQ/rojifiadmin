@@ -1,4 +1,4 @@
-import { AccountTier, AffiliationStatus, BiometricType, BlockchainNetwork, BooleanString, Coin, Engine, Fiat, PaymentRail, RequestStatus, Role, SenderStatus, Status, TeamRole, TeamStatus, TransactionStatus, TransactionType, UserType, WalletStatus, WalletType } from "@/enums/enums";
+import { AccountTier, AffiliationStatus, BiometricType, BlockchainNetwork, BooleanString, Coin, Engine, Fiat, PaymentRail, RequestStatus, Role, SenderStatus, Status, TeamRole, TeamStatus, TransactionStatus, TransactionType, UserType, WalletStatus, WalletType, WhichDocument } from "@/enums/enums";
 
 
 export interface IHandshakeClient {
@@ -35,6 +35,11 @@ export interface IRequestAccess {
     deletedAt: Date | null;
     archivedAt: Date | null;
     metadata: Record<string, any>;
+    offRampService: boolean;
+    fiatService: boolean;
+    virtualCardService: boolean;
+    otcdeskService: boolean;
+    apiIntegrationService: boolean;
 
     // Service customization fields
     services?: {
@@ -338,6 +343,31 @@ export interface ITeams {
     rojifiId: string;
 }
 
+export interface ISenderDocument {
+    _id?: string;
+    which: WhichDocument;
+    name: string;
+    type: string; // file type (pdf, jpg, png, etc.)
+    url: string;
+    size?: number;
+    uploadedAt: Date;
+    
+    // KYC verification
+    kycVerified: boolean;
+    kycVerifiedAt: Date | null;
+    
+    // SmileID verification with tracking IDs
+    smileIdStatus: "pending" | "verified" | "failed";
+    smileIdVerifiedAt: Date | null;
+    smileIdJobId: string | null;
+    smileIdUploadId: string | null;
+    
+    // Additional metadata
+    description?: string;
+    expiresAt?: Date;
+    isRequired: boolean;
+}
+
 export interface ISender {
     _id: string;
     rojifiId: string;
@@ -390,28 +420,9 @@ export interface ISender {
     deletedAt: Date | null;
     archived: boolean;
     archivedAt: Date | null;
-    businessMemorandumAndArticlesOfAssociationKyc: string;
-    businessMemorandumAndArticlesOfAssociationKycVerified: boolean;
-    businessMemorandumAndArticlesOfAssociationKycVerifiedAt: Date | null;
-    businessCertificateOfIncorporationKyc: string;
-    businessCertificateOfIncorporationKycVerified: boolean;
-    businessCertificateOfIncorporationKycVerifiedAt: Date | null;
-    businessCertificateOfIncorporationStatusReportKyc: string;
-    businessCertificateOfIncorporationStatusReportKycVerified: boolean;
-    businessCertificateOfIncorporationStatusReportKycVerifiedAt: Date | null;
-    businessProofOfAddressKyc: string;
-    businessProofOfAddressKycVerified: boolean;
-    businessProofOfAddressKycVerifiedAt: Date | null;
 
-    // Smile ID verification status for documents
-    businessMemorandumAndArticlesOfAssociationSmileIdStatus: "pending" | "verified" | "failed";
-    businessMemorandumAndArticlesOfAssociationSmileIdVerifiedAt: Date | null;
-    businessCertificateOfIncorporationSmileIdStatus: "pending" | "verified" | "failed";
-    businessCertificateOfIncorporationSmileIdVerifiedAt: Date | null;
-    businessCertificateOfIncorporationStatusReportSmileIdStatus: "pending" | "verified" | "failed";
-    businessCertificateOfIncorporationStatusReportSmileIdVerifiedAt: Date | null;
-    businessProofOfAddressSmileIdStatus: "pending" | "verified" | "failed";
-    businessProofOfAddressSmileIdVerifiedAt: Date | null;
+    // Documents array - more efficient and expandable approach
+    documents: Array<ISenderDocument>;
 
     // Nilos integration
     nilosStatus: "pending" | "approved" | "rejected" | "under_review";
@@ -420,6 +431,7 @@ export interface ISender {
     nilosRejectedAt: Date | null;
 
     status: SenderStatus;
+    primary?: boolean;
 
     // Additional fields from business details form
     // Company basic info
@@ -463,8 +475,44 @@ export interface ISender {
     directorOrBeneficialOwnerIsPEPOrUSPerson?: boolean;
     immediateApprove?: boolean;
 
+    directorsAndShareholders?: Array<IDirectorAndShareholder>;
+
     createdAt: Date;
     updatedAt: Date;
+}
+
+export interface IDirectorAndShareholder {
+    _id?: string;
+    senderId: string;
+    firstName: string;
+    lastName: string;
+    middleName: string;
+    email: string;
+    jobTitle?: string;
+    role: string;
+    isDirector: boolean;
+    isShareholder: boolean;
+    shareholderPercentage?: number;
+    dateOfBirth: Date;
+    nationality: string;
+    phoneCode: string;
+    phoneNumber: string;
+    idType: "passport" | "drivers_license";
+    idNumber: string;
+    issuedCountry: string;
+    issueDate: Date;
+    expiryDate: Date;
+    streetAddress: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
+    idDocument?: string; // URL to uploaded ID document
+    proofOfAddress?: string; // URL to uploaded proof of address
+    idDocumentVerified?: boolean;
+    proofOfAddressVerified?: boolean;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
 
 export interface IPayment {
