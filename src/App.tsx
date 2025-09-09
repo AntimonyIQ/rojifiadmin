@@ -43,7 +43,6 @@ function App() {
     return (
         <AnimatePresence mode="wait">
             <Switch>
-                {/* <Route path="/" component={LoginPage} /> */}
                 <RedirectIfAuthenticated path="/">
                     <LoginPage />
                 </RedirectIfAuthenticated>

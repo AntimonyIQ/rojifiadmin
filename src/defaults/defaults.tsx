@@ -22,9 +22,13 @@ export default class Defaults {
 
     public static LOGIN_STATUS = () => {
         const sd: SessionData = session.getUserData();
-        if (!sd || !sd.user || !sd.user.loginLastAt) {
-            window.location.href = "/";
-            return;
+        if (!sd || !sd.isLoggedIn || !sd.user) {
+            return false;
+        }
+
+        // Skip loginLastAt check if it doesn't exist (might be a new session format)
+        if (!sd.user.loginLastAt) {
+            return true; // Assume valid if no timestamp
         }
 
         const loginLastAt: Date = new Date(sd.user.loginLastAt);
@@ -34,8 +38,7 @@ export default class Defaults {
 
         if (diffMinutes >= 60) {
             session.updateSession({ ...sd, isLoggedIn: false });
-            window.location.href = "/";
-            return;
+            return false; // Let ProtectedRoute handle redirects
         }
 
         return true;

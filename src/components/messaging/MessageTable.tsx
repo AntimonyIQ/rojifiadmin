@@ -35,11 +35,11 @@ export default function MessageTable({ messages, loading }: MessageTableProps) {
     setEditOpen(true);
   };
 
-  const handleResend = (id: string) => {
+  const handleResend = (_id: string) => {
 
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = (_id: string) => {
 
   };
 

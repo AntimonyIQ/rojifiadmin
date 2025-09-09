@@ -1,10 +1,8 @@
-import { ReactNode, useEffect } from "react";
+import { ReactNode } from "react";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { motion } from "framer-motion";
-import { useLocation } from "wouter";
-import { session, SessionData } from "@/session/session";
 
 interface DashboardLayoutProps {
     children: ReactNode;
@@ -12,19 +10,6 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
     const { collapsed } = useSidebar();
-    const [, setLocation] = useLocation();
-    const sd: SessionData = session.getUserData();
-
-    useEffect(() => {
-        // Only redirect if explicitly not logged in, avoid redirect loops
-        if (sd && sd.isLoggedIn === false) {
-            setLocation("/");
-        }
-    }, [sd?.isLoggedIn, setLocation]);
-
-    if (!sd || !sd.isLoggedIn || !sd.user) {
-        return null;
-    }
 
     return (
         <div className="h-screen flex overflow-hidden bg-gray-50">

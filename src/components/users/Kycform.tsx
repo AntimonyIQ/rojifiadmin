@@ -43,6 +43,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function KycForm({ userId }: { userId: string }) {
+  console.log("KycForm userId:", userId);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -61,7 +62,7 @@ export default function KycForm({ userId }: { userId: string }) {
 
   }, []);
 
-  const onSubmit = (values: FormValues) => {
+  const onSubmit = (_values: FormValues) => {
 
   };
 

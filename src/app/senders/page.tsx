@@ -190,8 +190,6 @@ export default function SendersPage() {
                 <Tabs value={value} onValueChange={(v) => setValue(v)}>
                     <TabsList>
                         <TabsTrigger value="list">All Senders</TabsTrigger>
-                        <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-                        <TabsTrigger value="admin">Admin</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="list">
@@ -252,7 +250,7 @@ export default function SendersPage() {
                                                 <TableCell className="font-medium">{s.businessName || "-"}</TableCell>
                                                 <TableCell>
                                                     <div className="flex items-center gap-2">
-                                                        {s.countryflag && <span className="text-lg">{s.countryflag}</span>}
+                                                        <img src={s.countryflag} alt="" className="h-5 w-5 rounded-full" />
                                                         <span>{s.country || "-"}</span>
                                                     </div>
                                                 </TableCell>

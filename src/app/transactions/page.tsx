@@ -47,7 +47,7 @@ type Processor = {
 
 // processor balances component
 function ProcessorBalanceGrid() {
-    const [transactions, setTransactions] = useState<Array<ITransaction>>([]);
+    // const [transactions, setTransactions] = useState<Array<ITransaction>>([]);
     const [selectedProcessor, setSelectedProcessor] = useState<Processor | null>(
         null
     );

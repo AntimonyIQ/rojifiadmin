@@ -85,7 +85,7 @@ export default function CreateMessageDialog({
     form.setValue(fieldName, text);
   };
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (_values: z.infer<typeof formSchema>) => {
 
   };
 
