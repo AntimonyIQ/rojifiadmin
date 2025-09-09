@@ -76,8 +76,8 @@ export default class Session {
     }
 
     private saveSession(): void {
-        // 60 minutes * 24 hours * 365 days = 525,600 minutes (1 year)
-        const expiresInMinutes = 60 * 24 * 365;
+        // 60 minutes = 1 hour
+        const expiresInMinutes = 60;
         const token = JWT.encode({ isLoggedIn: this.isLoggedIn, userData: this.userData }, this.secretKey, expiresInMinutes);
         localStorage.setItem('session', token);
     }

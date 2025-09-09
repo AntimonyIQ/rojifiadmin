@@ -1459,12 +1459,26 @@ export default function SendersPage() {
                                     <div className="flex-1 min-h-[70vh] bg-gray-100 rounded-lg flex items-center justify-center">
                                         {selectedDocument?.url ? (
                                             <iframe
-                                                src={`https://docs.google.com/gview?url=${encodeURIComponent(selectedDocument.url)}&embedded=true`}
+                                                src={selectedDocument.url}
                                                 className="w-full h-[70vh] border-0 rounded"
                                                 title="Document Viewer"
                                                 onError={(e) => {
                                                     console.error('Document viewer error:', e);
-                                                    // Fallback: show direct link if Google Viewer fails
+                                                    const iframe = e.target as HTMLIFrameElement;
+                                                    if (iframe.parentElement) {
+                                                        iframe.parentElement.innerHTML = `
+                                                            <div class="text-center text-gray-500">
+                                                                <svg class="h-12 w-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                                </svg>
+                                                                <p class="text-lg font-medium">Preview unavailable</p>
+                                                                <p class="text-sm text-gray-400 mt-1">Unable to display document preview</p>
+                                                                <button onclick="window.open('${selectedDocument.url}', '_blank')" class="mt-3 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                                                                    Open Document
+                                                                </button>
+                                                            </div>
+                                                        `;
+                                                    }
                                                 }}
                                             />
                                         ) : (
@@ -1480,8 +1494,8 @@ export default function SendersPage() {
                                     {selectedDocument?.url && (
                                         <div className="text-xs text-gray-500 text-center py-2 bg-gray-50 rounded">
                                             <p>
-                                                If the document doesn't load properly, click "Open Original" to view it directly.
-                                                Supported formats: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, and image files.
+                                                If the document doesn't display properly above, click "Open Original" to view it in a new tab.
+                                                Supported formats: PDF, images (JPG, PNG, GIF), and other browser-compatible files.
                                             </p>
                                         </div>
                                     )}

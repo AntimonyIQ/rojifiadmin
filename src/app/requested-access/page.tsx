@@ -46,6 +46,7 @@ import { toast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import countries from "../../data/country_state.json";
 
 export default function RequestedAccessPage() {
     const [requestedAccess, setRequestedAccess] = useState<IRequestAccess[]>([]);
@@ -90,7 +91,6 @@ export default function RequestedAccessPage() {
     const fetchRequestAccess = async () => {
         try {
             setLoading(true);
-            Defaults.LOGIN_STATUS();
 
             const params = new URLSearchParams({
                 page: pagination.page.toString(),
@@ -401,6 +401,12 @@ export default function RequestedAccessPage() {
         }
     };
 
+    const findCountry = (name: string) => {
+        const country = countries.find((country) => country.name.toLowerCase() === name.toLowerCase());
+        console.log("Found country:", country);
+        return country;
+    };
+
     if (loading) {
         return (
             <TooltipProvider>
@@ -660,7 +666,10 @@ export default function RequestedAccessPage() {
                                     requestedAccess.map((request) => (
                                         <TableRow key={request._id}>
                                             <TableCell>
-                                                {`${request.firstname} ${request.lastname}`}
+                                                <div className="flex items-center gap-2">
+                                                    <img src={`https://flagcdn.com/w320/${findCountry(request.country)?.iso2.toLowerCase()}.png`} alt="" className="w-5 h-5 rounded-full" />
+                                                    {`${request.firstname} ${request.lastname}`}
+                                                </div>
                                             </TableCell>
                                             <TableCell>{request.businessName}</TableCell>
                                             <TableCell>{request.email}</TableCell>
