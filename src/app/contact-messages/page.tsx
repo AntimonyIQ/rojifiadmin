@@ -85,9 +85,9 @@ export default function ContactMessagesPage() {
             const data: IResponse = await res.json();
             if (data.status === Status.ERROR) throw new Error(data.message || data.error);
             if (data.status === Status.SUCCESS) {
-                if (!data.handshake) throw new Error('Unable to process response');
-                const parseData: Array<IContactUs> = Defaults.PARSE_DATA(data.data, sd.client.privateKey, data.handshake);
-                setContactMessages(parseData);
+                // if (!data.handshake) throw new Error('Unable to process response');
+                // const parseData: Array<IContactUs> = Defaults.PARSE_DATA(data.data, sd.client.privateKey, data.handshake);
+                setContactMessages(data.data);
                 if (data.pagination) {
                     setPagination(data.pagination);
                 }
