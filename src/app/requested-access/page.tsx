@@ -751,6 +751,16 @@ export default function RequestedAccessPage() {
                                                                             <p className="text-sm text-gray-600">{selectedRequest.message}</p>
                                                                         </div>
 
+                                                                        {/* Date Information */}
+                                                                        <div>
+                                                                            <label className="font-semibold">Created At:</label>
+                                                                            <p className="text-sm text-gray-600">{formatDate(selectedRequest.createdAt)}</p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <label className="font-semibold">Last Updated:</label>
+                                                                            <p className="text-sm text-gray-600">{formatDate(selectedRequest.updatedAt)}</p>
+                                                                        </div>
+
                                                                         {/* Metadata Section */}
                                                                         {selectedRequest.metadata && (
                                                                             <div className="col-span-2 border-t pt-4">

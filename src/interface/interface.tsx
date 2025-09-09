@@ -55,6 +55,8 @@ export interface IRequestAccess {
         lastUpdated?: Date;
         updatedBy?: string; // Admin who last updated the services
     };
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 export interface IResponse<Data = any, Error = any> {
