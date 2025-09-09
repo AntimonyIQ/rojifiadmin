@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
-import { useUpdateMessage } from "@/hooks/useCommunications";
 import { LoaderCircle } from "lucide-react";
 
 interface EditMessageDialogProps {
@@ -29,8 +28,6 @@ export default function EditMessageDialog({
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
 
-  const { mutate: updateMessage, isPending } = useUpdateMessage();
-
   useEffect(() => {
     if (message) {
       setSubject(message.subject);
@@ -38,16 +35,7 @@ export default function EditMessageDialog({
     }
   }, [message]);
 
-  const handleUpdate = () => {
-    updateMessage(
-      { id: message?.id!!, subject, body },
-      {
-        onSuccess: () => {
-          onOpenChange(false);
-        },
-      }
-    );
-  };
+  const handleUpdate = () => { };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -72,10 +60,10 @@ export default function EditMessageDialog({
             </Button>
             <Button
               onClick={handleUpdate}
-              disabled={isPending}
+              disabled={true}
               className="disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isPending ? (
+              {true ? (
                 <LoaderCircle className="size-6 animate-spin duration-300" />
               ) : (
                 "Update"

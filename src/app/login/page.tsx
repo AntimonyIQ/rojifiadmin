@@ -11,6 +11,7 @@ import { session, SessionData } from "@/session/session";
 import Defaults from "@/defaults/defaults";
 import { Status } from "@/enums/enums";
 import { Eye, EyeClosed } from "lucide-react";
+import { useLocation } from "wouter";
 
 export interface ILoginFormProps {
     user: IUser;
@@ -21,6 +22,7 @@ export interface ILoginFormProps {
 
 export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
+    const [, setRouteLocation] = useLocation();
     const [location, setLocation] = useState<Partial<ILocation>>({
         country: '',
         state: '',
@@ -112,8 +114,6 @@ export default function LoginPage() {
                         description: "Welcome to Rojifi Admin Dashboard",
                     });
 
-                    console.log(parseData);
-
                     session.login({
                         ...sd,
                         authorization: authorization,
@@ -121,7 +121,8 @@ export default function LoginPage() {
                         user: parseData,
                     });
 
-                    window.location.href = "/dashboard";
+                    // Use proper routing instead of hard refresh
+                    setRouteLocation("/dashboard");
                 }
             }
         } catch (err: any) {

@@ -5,13 +5,11 @@ import { Plus } from "lucide-react";
 import { useState, Suspense } from "react";
 import CreateMessageDialog from "@/components/messaging/CreateMessageDialog";
 import { LoadingPage } from "@/components/ui/loading-spinner";
-import { useFetchAllMessages } from "@/hooks/useCommunications";
 
 export default function MessagingPage() {
     const [page, setPage] = useState(1);
-    const { data, isFetching, isLoading } = useFetchAllMessages(page);
 
-    const total = data?.metadata?.total || 0;
+    const total = 0;
     const totalPages = Math.ceil(total / 10);
 
     const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -35,8 +33,8 @@ export default function MessagingPage() {
                 </div>
 
                 <MessageTable
-                    messages={data?.data ?? []}
-                    loading={isFetching || isLoading}
+                    messages={[]}
+                    loading={true}
                 />
 
                 {/* pagination */}

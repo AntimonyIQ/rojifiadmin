@@ -21,8 +21,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { useSendBulkMessage } from "@/hooks/useCommunications";
-import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   title: z.string().min(1, "Subject is required"),
@@ -60,9 +58,6 @@ export default function CreateMessageDialog({
   const bodyRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLDivElement>(null);
 
-  const { mutate, isPending } = useSendBulkMessage();
-  const { toast } = useToast();
-
   const highlightTemplateVars = (text: string) => {
     const allowed = ["firstname", "lastname", "fullname"];
     return text.replace(/{{(.*?)}}/g, (match, p1) => {
@@ -91,32 +86,7 @@ export default function CreateMessageDialog({
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    mutate(
-      {
-        subject: values.title,
-        text: values.body,
-      },
-      {
-        onSuccess: () => {
-          form.reset();
-          onOpenChange(false);
-          toast({
-            title: "Message Sent 🎉",
-            description: "Your bulk message was sent successfully.",
-            variant: "default",
-          });
-        },
-        onError: (error) => {
-          console.error("Error sending message:", error);
-          toast({
-            title: "Failed to Send message",
-            description:
-              "There was an issue sending the bulk message. Please try again.",
-            variant: "destructive",
-          });
-        },
-      }
-    );
+
   };
 
   return (
@@ -241,8 +211,8 @@ export default function CreateMessageDialog({
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? "Sending..." : "Send"}
+              <Button type="submit" disabled={true}>
+                {true ? "Sending..." : "Send"}
               </Button>
             </div>
           </form>

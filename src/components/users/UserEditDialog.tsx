@@ -22,8 +22,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useEffect } from "react";
-import { useUpdateUser } from "@/hooks/useUsers";
-import { toast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { IUser } from "@/interface/interface";
 
@@ -54,7 +52,6 @@ export default function UserEditDialog({
     open,
     onOpenChange,
 }: UserDetailsDialogProps) {
-    const { mutate: updateUser, isPending: isUpdatingUser } = useUpdateUser();
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
@@ -78,27 +75,8 @@ export default function UserEditDialog({
         }
     }, [open, user, form]);
 
-    const onSubmit = (values: FormValues) => {
-        updateUser(
-            // @ts-ignore
-            { id: user?.id, data: values },
-            {
-                onSuccess: () => {
-                    toast({
-                        title: "User Updated!",
-                        description: `${values.firstname} has been updated successfully.`,
-                    });
-                },
-                onError: (error: any) => {
-                    toast({
-                        title: "Error",
-                        description:
-                            error?.response?.data?.message || "Failed to update user.",
-                        variant: "destructive",
-                    });
-                },
-            }
-        );
+    const onSubmit = (_values: FormValues) => {
+
     };
 
     if (!user) return null;
@@ -301,10 +279,10 @@ export default function UserEditDialog({
 
                         <Button
                             type="submit"
-                            disabled={isUpdatingUser}
+                            disabled={false}
                             className="w-full bg-primary text-white"
                         >
-                            {isUpdatingUser ? "Updating..." : "Update User Details"}
+                            {false ? "Updating..." : "Update User Details"}
                         </Button>
                     </form>
                 </Form>

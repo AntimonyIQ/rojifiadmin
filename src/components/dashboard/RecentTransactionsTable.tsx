@@ -183,10 +183,8 @@ export default function RecentTransactionsTable({
                         <CardTitle className="text-lg font-semibold text-gray-800">
                             Recent Transactions
                         </CardTitle>
-                        <Link href="/transactions">
-                            <a className="text-sm font-medium text-primary hover:text-primary/80">
-                                View all
-                            </a>
+                        <Link href="/transactions" className="text-sm font-medium text-primary hover:text-primary/80">
+                            View all
                         </Link>
                     </div>
                 </CardHeader>

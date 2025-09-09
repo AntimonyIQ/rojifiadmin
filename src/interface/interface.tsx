@@ -41,6 +41,7 @@ export interface IRequestAccess {
     otcdeskService: boolean;
     apiIntegrationService: boolean;
 
+
     // Service customization fields
     services?: {
         onRamp?: {
@@ -194,54 +195,48 @@ export interface IRequestAccess {
     archivedAt: Date | null;
     createdAt: Date;
     updatedAt: Date;
+    offRampService: boolean;
+    fiatService: boolean;
+    virtualCardService: boolean;
+    otcdeskService: boolean;
+    apiIntegrationService: boolean;
     metadata: Record<string, any>;
-
-    // Service customization fields
-    services?: {
-        onRamp?: {
-            enabled: boolean;
-            supportedFiats: string[]; // Array of supported fiat currencies
-        };
-        offRamp?: {
-            enabled: boolean;
-            supportedFiats: string[]; // Array of supported fiat currencies
-        };
-        lastUpdated?: Date;
-        updatedBy?: string; // Admin who last updated the services
-    };
+    completed: boolean;
 }
 
-export interface IUser extends IRequestAccess {
-    post_no_debit: string;
-    address_line_one: string;
-    address_line_two: string;
+export interface IUser {
+    _id: string;
+    requestAccessId: IUser | null;
+    rojifiId: string;
     username: string;
+    firstname: string;
+    lastname: string;
+    middlename: string;
+    phoneCode: string;
+    phoneNumber: string;
+    deleted: boolean;
+    deletedAt: Date | null;
+    deletedBy: IUser | null;
+    email: string;
     fullName: string;
     isEmailVerified: boolean;
     key: string;
     phoneNumberHash: string;
     isPhoneNumberVerified: boolean;
+    address: string;
+    city: string;
+    state: string;
+    country: string;
+    postalCode: string;
+    agreement: boolean;
+    weeklyVolume: number;
     dateOfBirth: string;
     pin: string;
+    archived: boolean;
+    archivedAt: Date | null;
     mnemonic: string;
     referralCode: string;
     password: string;
-    //////////////////////////////////
-
-    cacCertOfIncoporation: string,
-    memorandumArticlesOfAssociation: string,
-    cacStatusReport: string,
-    proofOfAddress: string,
-
-    cacCertOfIncoporationIsVerified: boolean,
-    memorandumArticlesOfAssociationIsVerified: boolean,
-    cacStatusReportIsVerified: boolean,
-    proofOfAddressIsVerified: boolean,
-
-    cacCertOfIncoporationVerifiedAt: Date | null,
-    memorandumArticlesOfAssociationVerifiedAt: Date | null,
-    cacStatusReportVerifiedAt: Date | null,
-    proofOfAddressVerifiedAt: Date | null,
 
     requested: {
         otcdesk: RequestStatus;
@@ -279,7 +274,6 @@ export interface IUser extends IRequestAccess {
     passkeyVerifiedAt: Date;
     tier: AccountTier;
     firstDepositConfirmed: boolean;
-    deletedBy: string | null;
     comparePassword(password: string): Promise<boolean>;
     comparePin(pin: string): Promise<boolean>;
     comparePasskey(passkey: string): Promise<boolean>;
@@ -344,35 +338,96 @@ export interface ITeams {
 }
 
 export interface ISenderDocument {
-    _id?: string;
+    _id: string;
     which: WhichDocument;
     name: string;
     type: string; // file type (pdf, jpg, png, etc.)
     url: string;
     size?: number;
     uploadedAt: Date;
-    
+
     // KYC verification
     kycVerified: boolean;
     kycVerifiedAt: Date | null;
-    
+
     // SmileID verification with tracking IDs
-    smileIdStatus: "pending" | "verified" | "failed";
+    smileIdStatus: "verified" | "rejected" | "under_review" | "not_submitted";
     smileIdVerifiedAt: Date | null;
     smileIdJobId: string | null;
     smileIdUploadId: string | null;
-    
+
     // Additional metadata
     description?: string;
     expiresAt?: Date;
     isRequired: boolean;
 }
 
+
+export interface IDirectorAndShareholder {
+    _id: string;
+    senderId: ISender;
+    creatorId: IUser;
+    firstName: string;
+    lastName: string;
+    middleName: string;
+    email?: string;
+    jobTitle: string;
+    role: string;
+    isDirector: boolean;
+    isShareholder: boolean;
+    shareholderPercentage: number;
+    dateOfBirth: Date;
+    nationality: string;
+    phoneCode: string;
+    phoneNumber: string;
+    idType: "passport" | "drivers_license";
+    idNumber: string;
+    issuedCountry: string;
+    issueDate: Date;
+    expiryDate: Date;
+    streetAddress: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
+
+    // ID Document file information
+    idDocument: {
+        name: string;
+        type: string; // file type (pdf, jpg, png, etc.)
+        url: string;
+        size?: number;
+        uploadedAt: Date;
+        // SmileID verification with tracking IDs
+        smileIdStatus: "verified" | "rejected" | "under_review" | "not_submitted";
+        smileIdVerifiedAt: Date | null;
+        smileIdJobId: string | null;
+        smileIdUploadId: string | null;
+    };
+
+    // Proof of Address file information 
+    proofOfAddress: {
+        name: string;
+        type: string; // file type (pdf, jpg, png, etc.)
+        url: string;
+        size?: number;
+        uploadedAt: Date;
+        // SmileID verification with tracking IDs
+        smileIdStatus: "verified" | "rejected" | "under_review" | "not_submitted";
+        smileIdVerifiedAt: Date | null;
+        smileIdJobId: string | null;
+        smileIdUploadId: string | null;
+    };
+
+    idDocumentVerified: boolean;
+    proofOfAddressVerified: boolean;
+};
+
 export interface ISender {
     _id: string;
     rojifiId: string;
-    creator: string;
-    teams: string;
+    creator: IUser;
+    teams: ITeams;
     country: string;
     countryflag: string;
     businessRegistrationNumber: string;
@@ -431,7 +486,7 @@ export interface ISender {
     nilosRejectedAt: Date | null;
 
     status: SenderStatus;
-    primary?: boolean;
+    primary: boolean;
 
     // Additional fields from business details form
     // Company basic info
@@ -475,44 +530,10 @@ export interface ISender {
     directorOrBeneficialOwnerIsPEPOrUSPerson?: boolean;
     immediateApprove?: boolean;
 
-    directorsAndShareholders?: Array<IDirectorAndShareholder>;
+    directors: Array<IDirectorAndShareholder>;
 
     createdAt: Date;
     updatedAt: Date;
-}
-
-export interface IDirectorAndShareholder {
-    _id?: string;
-    senderId: string;
-    firstName: string;
-    lastName: string;
-    middleName: string;
-    email: string;
-    jobTitle?: string;
-    role: string;
-    isDirector: boolean;
-    isShareholder: boolean;
-    shareholderPercentage?: number;
-    dateOfBirth: Date;
-    nationality: string;
-    phoneCode: string;
-    phoneNumber: string;
-    idType: "passport" | "drivers_license";
-    idNumber: string;
-    issuedCountry: string;
-    issueDate: Date;
-    expiryDate: Date;
-    streetAddress: string;
-    city: string;
-    state: string;
-    postalCode: string;
-    country: string;
-    idDocument?: string; // URL to uploaded ID document
-    proofOfAddress?: string; // URL to uploaded proof of address
-    idDocumentVerified?: boolean;
-    proofOfAddressVerified?: boolean;
-    createdAt?: Date;
-    updatedAt?: Date;
 }
 
 export interface IPayment {

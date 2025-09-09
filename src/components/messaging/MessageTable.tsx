@@ -18,7 +18,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 import ConfirmDialog from "./ConfirmDialog";
 import EditMessageDialog from "./EditMessageDialog";
-import { useDeleteMessage, useResendMessage } from "@/hooks/useCommunications";
 
 interface MessageTableProps {
   messages: any[];
@@ -31,31 +30,17 @@ export default function MessageTable({ messages, loading }: MessageTableProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
 
-  const { mutate: resendMessage, isPending: isResendingMessage } =
-    useResendMessage();
-  const { mutate: deleteMessage, isPending: isDeletingMessage } =
-    useDeleteMessage();
-
   const handleEdit = (message: any) => {
     setSelectedMessage(message);
     setEditOpen(true);
   };
 
   const handleResend = (id: string) => {
-    resendMessage(id, {
-      onSuccess: () => {
-        setResendOpen(false);
-      },
-    });
+
   };
 
   const handleDelete = (id: string) => {
-    console.log("Deleting message:", id);
-    deleteMessage(id, {
-      onSuccess: () => {
-        setDeleteOpen(false);
-      },
-    });
+
   };
 
   if (loading) {
@@ -138,8 +123,8 @@ export default function MessageTable({ messages, loading }: MessageTableProps) {
                     message.status === "sent"
                       ? "success"
                       : message.status === "failed"
-                      ? "destructive"
-                      : "warning"
+                        ? "destructive"
+                        : "warning"
                   }
                 >
                   {message.status}
@@ -205,7 +190,7 @@ export default function MessageTable({ messages, loading }: MessageTableProps) {
       <ConfirmDialog
         open={resendOpen}
         onOpenChange={setResendOpen}
-        isLoading={isResendingMessage}
+        isLoading={false}
         title="Resend Message?"
         message="Are you sure you want to resend this message?"
         onConfirm={() => handleResend(selectedMessage?.id)}
@@ -214,7 +199,7 @@ export default function MessageTable({ messages, loading }: MessageTableProps) {
       <ConfirmDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
-        isLoading={isDeletingMessage}
+        isLoading={false}
         title="Delete Message?"
         message="This action cannot be undone. Proceed?"
         onConfirm={() => handleDelete(selectedMessage?.id)}

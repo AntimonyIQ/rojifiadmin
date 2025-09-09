@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { IPagination, IResponse, ISender } from "@/interface/interface";
+import { IPagination, IResponse, ISender, IDirectorAndShareholder } from "@/interface/interface";
 import Defaults from "@/defaults/defaults";
 import { session, SessionData } from "@/session/session";
-import { Status, WhichDocument } from "@/enums/enums";
+import { Status } from "@/enums/enums";
 
 import {
     Dialog,
@@ -45,7 +45,8 @@ export default function SendersPage() {
     const [selectedAction, setSelectedAction] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(true);
     const [senders, setSenders] = useState<Array<ISender>>([]);
-    const [search, _setSearch] = useState<string>("");
+    const [search, setSearch] = useState<string>("");
+    const [debouncedSearch, setDebouncedSearch] = useState<string>("");
     const [pagination, setPagination] = useState<IPagination>({
         total: 0,
         totalPages: 0,
@@ -67,9 +68,18 @@ export default function SendersPage() {
 
     const sd: SessionData = session.getUserData();
 
+    // Debounce search input
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search);
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [search]);
+
     useEffect(() => {
         fetchSenders();
-    }, [pagination.page, pagination.limit, search]);
+    }, [pagination.page, pagination.limit, debouncedSearch]);
 
     const fetchSenders = async () => {
         try {
@@ -77,7 +87,7 @@ export default function SendersPage() {
 
             Defaults.LOGIN_STATUS();
 
-            const searchParam = search ? `&search=${encodeURIComponent(search)}` : "";
+            const searchParam = debouncedSearch ? `&search=${encodeURIComponent(debouncedSearch)}` : "";
             const url: string = `${Defaults.API_BASE_URL}/admin/sender/list?page=${pagination.page}&limit=${pagination.limit}${searchParam}`;
 
             const res = await fetch(url, {
@@ -107,145 +117,10 @@ export default function SendersPage() {
         }
     }
 
-    // Sample directors and shareholders data for testing
-    const sampleDirectorsAndShareholders = [
-        {
-            senderId: "sample123",
-            firstName: "John",
-            lastName: "Smith",
-            middleName: "Michael",
-            email: "john.smith@company.com",
-            jobTitle: "Chief Executive Officer",
-            role: "Director and Shareholder",
-            isDirector: true,
-            isShareholder: true,
-            shareholderPercentage: 45,
-            dateOfBirth: new Date("1980-05-15"),
-            nationality: "United States",
-            phoneCode: "1",
-            phoneNumber: "5551234567",
-            idType: "passport" as const,
-            idNumber: "P123456789",
-            issuedCountry: "United States",
-            issueDate: new Date("2020-01-15"),
-            expiryDate: new Date("2030-01-15"),
-            streetAddress: "123 Business Ave",
-            city: "New York",
-            state: "NY",
-            postalCode: "10001",
-            country: "United States",
-            idDocumentVerified: true,
-            proofOfAddressVerified: true
-        },
-        {
-            senderId: "sample123",
-            firstName: "Sarah",
-            lastName: "Johnson",
-            middleName: "Elizabeth",
-            email: "sarah.johnson@company.com",
-            jobTitle: "Chief Financial Officer",
-            role: "Director and Shareholder",
-            isDirector: true,
-            isShareholder: true,
-            shareholderPercentage: 35,
-            dateOfBirth: new Date("1985-08-22"),
-            nationality: "United Kingdom",
-            phoneCode: "44",
-            phoneNumber: "7700123456",
-            idType: "drivers_license" as const,
-            idNumber: "DL987654321",
-            issuedCountry: "United Kingdom",
-            issueDate: new Date("2021-03-10"),
-            expiryDate: new Date("2031-03-10"),
-            streetAddress: "456 Finance Street",
-            city: "London",
-            state: "Greater London",
-            postalCode: "SW1A 1AA",
-            country: "United Kingdom",
-            idDocumentVerified: false,
-            proofOfAddressVerified: true
-        }
-    ];
-
-    // Sample documents for testing
-    const sampleDocuments = [
-        {
-            which: WhichDocument.MEMORANDUM_ARTICLES,
-            name: "Memorandum and Articles of Association.pdf",
-            type: "application/pdf",
-            url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-            size: 1024576,
-            uploadedAt: new Date(),
-            kycVerified: false,
-            kycVerifiedAt: null,
-            smileIdStatus: "pending" as const,
-            smileIdVerifiedAt: null,
-            smileIdJobId: null,
-            smileIdUploadId: null,
-            isRequired: true
-        },
-        {
-            which: WhichDocument.CERTIFICATE_INCORPORATION,
-            name: "Certificate of Incorporation.pdf",
-            type: "application/pdf",
-            url: "https://file-examples.com/storage/fe86dd34ee608e883312ec6/2017/10/file_example_JPG_100kB.jpg",
-            size: 2048576,
-            uploadedAt: new Date(),
-            kycVerified: true,
-            kycVerifiedAt: new Date(),
-            smileIdStatus: "verified" as const,
-            smileIdVerifiedAt: new Date(),
-            smileIdJobId: "job_123",
-            smileIdUploadId: "upload_456",
-            isRequired: true
-        },
-        {
-            which: WhichDocument.INCORPORATION_STATUS,
-            name: "Incorporation Status Report.docx",
-            type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            url: "https://calibre-ebook.com/downloads/demos/demo.docx",
-            size: 512000,
-            uploadedAt: new Date(),
-            kycVerified: true,
-            kycVerifiedAt: new Date(),
-            smileIdStatus: "failed" as const,
-            smileIdVerifiedAt: null,
-            smileIdJobId: "job_789",
-            smileIdUploadId: "upload_101",
-            isRequired: true
-        },
-        {
-            which: WhichDocument.PROOF_ADDRESS,
-            name: "Proof of Address.pdf",
-            type: "application/pdf",
-            url: "https://www.learningcontainer.com/wp-content/uploads/2019/09/sample-pdf-file.pdf",
-            size: 768000,
-            uploadedAt: new Date(),
-            kycVerified: false,
-            kycVerifiedAt: null,
-            smileIdStatus: "verified" as const,
-            smileIdVerifiedAt: new Date(),
-            smileIdJobId: "job_112",
-            smileIdUploadId: "upload_113",
-            isRequired: true
-        }
-    ];
-
     // Helper function to open validation modal
     const openValidationModal = (sender: ISender) => {
-        // Add sample directors and shareholders and documents for demonstration
-        const senderWithSampleData = {
-            ...sender,
-            directorsAndShareholders: sender.directorsAndShareholders?.length
-                ? sender.directorsAndShareholders
-                : sampleDirectorsAndShareholders,
-            // Add sample documents if none exist
-            documents: sender.documents?.length
-                ? sender.documents
-                : sampleDocuments
-        };
-        setSelectedSender(senderWithSampleData);
-        setEditableFormData(senderWithSampleData);
+        setSelectedSender(sender);
+        setEditableFormData(sender);
         setCurrentStage(1);
         setIsValidationModalOpen(true);
     };
@@ -323,7 +198,20 @@ export default function SendersPage() {
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-lg font-medium">Senders</h2>
-                                <div>
+                                <div className="flex items-center gap-2">
+                                    <div className="relative">
+                                        <Input
+                                            placeholder="Search senders..."
+                                            value={search}
+                                            onChange={(e) => setSearch(e.target.value)}
+                                            className="pl-8 w-64"
+                                        />
+                                        <div className="absolute left-2 top-1/2 transform -translate-y-1/2">
+                                            <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                            </svg>
+                                        </div>
+                                    </div>
                                     <Button variant="outline" className="btn btn-sm">New Sender</Button>
                                 </div>
                             </div>
@@ -332,12 +220,12 @@ export default function SendersPage() {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead>Sender ID</TableHead>
-                                            <TableHead>Business</TableHead>
+                                            <TableHead>Rojifi ID</TableHead>
+                                            <TableHead>Business Name</TableHead>
                                             <TableHead>Country</TableHead>
-                                            <TableHead>Volume</TableHead>
+                                            <TableHead className="text-right">Volume</TableHead>
                                             <TableHead>Status</TableHead>
-                                            <TableHead>Actions</TableHead>
+                                            <TableHead className="text-right">Actions</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -360,13 +248,35 @@ export default function SendersPage() {
 
                                         {!loading && senders.map((s: ISender, idx: number) => (
                                             <TableRow key={s._id || idx}>
-                                                <TableCell>{s._id || "-"}</TableCell>
-                                                <TableCell>{s.businessName || "-"}</TableCell>
-                                                <TableCell>{s.country || "-"}</TableCell>
-                                                <TableCell>{s.volume?.toLocaleString() || "-"}</TableCell>
+                                                <TableCell className="font-mono text-xs">{s.rojifiId || s._id?.slice(-8) || "-"}</TableCell>
+                                                <TableCell className="font-medium">{s.businessName || "-"}</TableCell>
                                                 <TableCell>
-                                                    <Badge variant={s.affiliationStatus === 'live' ? 'success' : s.affiliationStatus === 'pending' ? 'warning' : 'outline'} className="capitalize">
-                                                        {s.affiliationStatus}
+                                                    <div className="flex items-center gap-2">
+                                                        {s.countryflag && <span className="text-lg">{s.countryflag}</span>}
+                                                        <span>{s.country || "-"}</span>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    {s.volume ? s.volume.toLocaleString('en-US', {
+                                                        style: 'currency',
+                                                        currency: 'USD',
+                                                        minimumFractionDigits: 0,
+                                                        maximumFractionDigits: 0
+                                                    }) : "-"}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge
+                                                        variant={
+                                                            s.status === 'active' ? 'default' :
+                                                                s.status === 'in-review' ? 'secondary' :
+                                                                    s.status === 'suspended' ? 'destructive' :
+                                                                        s.affiliationStatus === 'live' ? 'default' :
+                                                                            s.affiliationStatus === 'pending' ? 'secondary' :
+                                                                                'outline'
+                                                        }
+                                                        className="capitalize"
+                                                    >
+                                                        {s.status || s.affiliationStatus || 'unapproved'}
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell>
@@ -399,6 +309,54 @@ export default function SendersPage() {
                                     </TableBody>
                                 </Table>
                             </div>
+
+                            {/* Pagination Controls */}
+                            {pagination.totalPages > 1 && (
+                                <div className="flex items-center justify-between mt-4">
+                                    <div className="text-sm text-muted-foreground">
+                                        Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} results
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
+                                            disabled={pagination.page <= 1}
+                                        >
+                                            Previous
+                                        </Button>
+                                        <div className="flex items-center gap-1">
+                                            {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                                                const pageNum = pagination.page <= 3 ? i + 1 :
+                                                    pagination.page >= pagination.totalPages - 2 ? pagination.totalPages - 4 + i :
+                                                        pagination.page - 2 + i;
+
+                                                if (pageNum < 1 || pageNum > pagination.totalPages) return null;
+
+                                                return (
+                                                    <Button
+                                                        key={pageNum}
+                                                        variant={pagination.page === pageNum ? "default" : "outline"}
+                                                        size="sm"
+                                                        onClick={() => setPagination(prev => ({ ...prev, page: pageNum }))}
+                                                        className="w-8 h-8 p-0"
+                                                    >
+                                                        {pageNum}
+                                                    </Button>
+                                                );
+                                            })}
+                                        </div>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
+                                            disabled={pagination.page >= pagination.totalPages}
+                                        >
+                                            Next
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Action confirmation dialog */}
                             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -763,6 +721,107 @@ export default function SendersPage() {
                                                             </div>
                                                         </div>
 
+                                                        {/* Creator Information */}
+                                                        <div className="space-y-4">
+                                                            <h4 className="text-md font-semibold text-gray-900">Creator Information</h4>
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                <div>
+                                                                    <Label htmlFor="creatorFirstName">First Name</Label>
+                                                                    <Input
+                                                                        id="creatorFirstName"
+                                                                        value={editableFormData.creatorFirstName || ''}
+                                                                        onChange={(e) => handleFormInputChange('creatorFirstName', e.target.value)}
+                                                                        placeholder="Enter creator first name"
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <Label htmlFor="creatorLastName">Last Name</Label>
+                                                                    <Input
+                                                                        id="creatorLastName"
+                                                                        value={editableFormData.creatorLastName || ''}
+                                                                        onChange={(e) => handleFormInputChange('creatorLastName', e.target.value)}
+                                                                        placeholder="Enter creator last name"
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <Label htmlFor="creatorPosition">Position</Label>
+                                                                    <Input
+                                                                        id="creatorPosition"
+                                                                        value={editableFormData.creatorPosition || ''}
+                                                                        onChange={(e) => handleFormInputChange('creatorPosition', e.target.value)}
+                                                                        placeholder="Enter creator position"
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <Label htmlFor="creatorEmail">Email</Label>
+                                                                    <Input
+                                                                        id="creatorEmail"
+                                                                        type="email"
+                                                                        value={editableFormData.creatorEmail || ''}
+                                                                        onChange={(e) => handleFormInputChange('creatorEmail', e.target.value)}
+                                                                        placeholder="Enter creator email"
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <Label htmlFor="creatorPercentageOwnership">Ownership Percentage</Label>
+                                                                    <Input
+                                                                        id="creatorPercentageOwnership"
+                                                                        type="number"
+                                                                        min="0"
+                                                                        max="100"
+                                                                        value={editableFormData.creatorPercentageOwnership || ''}
+                                                                        onChange={(e) => handleFormInputChange('creatorPercentageOwnership', parseInt(e.target.value))}
+                                                                        placeholder="Enter ownership percentage"
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <Label htmlFor="creatorVotingRightPercentage">Voting Rights Percentage</Label>
+                                                                    <Input
+                                                                        id="creatorVotingRightPercentage"
+                                                                        type="number"
+                                                                        min="0"
+                                                                        max="100"
+                                                                        value={editableFormData.creatorVotingRightPercentage || ''}
+                                                                        onChange={(e) => handleFormInputChange('creatorVotingRightPercentage', parseInt(e.target.value))}
+                                                                        placeholder="Enter voting rights percentage"
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Nilos Integration */}
+                                                        <div className="space-y-4">
+                                                            <h4 className="text-md font-semibold text-gray-900">Nilos Integration</h4>
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                <div>
+                                                                    <Label htmlFor="nilosStatus">Nilos Status</Label>
+                                                                    <Select
+                                                                        value={editableFormData.nilosStatus || ''}
+                                                                        onValueChange={(value) => handleFormInputChange('nilosStatus', value)}
+                                                                    >
+                                                                        <SelectTrigger>
+                                                                            <SelectValue placeholder="Select Nilos status" />
+                                                                        </SelectTrigger>
+                                                                        <SelectContent>
+                                                                            <SelectItem value="pending">Pending</SelectItem>
+                                                                            <SelectItem value="approved">Approved</SelectItem>
+                                                                            <SelectItem value="rejected">Rejected</SelectItem>
+                                                                            <SelectItem value="under_review">Under Review</SelectItem>
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                </div>
+                                                                <div>
+                                                                    <Label htmlFor="nilosId">Nilos ID</Label>
+                                                                    <Input
+                                                                        id="nilosId"
+                                                                        value={editableFormData.nilosId || ''}
+                                                                        onChange={(e) => handleFormInputChange('nilosId', e.target.value)}
+                                                                        placeholder="Enter Nilos ID"
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
                                                         {/* Risk and Compliance */}
                                                         <div className="space-y-4">
                                                             <h4 className="text-md font-semibold text-gray-900">Risk and Compliance</h4>
@@ -880,7 +939,7 @@ export default function SendersPage() {
                                                                             <Badge
                                                                                 variant={
                                                                                     doc.smileIdStatus === 'verified' ? "default" :
-                                                                                        doc.smileIdStatus === 'failed' ? "destructive" :
+                                                                                        doc.smileIdStatus === 'rejected' ? "destructive" :
                                                                                             "secondary"
                                                                                 }
                                                                             >
@@ -954,18 +1013,18 @@ export default function SendersPage() {
                                                         </CardTitle>
                                                     </CardHeader>
                                                     <CardContent className="space-y-4">
-                                                        {selectedSender?.directorsAndShareholders && selectedSender.directorsAndShareholders.length > 0 ? (
+                                                        {selectedSender?.directors && selectedSender.directors.length > 0 ? (
                                                             <>
                                                                 <div className="flex items-center justify-between mb-4">
                                                                     <h4 className="font-medium">
-                                                                        Directors & Shareholders ({selectedSender.directorsAndShareholders.length})
+                                                                        Directors & Shareholders ({selectedSender.directors.length})
                                                                     </h4>
                                                                     <Badge variant="default" className="bg-green-100 text-green-800">
-                                                                        {selectedSender.directorsAndShareholders.length} Added
+                                                                        {selectedSender.directors.length} Added
                                                                     </Badge>
                                                                 </div>
 
-                                                                {selectedSender.directorsAndShareholders.map((person, index) => (
+                                                                {selectedSender.directors.map((person: IDirectorAndShareholder, index: number) => (
                                                                     <div key={index} className="border rounded-lg p-4 space-y-3">
                                                                         <div className="flex items-center justify-between">
                                                                             <div className="flex items-center gap-3">
@@ -1140,6 +1199,38 @@ export default function SendersPage() {
                                                             </div>
                                                         </div>
 
+                                                        {/* Creator Information Summary */}
+                                                        <div className="bg-muted p-4 rounded-lg">
+                                                            <h4 className="font-medium mb-3">Creator Information</h4>
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                                                                <div><strong>Full Name:</strong> {editableFormData.creatorFirstName || 'N/A'} {editableFormData.creatorLastName || 'N/A'}</div>
+                                                                <div><strong>Position:</strong> {editableFormData.creatorPosition || 'N/A'}</div>
+                                                                <div><strong>Email:</strong> {editableFormData.creatorEmail || 'N/A'}</div>
+                                                                <div><strong>Ownership:</strong> {editableFormData.creatorPercentageOwnership || 'N/A'}%</div>
+                                                                <div><strong>Voting Rights:</strong> {editableFormData.creatorVotingRightPercentage || 'N/A'}%</div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Nilos Integration Summary */}
+                                                        <div className="bg-muted p-4 rounded-lg">
+                                                            <h4 className="font-medium mb-3">Nilos Integration</h4>
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                                                                <div><strong>Status:</strong>
+                                                                    <Badge
+                                                                        variant={
+                                                                            editableFormData.nilosStatus === 'approved' ? 'default' :
+                                                                                editableFormData.nilosStatus === 'rejected' ? 'destructive' :
+                                                                                    'secondary'
+                                                                        }
+                                                                        className="ml-2 capitalize"
+                                                                    >
+                                                                        {editableFormData.nilosStatus || 'pending'}
+                                                                    </Badge>
+                                                                </div>
+                                                                <div><strong>Nilos ID:</strong> {editableFormData.nilosId || 'N/A'}</div>
+                                                            </div>
+                                                        </div>
+
                                                         {/* Address Information Summary */}
                                                         <div className="bg-muted p-4 rounded-lg">
                                                             <h4 className="font-medium mb-3">Address Information</h4>
@@ -1226,7 +1317,7 @@ export default function SendersPage() {
                                                                             <Badge
                                                                                 variant={
                                                                                     doc.smileIdStatus === 'verified' ? "default" :
-                                                                                        doc.smileIdStatus === 'failed' ? "destructive" :
+                                                                                        doc.smileIdStatus === 'rejected' ? "destructive" :
                                                                                             "secondary"
                                                                                 }
                                                                                 className="text-xs"
@@ -1246,15 +1337,15 @@ export default function SendersPage() {
                                                         {/* Directors & Shareholders Summary */}
                                                         <div className="bg-muted p-4 rounded-lg">
                                                             <h4 className="font-medium mb-3">Directors & Shareholders</h4>
-                                                            {selectedSender?.directorsAndShareholders && selectedSender.directorsAndShareholders.length > 0 ? (
+                                                            {selectedSender?.directors && selectedSender.directors.length > 0 ? (
                                                                 <div className="space-y-2 text-sm">
                                                                     <div className="flex justify-between items-center mb-2">
                                                                         <span><strong>Total Added:</strong></span>
                                                                         <Badge variant="default" className="bg-green-100 text-green-800">
-                                                                            {selectedSender.directorsAndShareholders.length} People
+                                                                            {selectedSender.directors.length} People
                                                                         </Badge>
                                                                     </div>
-                                                                    {selectedSender.directorsAndShareholders.map((person, index) => (
+                                                                    {selectedSender.directors.map((person: IDirectorAndShareholder, index: number) => (
                                                                         <div key={index} className="flex justify-between items-center py-1 border-b border-gray-200 last:border-b-0">
                                                                             <div>
                                                                                 <span className="font-medium">
@@ -1280,7 +1371,7 @@ export default function SendersPage() {
                                                                         <div className="flex justify-between">
                                                                             <span>Documents Verified:</span>
                                                                             <span>
-                                                                                {selectedSender.directorsAndShareholders.filter(p => p.idDocumentVerified && p.proofOfAddressVerified).length} / {selectedSender.directorsAndShareholders.length}
+                                                                                {selectedSender.directors.filter((p: IDirectorAndShareholder) => p.idDocumentVerified && p.proofOfAddressVerified).length} / {selectedSender.directors.length}
                                                                             </span>
                                                                         </div>
                                                                     </div>

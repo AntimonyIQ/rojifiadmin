@@ -19,10 +19,6 @@ import {
 } from "recharts";
 import { format } from "date-fns";
 import { useState } from "react";
-// @ts-ignore
-import { TransactionVolume } from "@/types";
-import { getDateRange } from "@/utils/getDateRange";
-import { useFetchTransactionVolume } from "@/hooks/useTransaction";
 
 
 const CustomTooltip = ({
@@ -37,7 +33,7 @@ const CustomTooltip = ({
           {format(new Date(label), "MMM d, yyyy")}
         </p>
         <p className="text-sm font-medium text-black">
-          Transactions: ₦{payload[0].value?.toLocaleString()} 
+          Transactions: ₦{payload[0].value?.toLocaleString()}
         </p>
       </div>
     );
@@ -51,13 +47,9 @@ export default function TransactionVolumeChart() {
     "week" | "month" | "quarter" | "year"
   >("month");
 
-  const { start, end } = getDateRange(timeRange);
 
 
-  const { data, isLoading } = useFetchTransactionVolume(start, end);
-
-
-  if (isLoading) {
+  if (false) {
     return (
       <Card className="border border-gray-100">
         <CardContent className="p-6">
@@ -100,7 +92,7 @@ export default function TransactionVolumeChart() {
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={data}
+              data={{ week: [], month: [], quarter: [], year: [] }[timeRange]}
               margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />

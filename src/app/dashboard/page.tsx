@@ -3,7 +3,6 @@ import { Users, UserCheck, ArrowUpRight } from "lucide-react";
 import KpiCard from "@/components/dashboard/KpiCard";
 import TransactionVolumeChart from "@/components/dashboard/TransactionVolumeChart";
 import RecentTransactionsTable from "@/components/dashboard/RecentTransactionsTable";
-import { useFetchDashboardOverview } from "@/hooks/useStaff";
 import { ITransaction } from "@/interface/interface";
 import { useEffect, useState } from "react";
 import {
@@ -20,8 +19,6 @@ export default function DashboardPage() {
     const [transactions, setTransactions] = useState<Array<ITransaction>>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [openDetails, setOpenDetails] = useState<boolean>(false);
-    const { data: dashboardData, isLoading: statsLoading } =
-        useFetchDashboardOverview();
 
     const currentDate = new Date();
     const thirtyDaysAgo = new Date(currentDate);
@@ -29,7 +26,7 @@ export default function DashboardPage() {
 
     useEffect(() => {
         fetchTransactions();
-    }, [currentDate]);
+    }, []); // Remove currentDate dependency to prevent infinite re-renders
 
     const fetchTransactions = async () => {
         setLoading(true);
@@ -55,44 +52,44 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <KpiCard
                     title="Total Users"
-                    value={dashboardData?.total_users.toLocaleString() || "0"}
-                    percentageChange={dashboardData?.user_growth || 0}
+                    value={"0"}
+                    percentageChange={0}
                     icon={Users}
                     iconColor="text-green-500"
                     iconBgColor="bg-green-50"
-                    loading={statsLoading}
+                    loading={true}
                 />
 
                 <KpiCard
                     title="Total Daily Transactions"
-                    value={dashboardData?.total_transactions?.toLocaleString() || "0"}
-                    percentageChange={dashboardData?.transaction_growth || 0}
+                    value={"0"}
+                    percentageChange={0}
                     icon={ArrowUpRight}
                     iconColor="text-blue-500"
                     iconBgColor="bg-blue-50"
-                    loading={statsLoading}
+                    loading={true}
                     fieldKey="Transaction"
                 />
 
                 <KpiCard
                     title="Total Transactions"
-                    value={dashboardData?.total_transactions?.toLocaleString() || "0"}
-                    percentageChange={dashboardData?.transaction_growth || 0}
+                    value={"0"}
+                    percentageChange={0}
                     icon={ArrowUpRight}
                     iconColor="text-blue-500"
                     iconBgColor="bg-blue-50"
-                    loading={statsLoading}
+                    loading={true}
                     fieldKey="Transaction"
                 />
 
                 <KpiCard
                     title="Active Users"
-                    value={dashboardData?.active_users.toLocaleString() || "0"}
-                    percentageChange={dashboardData?.active_user_growth || 0}
+                    value={"0"}
+                    percentageChange={0}
                     icon={UserCheck}
                     iconColor="text-purple-500"
                     iconBgColor="bg-purple-50"
-                    loading={statsLoading}
+                    loading={true}
                 />
             </div>
 

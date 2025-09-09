@@ -14,9 +14,6 @@ import {
     ChevronsRight,
     TrendingUp,
 } from "lucide-react";
-import {
-    useFetchAllProcessorBalance,
-} from "@/hooks/useStaff";
 import React, { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -50,27 +47,14 @@ type Processor = {
 
 // processor balances component
 function ProcessorBalanceGrid() {
-    const { data: processorBalances } = useFetchAllProcessorBalance();
+    const [transactions, setTransactions] = useState<Array<ITransaction>>([]);
     const [selectedProcessor, setSelectedProcessor] = useState<Processor | null>(
         null
     );
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {processorBalances?.map((item: Processor) => (
-                <Card
-                    key={item.processor}
-                    onClick={() => setSelectedProcessor(item)}
-                    className="p-6 cursor-pointer shadow-md hover:shadow-lg transition"
-                >
-                    <div className="text-center">
-                        {/* <p className="text-sm text-gray-500">Processor</p> */}
-                        <h3 className="text-xl font-semibold capitalize">
-                            {item.processor}
-                        </h3>
-                    </div>
-                </Card>
-            ))}
+
 
             {/* Dialog */}
             <Dialog

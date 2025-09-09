@@ -6,8 +6,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useIssueVirtualAccounts } from "@/hooks/useAccounts";
-import { useToast } from "@/hooks/use-toast";
 
 export default function UserIssueVirtualAccountDialog({
   user,
@@ -18,29 +16,9 @@ export default function UserIssueVirtualAccountDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const { mutate, isPending } = useIssueVirtualAccounts();
-  const { toast } = useToast();
 
   const handleIssue = () => {
-    mutate(
-      { id: user?.id },
-      {
-        onSuccess: () => {
-          toast({
-            title: "Success!",
-            description: "Virtual account issued successfully",
-          });
-          onOpenChange(false);
-        },
-        onError: () => {
-          toast({
-            title: "Failed!",
-            description: "Failed to issue virtual account",
-            variant: "destructive",
-          });
-        },
-      }
-    );
+
   };
 
   return (
@@ -59,16 +37,16 @@ export default function UserIssueVirtualAccountDialog({
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={isPending}
+            disabled={false}
           >
             Cancel
           </Button>
           <Button
             onClick={handleIssue}
-            disabled={isPending}
+            disabled={false}
             className="bg-primary"
           >
-            {isPending ? "Processing..." : "Approve"}
+            {false ? "Processing..." : "Approve"}
           </Button>
         </DialogFooter>
       </DialogContent>

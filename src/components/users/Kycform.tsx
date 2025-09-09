@@ -30,8 +30,6 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
-import { useFetchUserKYC, useUpdateKyc } from "@/hooks/useKYC";
-import { toast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   status: z.enum(["pending", "approved", "rejected"]),
@@ -45,8 +43,6 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function KycForm({ userId }: { userId: string }) {
-  const { data: kycInfo, isLoading } = useFetchUserKYC(userId);
-  const { mutate: updateKyc, isPending: isKycUpdating } = useUpdateKyc();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -62,56 +58,14 @@ export default function KycForm({ userId }: { userId: string }) {
 
   // Populate form once kycInfo is loaded
   useEffect(() => {
-    if (kycInfo?.kyc) {
-      const kyc = kycInfo.kyc;
 
-      try {
-        const dob = kyc.dob ? new Date(kyc.dob) : new Date();
-        console.log("Resetting form with:", { ...kyc, dob });
-
-        form.reset({
-          status: kyc.status ?? "pending",
-          method: kyc.method ?? "",
-          bvn: kyc.bvn ?? "",
-          nin: kyc.nin ?? "",
-          fullname: kyc.fullname ?? "",
-          dob,
-        });
-      } catch (error) {
-        console.error("Error parsing DOB or resetting form", error);
-      }
-    }
-  }, [kycInfo, form]);
+  }, []);
 
   const onSubmit = (values: FormValues) => {
-    const { method, ...dataToUpdate } = values;
-    try {
-      updateKyc(
-        { id: kycInfo.kyc.id!!, data: dataToUpdate },
-        {
-          // @ts-ignore
-          onSuccess: (response: any) => {
-            toast({
-              title: "Kyc Updated!",
-              description: `${values.fullname} kyc has been updated successfully.`,
-            });
-          },
-          onError: (error: any) => {
-            toast({
-              title: "Error",
-              description:
-                error?.response?.data?.message || "Failed to update kyc",
-              variant: "destructive",
-            });
-          },
-        }
-      );
-    } catch (error) {
-      console.error("Error updating KYC:", error);
-    }
+
   };
 
-  if (isLoading)
+  if (false)
     return (
       <div className="w-full h-full flex items-center justify-center space-y-2 mt-10">
         <div className="flex flex-col items-center space-y-2">
@@ -255,10 +209,10 @@ export default function KycForm({ userId }: { userId: string }) {
           {/* Submit */}
           <Button
             type="submit"
-            disabled={isKycUpdating}
+            disabled={false}
             className="w-full bg-primary text-white disabled:cursor-not-allowed disabled:primary/60"
           >
-            {isKycUpdating ? "Updating..." : "Save Changes"}
+            {false ? "Updating..." : "Save Changes"}
           </Button>
         </form>
       </Form>

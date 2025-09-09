@@ -1,11 +1,6 @@
 import { motion } from "framer-motion";
-import SettingsTabs from "@/components/settings/SettingsTabs";
-import { useLocation } from "wouter";
 
 export default function SettingsPage() {
-  const [location] = useLocation();
-  const queryParams = new URLSearchParams(location.split("?")[1] || "");
-  const defaultTab = queryParams.get("tab") || "payment-channels";
 
   return (
     <motion.div
@@ -20,7 +15,6 @@ export default function SettingsPage() {
         <p className="text-gray-500">Manage your application preferences and configurations</p>
       </div>
 
-      <SettingsTabs defaultTab={defaultTab} />
     </motion.div>
   );
 }

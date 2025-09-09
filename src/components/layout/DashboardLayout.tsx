@@ -16,12 +16,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     const sd: SessionData = session.getUserData();
 
     useEffect(() => {
-        if (!sd || !sd.isLoggedIn) {
+        // Only redirect if explicitly not logged in, avoid redirect loops
+        if (sd && sd.isLoggedIn === false) {
             setLocation("/");
         }
-    }, [sd, setLocation]);
+    }, [sd?.isLoggedIn, setLocation]);
 
-    if (!sd.user) {
+    if (!sd || !sd.isLoggedIn || !sd.user) {
         return null;
     }
 

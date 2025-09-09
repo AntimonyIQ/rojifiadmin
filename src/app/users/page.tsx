@@ -9,7 +9,6 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { Users as UsersIcon, UserCheck, UserX } from "lucide-react";
-import { useUserOverview } from "@/hooks/useUsers";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
     Table,
@@ -35,7 +34,6 @@ export default function UsersPage() {
         limit: 10,
     });
     const sd: SessionData = session.getUserData();
-    const { data: usersOverviewData } = useUserOverview();
 
     useEffect(() => {
         fetchUsers();
@@ -212,7 +210,7 @@ export default function UsersPage() {
                                     Total Users
                                 </p>
                                 <p className="text-3xl font-bold text-gray-900">
-                                    {usersOverviewData && usersOverviewData.total_users}
+                                    {0}
                                 </p>
                             </div>
                             <div className="h-12 w-12 bg-primary-50 rounded-full flex items-center justify-center">
@@ -236,7 +234,7 @@ export default function UsersPage() {
                                     Active Users
                                 </p>
                                 <p className="text-3xl font-bold text-green-600">
-                                    {usersOverviewData && usersOverviewData.active_users}
+                                    {0}
                                 </p>
                             </div>
                             <div className="h-12 w-12 bg-green-50 rounded-full flex items-center justify-center">
@@ -264,7 +262,7 @@ export default function UsersPage() {
                                     Inactive Users
                                 </p>
                                 <p className="text-3xl font-bold text-gray-600">
-                                    {usersOverviewData && usersOverviewData.inactive_users}
+                                    {0}
                                 </p>
                             </div>
                             <div className="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center">

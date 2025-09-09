@@ -1,7 +1,6 @@
 import { Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
 
 interface VirtualAccount {
   id: string;
@@ -18,14 +17,10 @@ interface Props {
 }
 
 export default function VirtualAccountCard({ account }: Props) {
-  const { toast } = useToast();
 
   const handleCopy = () => {
     navigator.clipboard.writeText(account.account_number);
-    toast({
-      title: "Copied!",
-      description: "Account number copied!",
-    });
+
   };
 
   return (

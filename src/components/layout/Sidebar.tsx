@@ -102,7 +102,7 @@ function NavItem({ href, icon, label, active, collapsed }: NavItemProps) {
 
 export default function Sidebar() {
     const { collapsed, toggleSidebar } = useSidebar();
-    const [location] = useLocation();
+    const [location, setLocation] = useLocation();
     const [user, setUser] = useState<IUser | null>(null);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const sd: SessionData = session.getUserData();
@@ -115,7 +115,7 @@ export default function Sidebar() {
 
     const handleLogout = () => {
         session.logout();
-        window.location.href = "/";
+        setLocation("/"); // Use proper routing instead of hard refresh
     };
 
     const openLogoutModal = () => {
