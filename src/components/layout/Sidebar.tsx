@@ -217,8 +217,8 @@ export default function Sidebar() {
                 initial={false}
                 animate={{ width: collapsed ? 72 : 256 }}
             >
-                <div className="flex flex-col h-full">
-                    <div className="flex items-center justify-between h-20 px-4 border-b border-gray-100">
+                <div className="flex flex-col h-full min-h-0">
+                    <div className="flex items-center justify-between h-16 md:h-20 px-4 border-b border-gray-100 flex-shrink-0">
                         {!collapsed ? (
                             <div className="flex items-center">
                                 <div className="font-bold text-xl text-primary tracking-tight">
@@ -246,8 +246,8 @@ export default function Sidebar() {
                         )}
                     </div>
 
-                    <nav className="flex-1 overflow-y-auto py-6">
-                        <ul className="space-y-2 px-3">
+                    <nav className="flex-1 overflow-y-auto py-4 md:py-6 min-h-0">
+                        <ul className="space-y-1 md:space-y-2 px-3">
                             {navigationItems.map((item) => (
                                 <NavItem
                                     key={item.href}
@@ -261,32 +261,32 @@ export default function Sidebar() {
                         </ul>
                     </nav>
 
-                    <div className="border-t border-gray-100 p-4">
+                    <div className="border-t border-gray-100 p-3 md:p-4 flex-shrink-0">
                         <div
                             className={`flex ${collapsed ? "justify-center" : "items-center"}`}
                         >
                             {collapsed ? (
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <div className="h-10 w-10 rounded-full bg-primary-50 flex items-center justify-center text-primary font-medium cursor-pointer">
+                                        <div className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-primary-50 flex items-center justify-center text-primary font-medium cursor-pointer">
                                             {user?.email?.substring(0, 2).toUpperCase() || "AU"}
                                         </div>
                                     </TooltipTrigger>
                                     <TooltipContent side="right">
-                                        {user?.fullName || "Admin User"}
+                                        {user?.fullName}
                                     </TooltipContent>
                                 </Tooltip>
                             ) : (
                                 <>
-                                    <div className="h-10 w-10 rounded-full bg-primary-50 flex items-center justify-center text-primary font-medium">
+                                    <div className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-primary-50 flex items-center justify-center text-primary font-medium">
                                         {user?.email?.substring(0, 2).toUpperCase() || "AU"}
                                     </div>
-                                    <div className="ml-3 flex-1 min-w-0">
-                                        <p className="text-sm font-semibold text-gray-700 truncate">
-                                            {user?.fullName || "Admin User"}
+                                    <div className="ml-2 md:ml-3 flex-1 min-w-0">
+                                        <p className="text-xs md:text-sm font-semibold text-gray-700 truncate">
+                                            {user?.fullName}
                                         </p>
                                         <p className="text-xs text-gray-500 truncate">
-                                            {user?.email || "admin@rojifi.com"}
+                                            {user?.email}
                                         </p>
                                     </div>
                                     <Button
@@ -296,7 +296,7 @@ export default function Sidebar() {
                                         className="ml-auto p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full"
                                         aria-label="Logout"
                                     >
-                                        <LogOut className="h-5 w-5" />
+                                        <LogOut className="h-4 w-4 md:h-5 md:w-5" />
                                     </Button>
                                 </>
                             )}
@@ -306,10 +306,10 @@ export default function Sidebar() {
                                     onClick={toggleSidebar}
                                     variant="ghost"
                                     size="icon"
-                                    className="absolute bottom-4 right-3.5 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full"
+                                    className="absolute bottom-3 md:bottom-4 right-3.5 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full"
                                     aria-label="Expand sidebar"
                                 >
-                                    <ChevronLeft className="h-5 w-5 rotate-180 transition-transform duration-300" />
+                                    <ChevronLeft className="h-4 w-4 md:h-5 md:w-5 rotate-180 transition-transform duration-300" />
                                 </Button>
                             )}
                         </div>

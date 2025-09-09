@@ -787,18 +787,18 @@ export default function SendersPage() {
                                                             </div>
                                                         </div>
 
-                                                        {/* Nilos Integration */}
+                                                        {/* Dunamis Integration */}
                                                         <div className="space-y-4">
-                                                            <h4 className="text-md font-semibold text-gray-900">Nilos Integration</h4>
+                                                            <h4 className="text-md font-semibold text-gray-900">Dunamis Integration</h4>
                                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                                 <div>
-                                                                    <Label htmlFor="nilosStatus">Nilos Status</Label>
+                                                                    <Label htmlFor="dunamisStatus">Dunamis Status</Label>
                                                                     <Select
-                                                                        value={editableFormData.nilosStatus || ''}
-                                                                        onValueChange={(value) => handleFormInputChange('nilosStatus', value)}
+                                                                        value={editableFormData.dunamisStatus || ''}
+                                                                        onValueChange={(value) => handleFormInputChange('dunamisStatus', value)}
                                                                     >
                                                                         <SelectTrigger>
-                                                                            <SelectValue placeholder="Select Nilos status" />
+                                                                            <SelectValue placeholder="Select Dunamis status" />
                                                                         </SelectTrigger>
                                                                         <SelectContent>
                                                                             <SelectItem value="pending">Pending</SelectItem>
@@ -809,12 +809,12 @@ export default function SendersPage() {
                                                                     </Select>
                                                                 </div>
                                                                 <div>
-                                                                    <Label htmlFor="nilosId">Nilos ID</Label>
+                                                                    <Label htmlFor="dunamisId">Dunamis ID</Label>
                                                                     <Input
-                                                                        id="nilosId"
-                                                                        value={editableFormData.nilosId || ''}
-                                                                        onChange={(e) => handleFormInputChange('nilosId', e.target.value)}
-                                                                        placeholder="Enter Nilos ID"
+                                                                        id="dunamisId"
+                                                                        value={editableFormData.dunamisId || ''}
+                                                                        onChange={(e) => handleFormInputChange('dunamisId', e.target.value)}
+                                                                        placeholder="Enter Dunamis ID"
                                                                     />
                                                                 </div>
                                                             </div>
@@ -1209,23 +1209,23 @@ export default function SendersPage() {
                                                             </div>
                                                         </div>
 
-                                                        {/* Nilos Integration Summary */}
+                                                        {/* Dunamis Integration Summary */}
                                                         <div className="bg-muted p-4 rounded-lg">
-                                                            <h4 className="font-medium mb-3">Nilos Integration</h4>
+                                                            <h4 className="font-medium mb-3">Dunamis Integration</h4>
                                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                                                                 <div><strong>Status:</strong>
                                                                     <Badge
                                                                         variant={
-                                                                            editableFormData.nilosStatus === 'approved' ? 'default' :
-                                                                                editableFormData.nilosStatus === 'rejected' ? 'destructive' :
+                                                                            editableFormData.dunamisStatus === 'approved' ? 'default' :
+                                                                                editableFormData.dunamisStatus === 'rejected' ? 'destructive' :
                                                                                     'secondary'
                                                                         }
                                                                         className="ml-2 capitalize"
                                                                     >
-                                                                        {editableFormData.nilosStatus || 'pending'}
+                                                                        {editableFormData.dunamisStatus || 'pending'}
                                                                     </Badge>
                                                                 </div>
-                                                                <div><strong>Nilos ID:</strong> {editableFormData.nilosId || 'N/A'}</div>
+                                                                <div><strong>Dunamis ID:</strong> {editableFormData.dunamisId || 'N/A'}</div>
                                                             </div>
                                                         </div>
 
@@ -1288,7 +1288,7 @@ export default function SendersPage() {
                                                             <div className="space-y-2 text-sm">
                                                                 <div>
                                                                     <strong>Requested Bank Services:</strong>
-                                                                    <span className="ml-2">{editableFormData.requestedNilosServices?.join(', ') || 'None specified'}</span>
+                                                                    <span className="ml-2">{editableFormData.requestedDunamisServices?.join(', ') || 'None specified'}</span>
                                                                 </div>
                                                                 <div>
                                                                     <strong>Source of Wealth:</strong>
@@ -1296,7 +1296,7 @@ export default function SendersPage() {
                                                                 </div>
                                                                 <div>
                                                                     <strong>Anticipated Source of Funds:</strong>
-                                                                    <span className="ml-2">{editableFormData.anticipatedSourceOfFundsOnNilos?.join(', ') || 'None specified'}</span>
+                                                                    <span className="ml-2">{editableFormData.anticipatedSourceOfFundsOnDunamis?.join(', ') || 'None specified'}</span>
                                                                 </div>
                                                             </div>
                                                         </div>
