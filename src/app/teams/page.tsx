@@ -20,7 +20,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import { Search, Download, Plus, Users, UserPlus, Loader2, ChevronLeft, ChevronRight, Eye, Edit, Trash, UserCheck, UserMinus } from "lucide-react";
+import { Search, Download, Plus, Users, UserPlus, Loader2, ChevronLeft, ChevronRight, Eye, Trash } from "lucide-react";
 import {
     Tooltip,
     TooltipContent,
@@ -138,6 +138,7 @@ export default function TeamsPage() {
         }
     }
 
+    /*
     const removeMemberFromTeam = async (teamId: string, memberEmail: string) => {
         try {
             setLoadingStates(prev => ({ ...prev, [`${teamId}-${memberEmail}`]: true }));
@@ -172,6 +173,7 @@ export default function TeamsPage() {
             setLoadingStates(prev => ({ ...prev, [`${teamId}-${memberEmail}`]: false }));
         }
     }
+    */
 
     const handleAddMember = async () => {
         if (!newMemberEmail || !selectedTeamId) return;
@@ -246,6 +248,7 @@ export default function TeamsPage() {
         }).format(new Date(date));
     };
 
+    /*
     const getStatusBadge = (status: TeamStatus) => {
         switch (status) {
             case TeamStatus.ACTIVE:
@@ -258,6 +261,7 @@ export default function TeamsPage() {
                 return <Badge variant="outline">Unknown</Badge>;
         }
     };
+    */
 
     const getRoleBadge = (role: TeamRole) => {
         switch (role) {
@@ -514,12 +518,12 @@ export default function TeamsPage() {
                                                                 onClick={() => {/* View team details */ }}
                                                             >
                                                                 <Eye className="h-4 w-4" />
-                                                            </Button>
-                                                        </TooltipTrigger>
+                                                            </Button >
+                                                        </TooltipTrigger >
                                                         <TooltipContent>
                                                             <p>View team details</p>
                                                         </TooltipContent>
-                                                    </Tooltip>
+                                                    </Tooltip >
                                                     {!team.archived && !team.deleted && (
                                                         <Tooltip>
                                                             <TooltipTrigger asChild>
@@ -541,20 +545,22 @@ export default function TeamsPage() {
                                                             </TooltipContent>
                                                         </Tooltip>
                                                     )}
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
+                                                </div >
+                                            </TableCell >
+                                        </TableRow >
                                     ))
                                 )}
-                            </TableBody>
-                        </Table>
+                            </TableBody >
+                        </Table >
 
-                        {teams.length === 0 && !loading && (
-                            <div className="text-center py-8 text-muted-foreground">
-                                No teams found matching your criteria.
-                            </div>
-                        )}
-                    </CardContent>
+                        {
+                            teams.length === 0 && !loading && (
+                                <div className="text-center py-8 text-muted-foreground">
+                                    No teams found matching your criteria.
+                                </div>
+                            )
+                        }
+                    </CardContent >
 
                     <div className="border-t px-6 py-4">
                         <div className="flex items-center justify-between">
@@ -597,8 +603,8 @@ export default function TeamsPage() {
                             </div>
                         </div>
                     </div>
-                </Card>
-            </div>
-        </TooltipProvider>
+                </Card >
+            </div >
+        </TooltipProvider >
     );
 }

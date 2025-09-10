@@ -2,6 +2,9 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { FileText, Eye, Send, AlertTriangle } from 'lucide-react';
 import { IResponse, ISender, ISenderDocument } from '@/interface/interface';
 import Defaults from '@/defaults/defaults';
@@ -20,6 +23,11 @@ export default function StageTwoDocumentReview({
 }: StageTwoDocumentReviewProps) {
     // track which document is currently submitting to SmileID (document id) or null
     const [loadingDocId, setLoadingDocId] = React.useState<string | null>(null);
+    // Report issue dialog state
+    const [reportDialogOpen, setReportDialogOpen] = React.useState(false);
+    const [reportingDocId, setReportingDocId] = React.useState<string | null>(null);
+    const [reportMessage, setReportMessage] = React.useState('');
+    const [isReporting, setIsReporting] = React.useState(false);
     const sd: SessionData = session.getUserData();
 
     const submitToSmileID = async (senderId: string, documentId: string) => {
@@ -60,6 +68,64 @@ export default function StageTwoDocumentReview({
             });
         } finally {
             setLoadingDocId(null);
+        }
+    }
+
+    const openReportDialog = (documentId: string) => {
+        setReportingDocId(documentId);
+        setReportMessage('');
+        setReportDialogOpen(true);
+    }
+
+    const closeReportDialog = () => {
+        setReportDialogOpen(false);
+        setReportingDocId(null);
+        setReportMessage('');
+        setIsReporting(false);
+    }
+
+    const submitReport = async () => {
+        if (!reportingDocId || !reportMessage.trim()) return;
+
+        try {
+            setIsReporting(true);
+            Defaults.LOGIN_STATUS();
+
+            const res = await fetch(`${Defaults.API_BASE_URL}/admin/documents/report-issue`, {
+                method: 'POST',
+                headers: {
+                    ...Defaults.HEADERS,
+                    'x-rojifi-handshake': sd.client.publicKey,
+                    'x-rojifi-deviceid': sd.deviceid,
+                    Authorization: `Bearer ${sd.authorization}`,
+                },
+                body: JSON.stringify({
+                    senderId: selectedSender?._id,
+                    documentId: reportingDocId,
+                    message: reportMessage.trim()
+                })
+            });
+            const data: IResponse = await res.json();
+            if (data.status === Status.ERROR) throw new Error(data.message || data.error);
+            if (data.status === Status.SUCCESS) {
+                toast({
+                    title: 'Success',
+                    description: 'Issue reported successfully',
+                    duration: 5000,
+                    variant: "default"
+                });
+                closeReportDialog();
+            }
+        } catch (e) {
+            console.error(e);
+            toast({
+                title: 'Error',
+                description: (e as Error).message || 'Failed to report issue',
+                duration: 5000,
+                variant: "destructive"
+            });
+        } finally {
+            setIsReporting(false);
         }
     }
 
@@ -146,10 +212,7 @@ export default function StageTwoDocumentReview({
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                onClick={() => {
-                                                    console.log('Reporting issue with document', doc);
-                                                    alert('Issue reported for this document');
-                                                }}
+                                                onClick={() => openReportDialog(doc._id)}
                                                 className="text-red-600 border-red-300 hover:bg-red-50"
                                             >
                                                 <AlertTriangle className="h-4 w-4 mr-1" /> Report Issue
@@ -167,6 +230,59 @@ export default function StageTwoDocumentReview({
                     )}
                 </CardContent>
             </Card>
+
+            {/* Report Issue Dialog */}
+            <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Report Document Issue</DialogTitle>
+                        <DialogDescription>
+                            Please describe the issue you found with this document. Our team will review your report.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="message">Issue Description</Label>
+                            <Textarea
+                                id="message"
+                                placeholder="Describe the issue with this document..."
+                                value={reportMessage}
+                                onChange={(e) => setReportMessage(e.target.value)}
+                                className="min-h-[100px]"
+                                disabled={isReporting}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={closeReportDialog}
+                            disabled={isReporting}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="button"
+                            onClick={submitReport}
+                            disabled={!reportMessage.trim() || isReporting}
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                        >
+                            {isReporting ? (
+                                <>
+                                    <svg className="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 11-8 8z"></path>
+                                    </svg>
+                                    Reporting...
+                                </>
+                            ) : (
+                                'Report Issue'
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
