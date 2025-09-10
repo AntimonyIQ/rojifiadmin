@@ -66,6 +66,7 @@ export default function RequestedAccessPage() {
 
     // Tailor Service modal states
     const [tailorServiceModalOpen, setTailorServiceModalOpen] = useState(false);
+    const [savingServiceConfig, setSavingServiceConfig] = useState(false);
     const [serviceSettings, setServiceSettings] = useState({
         fiat: {
             enabled: false,
@@ -231,6 +232,7 @@ export default function RequestedAccessPage() {
 
     const updateTailoredService = async (id: string) => {
         try {
+            setSavingServiceConfig(true);
             const res = await fetch(`${Defaults.API_BASE_URL}/admin/requestaccess/tailor/${id}`, {
                 method: 'POST',
                 headers: {
@@ -260,13 +262,7 @@ export default function RequestedAccessPage() {
                 variant: "destructive",
             });
         } finally {
-            setLoadingStates(prev => ({
-                ...prev,
-                [id]: {
-                    approve: prev[id]?.approve || false,
-                    reject: false
-                }
-            }));
+            setSavingServiceConfig(false);
         }
     }
 
@@ -1025,7 +1021,7 @@ export default function RequestedAccessPage() {
                                                             <TooltipTrigger asChild>
                                                                 <Button
                                                                     variant="outline"
-                                                                    size="sm"
+                                                                    size="sm" disabled={selectedRequest?.completed}
                                                                     onClick={() => openTailorServiceModal(request)}
                                                                     className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
                                                                 >
@@ -1122,6 +1118,7 @@ export default function RequestedAccessPage() {
                                         <div className="flex items-center space-x-2">
                                             <Switch
                                                 id="fiat-enabled"
+                                                disabled={selectedRequest.fiatService === true ? true : false}
                                                 checked={serviceSettings.fiat.enabled}
                                                 onCheckedChange={(checked) => handleServiceToggle('fiat', checked)}
                                             />
@@ -1169,6 +1166,7 @@ export default function RequestedAccessPage() {
                                         <div className="flex items-center space-x-2">
                                             <Switch
                                                 id="offramp-enabled"
+                                                disabled={selectedRequest.offRampService === true ? true : false}
                                                 checked={serviceSettings.offRamp.enabled}
                                                 onCheckedChange={(checked) => handleServiceToggle('offRamp', checked)}
                                             />
@@ -1241,17 +1239,26 @@ export default function RequestedAccessPage() {
                                     <Button
                                         variant="outline"
                                         onClick={() => setTailorServiceModalOpen(false)}
-                                        disabled={false}
+                                        disabled={savingServiceConfig}
                                     >
                                         Cancel
                                     </Button>
                                     <Button
                                         onClick={() => updateTailoredService(selectedRequest._id)}
-                                        disabled={false}
+                                        disabled={savingServiceConfig}
                                         className="bg-blue-600 hover:bg-blue-700"
                                     >
-                                        <Check className="mr-2 h-4 w-4" />
-                                        Save Configuration
+                                        {savingServiceConfig ? (
+                                            <>
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                Saving...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Check className="mr-2 h-4 w-4" />
+                                                Save Configuration
+                                            </>
+                                        )}
                                     </Button>
                                 </div>
                             </div>
