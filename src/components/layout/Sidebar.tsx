@@ -16,6 +16,8 @@ import {
     UserPlus,
     Mail,
     FileText,
+    BriefcaseBusiness,
+    TableCellsMerge,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
@@ -143,6 +145,11 @@ export default function Sidebar() {
             label: "Users",
         },
         {
+            href: "/newonboarding",
+            icon: <BriefcaseBusiness className="h-5 w-5" />,
+            label: "New Onboarding",
+        },
+        {
             href: "/wallets",
             icon: <Wallet className="h-5 w-5" />,
             label: "Wallets",
@@ -171,6 +178,11 @@ export default function Sidebar() {
             href: "/senders",
             icon: <Building className="h-5 w-5" />,
             label: "Senders",
+        },
+        {
+            href: "/teams",
+            icon: <TableCellsMerge className="h-5 w-5" />,
+            label: "Teams",
         },
         {
             href: "/newsletters",

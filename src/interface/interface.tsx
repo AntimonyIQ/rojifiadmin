@@ -309,7 +309,7 @@ export interface IbankWallet {
 
 export interface ITeamMember {
     rojifiId: string;
-    userId?: string;
+    userId?: IUser | null;
     email: string;
     fullName?: string;
     role: TeamRole;
@@ -326,8 +326,8 @@ export interface ITeamMember {
 }
 
 export interface ITeams {
-    creator: string;
-    sender: string;
+    creator: IUser;
+    sender: ISender;
     description: string;
     members: Array<ITeamMember>;
     deleted: boolean;

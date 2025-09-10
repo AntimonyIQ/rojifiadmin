@@ -24,7 +24,7 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Check, MessageSquare, X, Loader2, Eye, FileText, Send, Filter, TrendingUp, BarChart3 } from "lucide-react";
+import { MoreHorizontal, Check, X, Loader2, Eye, FileText, Send, Filter, TrendingUp, BarChart3 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,7 +42,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 
-export default function SendersPage() {
+export default function NewOnboardingPage() {
     const [value, setValue] = useState<string>("list");
     const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
     const [selectedSender, setSelectedSender] = useState<ISender | null>(null);
@@ -119,7 +119,7 @@ export default function SendersPage() {
             Defaults.LOGIN_STATUS();
 
             const searchParam = debouncedSearch ? `&search=${encodeURIComponent(debouncedSearch)}` : "";
-            const url: string = `${Defaults.API_BASE_URL}/admin/sender/primary/list?page=${pagination.page}&limit=${pagination.limit}${searchParam}`;
+            const url: string = `${Defaults.API_BASE_URL}/admin/sender/list?page=${pagination.page}&limit=${pagination.limit}${searchParam}&businessVerificationCompleted=true`;
 
             const res = await fetch(url, {
                 method: 'GET',
@@ -287,23 +287,23 @@ export default function SendersPage() {
     return (
         <div className="space-y-6 p-4">
             <header className="flex items-center justify-between">
-                <h1 className="text-2xl font-semibold">Senders</h1>
-                <p className="text-sm text-muted-foreground">Manage senders and their onboarding status</p>
+                <h1 className="text-2xl font-semibold">New Onboarding</h1>
+                <p className="text-sm text-muted-foreground">Manage new onboarding businesses and their onboarding status</p>
             </header>
 
             <div className="bg-card p-4 rounded-md">
                 <Tabs value={value} onValueChange={(v) => setValue(v)}>
                     <TabsList>
-                        <TabsTrigger value="list">All Senders</TabsTrigger>
+                        <TabsTrigger value="list">All Onboarding</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="list">
                         <div className="space-y-3">
                             {/* Summary Cards */}
-                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 w-full">
+                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5 w-full">
                                 <Card className="border shadow-sm">
                                     <CardHeader className="pb-2">
-                                        <CardTitle className="text-sm font-medium flex items-center gap-2"><BarChart3 className="h-4 w-4 text-primary" /> Total Senders</CardTitle>
+                                        <CardTitle className="text-sm font-medium flex items-center gap-2"><BarChart3 className="h-4 w-4 text-primary" /> Total Onboarding</CardTitle>
                                     </CardHeader>
                                     <CardContent>
                                         <div className="text-2xl font-bold tabular-nums">{stats.total}</div>
@@ -337,6 +337,15 @@ export default function SendersPage() {
                                         <p className="text-xs text-muted-foreground mt-1">Access restricted</p>
                                     </CardContent>
                                 </Card>
+                                <Card className="border shadow-sm">
+                                    <CardHeader className="pb-2">
+                                        <CardTitle className="text-sm font-medium flex items-center gap-2"><BarChart3 className="h-4 w-4 text-primary" /> All Onboarding + Sender</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="text-2xl font-bold tabular-nums">{stats.total}</div>
+                                        <p className="text-xs text-muted-foreground mt-1">Across all statuses</p>
+                                    </CardContent>
+                                </Card>
                             </div>
 
                             {/* Filters & Search */}
@@ -346,7 +355,7 @@ export default function SendersPage() {
                                         <Label className="text-xs uppercase tracking-wide">Search</Label>
                                         <div className="relative">
                                             <Input
-                                                placeholder="Search senders..."
+                                                placeholder="Search new onboarding..."
                                                 value={search}
                                                 onChange={(e) => setSearch(e.target.value)}
                                                 className="pl-8 w-full sm:w-64"
@@ -408,12 +417,12 @@ export default function SendersPage() {
                                     <Button variant="outline" size="sm" onClick={clearFilters} className="flex items-center gap-1">
                                         <Filter className="h-4 w-4" /> Reset
                                     </Button>
-                                    <Button variant="outline" size="sm" className="btn btn-sm">New Sender</Button>
+                                    <Button variant="outline" size="sm" className="btn btn-sm">New Onboarding</Button>
                                 </div>
                             </div>
 
                             <div className="flex items-center justify-between">
-                                <h2 className="text-lg font-medium">Senders</h2>
+                                <h2 className="text-lg font-medium">New Onboarding</h2>
                                 <div className="text-sm text-muted-foreground">Showing {displayedSenders.length} of {senders.length}</div>
                             </div>
 
@@ -421,11 +430,11 @@ export default function SendersPage() {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead>Rojifi ID</TableHead>
                                             <TableHead>Business Name</TableHead>
                                             <TableHead>Country</TableHead>
-                                            <TableHead className="text-right">Volume</TableHead>
+                                            <TableHead>Email</TableHead>
                                             <TableHead>Status</TableHead>
+                                            <TableHead>Date Added</TableHead>
                                             <TableHead className="text-right">Actions</TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -433,7 +442,7 @@ export default function SendersPage() {
                                         {loading && (
                                             <TableRow>
                                                 <TableCell colSpan={6} className="text-center py-6 text-sm text-muted-foreground">
-                                                    <div className="flex items-center justify-center gap-2">
+                                                    <div className="flex items-center justify-center gap-2 h-40">
                                                         <Loader2 className="h-5 w-5 animate-spin text-primary" />
                                                         <span>Loading senders...</span>
                                                     </div>
@@ -449,7 +458,6 @@ export default function SendersPage() {
 
                                         {!loading && displayedSenders.map((s: ISender, idx: number) => (
                                             <TableRow key={s._id || idx}>
-                                                <TableCell className="font-mono text-xs">{s.rojifiId || s._id?.slice(-8) || "-"}</TableCell>
                                                 <TableCell className="font-medium">{s.businessName || "-"}</TableCell>
                                                 <TableCell>
                                                     <div className="flex items-center gap-2">
@@ -457,14 +465,7 @@ export default function SendersPage() {
                                                         <span>{s.country || "-"}</span>
                                                     </div>
                                                 </TableCell>
-                                                <TableCell className="text-right">
-                                                    {s.volume ? s.volume.toLocaleString('en-US', {
-                                                        style: 'currency',
-                                                        currency: 'USD',
-                                                        minimumFractionDigits: 0,
-                                                        maximumFractionDigits: 0
-                                                    }) : "-"}
-                                                </TableCell>
+                                                <TableCell className="font-medium">{s.email || "-"}</TableCell>
                                                 <TableCell>
                                                     <Badge
                                                         variant={
@@ -481,6 +482,9 @@ export default function SendersPage() {
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell>
+                                                    {s.createdAt ? new Date(s.createdAt).toLocaleDateString('en-US') : "-"}
+                                                </TableCell>
+                                                <TableCell>
                                                     <div className="flex items-center justify-end">
                                                         <DropdownMenu>
                                                             <DropdownMenuTrigger asChild>
@@ -493,14 +497,18 @@ export default function SendersPage() {
                                                                     <Eye className="mr-2" size={14} /> View & Validate
                                                                 </DropdownMenuItem>
                                                                 <DropdownMenuItem onSelect={() => { setSelectedSender(s); setSelectedAction('approve'); setIsDialogOpen(true); }}>
-                                                                    <Check className="mr-2" size={14} /> Approve
+                                                                    <Eye className="mr-2" size={14} /> Review
                                                                 </DropdownMenuItem>
-                                                                <DropdownMenuItem onSelect={() => { setSelectedSender(s); setSelectedAction('request_info'); setIsDialogOpen(true); }}>
-                                                                    <MessageSquare className="mr-2" size={14} /> Request Info
+                                                                {/**
+                                                                 * 
+                                                                <DropdownMenuItem className="text-red-500" onSelect={() => { setSelectedSender(s); setSelectedAction('request_info'); setIsDialogOpen(true); }}>
+                                                                    <X className="mr-2" size={14} /> Suspend
                                                                 </DropdownMenuItem>
                                                                 <DropdownMenuItem onSelect={() => { setSelectedSender(s); setSelectedAction('reject'); setIsDialogOpen(true); }}>
-                                                                    <X className="mr-2" size={14} /> Reject
+                                                                    <X className="mr-2" size={14} /> Archive
                                                                 </DropdownMenuItem>
+                                                                 * 
+                                                                 */}
                                                             </DropdownMenuContent>
                                                         </DropdownMenu>
                                                     </div>
@@ -587,7 +595,7 @@ export default function SendersPage() {
                                     <DialogHeader>
                                         <DialogTitle className="flex items-center gap-2">
                                             <FileText className="h-5 w-5" />
-                                            Sender Validation - {selectedSender?.businessName}
+                                            New Onboarding Validation - {selectedSender?.businessName}
                                         </DialogTitle>
                                         <div className="mt-4">
                                             <div className="flex items-center justify-between mb-2">

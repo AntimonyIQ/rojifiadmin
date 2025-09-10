@@ -21,6 +21,8 @@ import NewslettersPage from "./app/newsletters/page";
 import ContactMessagesPage from "./app/contact-messages/page";
 import RequestedAccessPage from "./app/requested-access/page";
 import ProvidersPage from "./app/providers/page";
+import NewOnboardingPage from "./app/newonboarding/page";
+import TeamsPage from "./app/teams/page";
 
 function AppRoute({
     path,
@@ -48,6 +50,8 @@ function App() {
                 </RedirectIfAuthenticated>
                 <AppRoute path="/dashboard" page={DashboardPage} />
                 <AppRoute path="/users" page={UsersPage} />
+                <AppRoute path="/newonboarding" page={NewOnboardingPage} />
+                <AppRoute path="/teams" page={TeamsPage} />
                 <AppRoute path="/transactions" page={TransactionsPage} />
                 <AppRoute path="/analytics" page={AnalyticsPage} />
                 <AppRoute path="/messaging" page={MessagingPage} />
