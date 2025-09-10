@@ -5,13 +5,13 @@ import {
     Users,
     Settings,
     LogOut,
-    UserCog,
-    MessageSquare,
+    // UserCog,
+    // MessageSquare,
     Briefcase,
     CreditCardIcon,
     Building,
     ReceiptText,
-    Projector,
+    // Projector,
     Wallet,
     UserPlus,
     Mail,
@@ -177,6 +177,7 @@ export default function Sidebar() {
             icon: <FileText className="h-5 w-5" />,
             label: "Newsletters",
         },
+        /*
         {
             href: "/messaging",
             icon: <MessageSquare className="h-5 w-5" />,
@@ -187,6 +188,7 @@ export default function Sidebar() {
             icon: <UserCog className="h-5 w-5" />,
             label: "Manage Staff",
         },
+        */
         {
             href: "/otc",
             icon: <Briefcase className="h-5 w-5" />,
@@ -197,11 +199,13 @@ export default function Sidebar() {
             icon: <CreditCardIcon className="h-5 w-5" />,
             label: "Virtual Card",
         },
+        /*
         {
             href: "/statements",
             icon: <Projector className="h-5 w-5" />,
             label: "Statements",
         },
+        */
         {
             href: "/settings",
             icon: <Settings className="h-5 w-5" />,

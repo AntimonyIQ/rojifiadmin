@@ -119,6 +119,8 @@ export default function RequestedAccessPage() {
             if (data.status === Status.SUCCESS) {
                 if (!data.handshake) throw new Error('Unable to process response');
                 const parseData: Array<IRequestAccess> = Defaults.PARSE_DATA(data.data, sd.client.privateKey, data.handshake);
+
+                // console.log("Fetched access requests:", parseData);
                 setRequestedAccess(parseData);
                 if (data.pagination) {
                     setPagination(data.pagination);
@@ -403,7 +405,6 @@ export default function RequestedAccessPage() {
 
     const findCountry = (name: string) => {
         const country = countries.find((country) => country.name.toLowerCase() === name.toLowerCase());
-        console.log("Found country:", country);
         return country;
     };
 
