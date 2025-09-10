@@ -67,19 +67,19 @@ export default function RequestedAccessPage() {
     // Tailor Service modal states
     const [tailorServiceModalOpen, setTailorServiceModalOpen] = useState(false);
     const [serviceSettings, setServiceSettings] = useState({
-        onRamp: {
+        fiat: {
             enabled: false,
-            supportedFiats: [] as string[]
+            supportedCurrencies: ["NGN"] as string[] // "USD", "EUR", "GBP", 
         },
         offRamp: {
             enabled: false,
-            supportedFiats: [] as string[]
+            supportedCurrencies: ["USDT", "USDC"] as string[]
         }
     });
-    const [savingServices, setSavingServices] = useState(false);
 
-    // Available fiat currencies
-    const availableFiats = ["USD", "EUR", "GBP", "NGN", "GHS", "KES", "ZAR", "EGP", "UGX"];
+    // Available currencies
+    const availableFiats = ["NGN"]; // "USD", "EUR", "GBP", 
+    const availableCryptos = ["USDT", "USDC"];
 
     const sd: SessionData = session.getUserData();
 
@@ -229,6 +229,47 @@ export default function RequestedAccessPage() {
         }
     }
 
+    const updateTailoredService = async (id: string) => {
+        try {
+            const res = await fetch(`${Defaults.API_BASE_URL}/admin/requestaccess/tailor/${id}`, {
+                method: 'POST',
+                headers: {
+                    ...Defaults.HEADERS,
+                    'x-rojifi-handshake': sd.client.publicKey,
+                    'x-rojifi-deviceid': sd.deviceid,
+                    Authorization: `Bearer ${sd.authorization}`,
+                },
+                body: JSON.stringify({ offRampService: serviceSettings.offRamp.enabled, fiatService: serviceSettings.fiat.enabled })
+            });
+
+            const data: IResponse = await res.json();
+            if (data.status === Status.ERROR) throw new Error(data.message || data.error);
+            if (data.status === Status.SUCCESS) {
+                toast({
+                    title: "Tailored service updated successfully",
+                    description: `Service configuration has been saved for ${selectedRequest?.firstname} ${selectedRequest?.lastname}.`,
+                    variant: "default",
+                });
+                setTailorServiceModalOpen(false);
+                await fetchRequestAccess();
+            }
+        } catch (error: any) {
+            toast({
+                title: "Error updating",
+                description: error.message,
+                variant: "destructive",
+            });
+        } finally {
+            setLoadingStates(prev => ({
+                ...prev,
+                [id]: {
+                    approve: prev[id]?.approve || false,
+                    reject: false
+                }
+            }));
+        }
+    }
+
     const handleApprove = async (request: IRequestAccess) => {
         if (!request._id) return;
         await approveRequestedAccess(request._id);
@@ -250,87 +291,44 @@ export default function RequestedAccessPage() {
 
     const openTailorServiceModal = (request: IRequestAccess) => {
         setSelectedRequest(request);
-        // Initialize service settings from request data or defaults
+        // Initialize service settings from request data using direct fiatService/offRampService properties
         setServiceSettings({
-            onRamp: {
-                enabled: request.services?.onRamp?.enabled || false,
-                supportedFiats: request.services?.onRamp?.supportedFiats || []
+            fiat: {
+                enabled: request.fiatService || false,
+                supportedCurrencies: request.fiatService ? availableFiats : []
             },
             offRamp: {
-                enabled: request.services?.offRamp?.enabled || false,
-                supportedFiats: request.services?.offRamp?.supportedFiats || []
+                enabled: request.offRampService || false,
+                supportedCurrencies: request.offRampService ? availableCryptos : []
             }
         });
         setTailorServiceModalOpen(true);
     };
 
-    const handleServiceToggle = (serviceType: 'onRamp' | 'offRamp', enabled: boolean) => {
+    const handleServiceToggle = (serviceType: 'fiat' | 'offRamp', enabled: boolean) => {
         setServiceSettings(prev => ({
             ...prev,
             [serviceType]: {
                 ...prev[serviceType],
-                enabled
+                enabled,
+                // Auto-select all currencies when enabled, empty when disabled
+                supportedCurrencies: enabled
+                    ? (serviceType === 'fiat' ? availableFiats : availableCryptos)
+                    : []
             }
         }));
     };
 
-    const handleFiatToggle = (serviceType: 'onRamp' | 'offRamp', fiat: string, checked: boolean) => {
+    const handleCurrencyToggle = (serviceType: 'fiat' | 'offRamp', currency: string, checked: boolean) => {
         setServiceSettings(prev => ({
             ...prev,
             [serviceType]: {
                 ...prev[serviceType],
-                supportedFiats: checked
-                    ? [...prev[serviceType].supportedFiats, fiat]
-                    : prev[serviceType].supportedFiats.filter(f => f !== fiat)
+                supportedCurrencies: checked
+                    ? [...prev[serviceType].supportedCurrencies, currency]
+                    : prev[serviceType].supportedCurrencies.filter(c => c !== currency)
             }
         }));
-    };
-
-    const saveServiceSettings = async () => {
-        if (!selectedRequest?._id) return;
-
-        try {
-            setSavingServices(true);
-
-            const res = await fetch(`${Defaults.API_BASE_URL}/admin/requestaccess/update-services/${selectedRequest._id}`, {
-                method: 'PUT',
-                headers: {
-                    ...Defaults.HEADERS,
-                    "Content-Type": "application/json",
-                    'x-rojifi-handshake': sd.client.publicKey,
-                    'x-rojifi-deviceid': sd.deviceid,
-                    Authorization: `Bearer ${sd.authorization}`,
-                },
-                body: JSON.stringify({
-                    services: {
-                        onRamp: serviceSettings.onRamp,
-                        offRamp: serviceSettings.offRamp,
-                        lastUpdated: new Date(),
-                        updatedBy: sd.rojifiId
-                    }
-                })
-            });
-
-            const data: IResponse = await res.json();
-            if (data.status === Status.ERROR) throw new Error(data.message || data.error);
-            if (data.status === Status.SUCCESS) {
-                toast({
-                    title: "Services updated successfully",
-                    description: `Service configuration has been saved for ${selectedRequest.firstname} ${selectedRequest.lastname}.`,
-                    variant: "default",
-                });
-                setTailorServiceModalOpen(false);
-                await fetchRequestAccess(); // Refresh the list
-            }
-        } catch (error: any) {
-            toast({
-                title: "Error updating services",
-                description: error.message,
-                variant: "destructive",
-            });
-        } finally {
-            setSavingServices(false);
-        }
     };
 
     // Debounced search
@@ -1112,42 +1110,43 @@ export default function RequestedAccessPage() {
 
                         {selectedRequest && (
                             <div className="space-y-6">
-                                {/* On-Ramp Service */}
+                                {/* Fiat Service */}
                                 <Card>
                                     <CardHeader>
                                         <CardTitle className="flex items-center gap-2">
                                             <CreditCard className="h-4 w-4 text-green-600" />
-                                            On-Ramp Service
+                                            Fiat Service
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
                                         <div className="flex items-center space-x-2">
                                             <Switch
-                                                id="onramp-enabled"
-                                                checked={serviceSettings.onRamp.enabled}
-                                                onCheckedChange={(checked) => handleServiceToggle('onRamp', checked)}
+                                                id="fiat-enabled"
+                                                checked={serviceSettings.fiat.enabled}
+                                                onCheckedChange={(checked) => handleServiceToggle('fiat', checked)}
                                             />
-                                            <Label htmlFor="onramp-enabled" className="text-sm font-medium">
-                                                Enable On-Ramp Service
+                                            <Label htmlFor="fiat-enabled" className="text-sm font-medium">
+                                                Enable Fiat Service
                                             </Label>
                                         </div>
 
-                                        {serviceSettings.onRamp.enabled && (
+                                        {serviceSettings.fiat.enabled && (
                                             <div>
                                                 <Label className="text-sm font-medium mb-3 block">
                                                     Supported Fiat Currencies:
                                                 </Label>
                                                 <div className="grid grid-cols-3 gap-3">
                                                     {availableFiats.map((fiat) => (
-                                                        <div key={`onramp-${fiat}`} className="flex items-center space-x-2">
+                                                        <div key={`fiat-${fiat}`} className="flex items-center space-x-2">
                                                             <Checkbox
-                                                                id={`onramp-${fiat}`}
-                                                                checked={serviceSettings.onRamp.supportedFiats.includes(fiat)}
+                                                                id={`fiat-${fiat}`}
+                                                                disabled={true}
+                                                                checked={serviceSettings.fiat.supportedCurrencies.includes(fiat)}
                                                                 onCheckedChange={(checked) =>
-                                                                    handleFiatToggle('onRamp', fiat, checked as boolean)
+                                                                    handleCurrencyToggle('fiat', fiat, checked as boolean)
                                                                 }
                                                             />
-                                                            <Label htmlFor={`onramp-${fiat}`} className="text-sm">
+                                                            <Label htmlFor={`fiat-${fiat}`} className="text-sm">
                                                                 {fiat}
                                                             </Label>
                                                         </div>
@@ -1181,20 +1180,21 @@ export default function RequestedAccessPage() {
                                         {serviceSettings.offRamp.enabled && (
                                             <div>
                                                 <Label className="text-sm font-medium mb-3 block">
-                                                    Supported Fiat Currencies:
+                                                    Supported Crypto Stable Coins:
                                                 </Label>
                                                 <div className="grid grid-cols-3 gap-3">
-                                                    {availableFiats.map((fiat) => (
-                                                        <div key={`offramp-${fiat}`} className="flex items-center space-x-2">
+                                                    {availableCryptos.map((crypto) => (
+                                                        <div key={`offramp-${crypto}`} className="flex items-center space-x-2">
                                                             <Checkbox
-                                                                id={`offramp-${fiat}`}
-                                                                checked={serviceSettings.offRamp.supportedFiats.includes(fiat)}
+                                                                id={`offramp-${crypto}`}
+                                                                disabled={true}
+                                                                checked={serviceSettings.offRamp.supportedCurrencies.includes(crypto)}
                                                                 onCheckedChange={(checked) =>
-                                                                    handleFiatToggle('offRamp', fiat, checked as boolean)
+                                                                    handleCurrencyToggle('offRamp', crypto, checked as boolean)
                                                                 }
                                                             />
-                                                            <Label htmlFor={`offramp-${fiat}`} className="text-sm">
-                                                                {fiat}
+                                                            <Label htmlFor={`offramp-${crypto}`} className="text-sm">
+                                                                {crypto}
                                                             </Label>
                                                         </div>
                                                     ))}
@@ -1241,26 +1241,17 @@ export default function RequestedAccessPage() {
                                     <Button
                                         variant="outline"
                                         onClick={() => setTailorServiceModalOpen(false)}
-                                        disabled={savingServices}
+                                        disabled={false}
                                     >
                                         Cancel
                                     </Button>
                                     <Button
-                                        onClick={saveServiceSettings}
-                                        disabled={savingServices}
+                                        onClick={() => updateTailoredService(selectedRequest._id)}
+                                        disabled={false}
                                         className="bg-blue-600 hover:bg-blue-700"
                                     >
-                                        {savingServices ? (
-                                            <>
-                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                Saving...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Check className="mr-2 h-4 w-4" />
-                                                Save Configuration
-                                            </>
-                                        )}
+                                        <Check className="mr-2 h-4 w-4" />
+                                        Save Configuration
                                     </Button>
                                 </div>
                             </div>
