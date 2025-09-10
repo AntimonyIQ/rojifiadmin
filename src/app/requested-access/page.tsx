@@ -949,6 +949,12 @@ export default function RequestedAccessPage() {
                                                                                 </div>
                                                                                 {selectedRequest.approvedAt && (
                                                                                     <div className="text-sm text-gray-500 mt-1 space-y-1">
+                                                                                        <p><strong>Fiat Services:</strong> {selectedRequest.fiatService ? "Enabled" : "Disabled"}</p>
+                                                                                        <p><strong>Off Ramp:</strong> {selectedRequest.offRampService ? "Enabled" : "Disabled"}</p>
+                                                                                    </div>
+                                                                                )}
+                                                                                {selectedRequest.approvedAt && (
+                                                                                    <div className="text-sm text-gray-500 mt-1 space-y-1">
                                                                                         <p><strong>Approved On:</strong> {formatDate(selectedRequest.approvedAt)}</p>
                                                                                         <p><strong>Approved By:</strong> {selectedRequest.approvedBy ? `${selectedRequest.approvedBy.firstname} ${selectedRequest.approvedBy.lastname} (${selectedRequest.approvedBy.email})` : "N/A"}</p>
                                                                                     </div>
@@ -1021,7 +1027,7 @@ export default function RequestedAccessPage() {
                                                             <TooltipTrigger asChild>
                                                                 <Button
                                                                     variant="outline"
-                                                                    size="sm" disabled={selectedRequest?.completed}
+                                                                    size="sm" disabled={selectedRequest?.completed || selectedRequest?.approved}
                                                                     onClick={() => openTailorServiceModal(request)}
                                                                     className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
                                                                 >
