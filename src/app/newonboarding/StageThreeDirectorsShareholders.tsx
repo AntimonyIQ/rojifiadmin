@@ -160,25 +160,6 @@ export default function StageThreeDirectorsShareholders({
         }
     };
 
-    const handleSubmitToSmileId = async (person: IDirectorAndShareholder, docType: 'id' | 'address') => {
-        try {
-            const document = docType === 'id' ? person.idDocument : person.proofOfAddress;
-            console.log(`Submitting ${docType} document to Smile ID for:`, person.firstName, person.lastName);
-            console.log('Document details:', document);
-            alert(`${person.firstName} ${person.lastName}'s ${docType === 'id' ? 'ID document' : 'proof of address'} submitted to Smile ID for verification.`);
-        } catch (error) {
-            console.error('Error sending to Smile ID:', error);
-            alert('Failed to send to Smile ID. Please try again.');
-        }
-    };
-
-    const handleReportIssue = (person: IDirectorAndShareholder, docType: 'id' | 'address') => {
-        const document = docType === 'id' ? person.idDocument : person.proofOfAddress;
-        console.log(`Reporting issue with ${docType} document for:`, person.firstName, person.lastName);
-        console.log('Document details:', document);
-        alert(`Issue reported for ${person.firstName} ${person.lastName}'s ${docType === 'id' ? 'ID document' : 'proof of address'}.`);
-    };
-
     const getSmileIdBadgeVariant = (status: string) => {
         switch (status) {
             case 'verified': return 'default';
