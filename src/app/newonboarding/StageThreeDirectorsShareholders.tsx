@@ -1,11 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Users, User, FileText, Eye, Send, AlertTriangle } from 'lucide-react';
-import { ISender, IDirectorAndShareholder } from '@/interface/interface';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Users, User, FileText, Eye, AlertTriangle, Loader2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { ISender, IDirectorAndShareholder, IResponse } from '@/interface/interface';
+import Defaults from '@/defaults/defaults';
+import React from 'react';
+import { session, SessionData } from '@/session/session';
+import { Status } from '@/enums/enums';
+import { toast } from '@/hooks/use-toast';
 
 interface StageThreeDirectorsShareholdersProps {
     selectedSender: ISender | null;
@@ -16,6 +23,130 @@ export default function StageThreeDirectorsShareholders({
     selectedSender,
     viewDocument
 }: StageThreeDirectorsShareholdersProps) {
+    // Director-level loading state (director id) or null
+    const [loadingDirectorId, setLoadingDirectorId] = React.useState<string | null>(null);
+    // Report issue dialog state for directors
+    const [reportDialogOpen, setReportDialogOpen] = React.useState(false);
+    const [reportingDirectorId, setReportingDirectorId] = React.useState<string | null>(null);
+    const [reportMessage, setReportMessage] = React.useState('');
+    const [isReporting, setIsReporting] = React.useState(false);
+    const sd: SessionData = session.getUserData();
+
+    const openReportDialog = (directorId: string) => {
+        setReportingDirectorId(directorId);
+        setReportMessage('');
+        setReportDialogOpen(true);
+    }
+
+    // Approve confirmation modal state
+    const [approveDialogOpen, setApproveDialogOpen] = React.useState(false);
+    const [approveTargetId, setApproveTargetId] = React.useState<string | null>(null);
+
+    const openApproveDialog = (directorId: string) => {
+        setApproveTargetId(directorId);
+        setApproveDialogOpen(true);
+    }
+
+    const closeApproveDialog = () => {
+        setApproveDialogOpen(false);
+        setApproveTargetId(null);
+    }
+
+    const closeReportDialog = () => {
+        setReportDialogOpen(false);
+        setReportingDirectorId(null);
+        setReportMessage('');
+        setIsReporting(false);
+    }
+
+    const submitReport = async () => {
+        if (!reportingDirectorId || !reportMessage.trim()) return;
+
+        try {
+            setIsReporting(true);
+            Defaults.LOGIN_STATUS();
+
+            const res = await fetch(`${Defaults.API_BASE_URL}/admin/director/send/issue`, {
+                method: 'POST',
+                headers: {
+                    ...Defaults.HEADERS,
+                    'x-rojifi-handshake': sd.client.publicKey,
+                    'x-rojifi-deviceid': sd.deviceid,
+                    Authorization: `Bearer ${sd.authorization}`,
+                },
+                body: JSON.stringify({
+                    senderId: selectedSender?._id,
+                    directorId: reportingDirectorId,
+                    issueMessage: reportMessage.trim()
+                })
+            });
+            const data: IResponse = await res.json();
+            if (data.status === Status.ERROR) throw new Error(data.message || data.error);
+            if (data.status === Status.SUCCESS) {
+                toast({
+                    title: 'Success',
+                    description: 'Issue reported successfully',
+                    duration: 5000,
+                    variant: "default"
+                });
+                closeReportDialog();
+            }
+        } catch (e) {
+            console.error(e);
+            toast({
+                title: 'Error',
+                description: (e as Error).message || 'Failed to report issue',
+                duration: 5000,
+                variant: "destructive"
+            });
+        } finally {
+            setIsReporting(false);
+        }
+    }
+
+    const approveDirector = async (directorId: string) => {
+        if (!directorId) return;
+
+        try {
+            setLoadingDirectorId(directorId);
+            Defaults.LOGIN_STATUS();
+
+            const res = await fetch(`${Defaults.API_BASE_URL}/admin/director/approve`, {
+                method: 'POST',
+                headers: {
+                    ...Defaults.HEADERS,
+                    'x-rojifi-handshake': sd.client.publicKey,
+                    'x-rojifi-deviceid': sd.deviceid,
+                    Authorization: `Bearer ${sd.authorization}`,
+                },
+                body: JSON.stringify({
+                    senderId: selectedSender?._id,
+                    directorId
+                })
+            });
+            const data: IResponse = await res.json();
+            if (data.status === Status.ERROR) throw new Error(data.message || data.error);
+            if (data.status === Status.SUCCESS) {
+                toast({
+                    title: 'Success',
+                    description: 'Director approved successfully',
+                    duration: 5000,
+                    variant: "default"
+                });
+            }
+        } catch (e) {
+            console.error(e);
+            toast({
+                title: 'Error',
+                description: (e as Error).message || 'Failed to approve director',
+                duration: 5000,
+                variant: "destructive"
+            });
+        } finally {
+            setLoadingDirectorId(null);
+        }
+    }
+
     const handleViewDocument = (document: any, person: IDirectorAndShareholder, docType: 'id' | 'address') => {
         if (viewDocument) {
             // Add additional context for the document viewer
@@ -91,7 +222,7 @@ export default function StageThreeDirectorsShareholders({
 
                             {selectedSender.directors.map((person: IDirectorAndShareholder, index: number) => (
                                 <div key={person._id || index} className="space-y-4">
-                                    <div className="border rounded-lg p-6 bg-gray-50/50">
+                                    <div className={`border rounded-lg p-6 ${(person as any).issueReported ? 'border-red-400 bg-red-50' : 'bg-gray-50/50'}`}>
                                         {/* Header with name and roles */}
                                         <div className="flex items-start justify-between mb-4">
                                             <div className="flex items-center gap-4">
@@ -205,12 +336,12 @@ export default function StageThreeDirectorsShareholders({
                                                     />
                                                 </div>
                                                 <div>
-                                                    <Label htmlFor="nationality">Nationality</Label>
+                                                    <Label htmlFor="nationality">Country of Birth</Label>
                                                     <Input
                                                         id="nationality"
                                                         value={person.nationality || ''}
                                                         onChange={(_e) => { }}
-                                                        placeholder="Enter nationality"
+                                                        placeholder="Enter country of birth"
                                                         disabled={true}
                                                     />
                                                 </div>
@@ -350,26 +481,6 @@ export default function StageThreeDirectorsShareholders({
                                                             <Eye className="h-3 w-3 mr-1" />
                                                             View
                                                         </Button>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            disabled={person.idDocument.smileIdStatus === 'verified'}
-                                                            onClick={() => handleSubmitToSmileId(person, 'id')}
-                                                            className={person.idDocument.smileIdStatus === 'verified' ?
-                                                                'bg-green-600 hover:bg-green-700 text-white' : ''}
-                                                        >
-                                                            <Send className="h-3 w-3 mr-1" />
-                                                            {person.idDocument.smileIdStatus === 'verified' ? 'Verified' : 'Submit to Smile ID'}
-                                                        </Button>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => handleReportIssue(person, 'id')}
-                                                            className="text-red-600 border-red-300 hover:bg-red-50"
-                                                        >
-                                                            <AlertTriangle className="h-3 w-3 mr-1" />
-                                                            Report Issue
-                                                        </Button>
                                                     </div>
                                                 )}
                                                 {person.idDocument?.smileIdVerifiedAt && (
@@ -405,26 +516,6 @@ export default function StageThreeDirectorsShareholders({
                                                             <Eye className="h-3 w-3 mr-1" />
                                                             View
                                                         </Button>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            disabled={person.proofOfAddress.smileIdStatus === 'verified'}
-                                                            onClick={() => handleSubmitToSmileId(person, 'address')}
-                                                            className={person.proofOfAddress.smileIdStatus === 'verified' ?
-                                                                'bg-green-600 hover:bg-green-700 text-white' : ''}
-                                                        >
-                                                            <Send className="h-3 w-3 mr-1" />
-                                                            {person.proofOfAddress.smileIdStatus === 'verified' ? 'Verified' : 'Submit to Smile ID'}
-                                                        </Button>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => handleReportIssue(person, 'address')}
-                                                            className="text-red-600 border-red-300 hover:bg-red-50"
-                                                        >
-                                                            <AlertTriangle className="h-3 w-3 mr-1" />
-                                                            Report Issue
-                                                        </Button>
                                                     </div>
                                                 )}
                                                 {person.proofOfAddress?.smileIdVerifiedAt && (
@@ -434,9 +525,30 @@ export default function StageThreeDirectorsShareholders({
                                                 )}
                                             </div>
                                         </div>
-                                    </div>
 
-                                    {/* Add separator between directors except for the last one */}
+                                        {/* Director-level Actions */}
+                                        <div className="flex gap-3 pt-4 border-t border-gray-200">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                disabled={loadingDirectorId === person._id}
+                                                onClick={() => openReportDialog(person._id)}
+                                                className="text-red-600 border-red-300 hover:bg-red-50"
+                                            >
+                                                <AlertTriangle className="h-4 w-4 mr-1" />
+                                                Report Issue
+                                            </Button>
+                                            <Button
+                                                variant="default"
+                                                size="sm"
+                                                disabled={loadingDirectorId === person._id}
+                                                onClick={() => openApproveDialog(person._id)}
+                                                className="text-white bg-green-600 border-green-300 hover:bg-green-700"
+                                            >
+                                                Approve
+                                            </Button>
+                                        </div>
+                                    </div>                                    {/* Add separator between directors except for the last one */}
                                     {index < selectedSender.directors.length - 1 && (
                                         <Separator className="my-6" />
                                     )}
@@ -467,6 +579,91 @@ export default function StageThreeDirectorsShareholders({
                     )}
                 </CardContent>
             </Card>
+
+            {/* Report Issue Dialog */}
+            <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Report Director/Shareholder Issue</DialogTitle>
+                        <DialogDescription>
+                            Please describe the issue you found with this director/shareholder record.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="message">Issue Description</Label>
+                            <Textarea
+                                id="message"
+                                placeholder="Describe the issue with this director/shareholder record..."
+                                value={reportMessage}
+                                onChange={(e) => setReportMessage(e.target.value)}
+                                className="min-h-[100px]"
+                                disabled={isReporting}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={closeReportDialog}
+                            disabled={isReporting}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="button"
+                            onClick={submitReport}
+                            disabled={!reportMessage.trim() || isReporting}
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                        >
+                            {isReporting ? (
+                                <>
+                                    <svg className="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 11-8 8z"></path>
+                                    </svg>
+                                    Reporting...
+                                </>
+                            ) : (
+                                'Report Issue'
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            {/* Approve Confirmation Dialog */}
+            <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
+                <DialogContent className="sm:max-w-[420px]">
+                    <DialogHeader>
+                        <DialogTitle>Approve Director</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to approve this director/shareholder? This action will mark their documents as approved.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={closeApproveDialog} disabled={loadingDirectorId === approveTargetId}>Cancel</Button>
+                        <Button
+                            onClick={async () => {
+                                if (!approveTargetId) return;
+                                await approveDirector(approveTargetId);
+                                closeApproveDialog();
+                            }}
+                            disabled={loadingDirectorId === approveTargetId}
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                        >
+                            {loadingDirectorId === approveTargetId ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Approving...
+                                </>
+                            ) : (
+                                'Confirm Approve'
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

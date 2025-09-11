@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { FileText, Eye, Send, AlertTriangle } from 'lucide-react';
+import { FileText, Eye, Send, AlertTriangle, Loader2 } from 'lucide-react';
 import { IResponse, ISender, ISenderDocument } from '@/interface/interface';
 import Defaults from '@/defaults/defaults';
 import { session, SessionData } from '@/session/session';
@@ -91,7 +91,7 @@ export default function StageTwoDocumentReview({
             setIsReporting(true);
             Defaults.LOGIN_STATUS();
 
-            const res = await fetch(`${Defaults.API_BASE_URL}/admin/documents/report-issue`, {
+            const res = await fetch(`${Defaults.API_BASE_URL}/admin/sender/document/issue`, {
                 method: 'POST',
                 headers: {
                     ...Defaults.HEADERS,
@@ -102,7 +102,7 @@ export default function StageTwoDocumentReview({
                 body: JSON.stringify({
                     senderId: selectedSender?._id,
                     documentId: reportingDocId,
-                    message: reportMessage.trim()
+                    issueMessage: reportMessage.trim()
                 })
             });
             const data: IResponse = await res.json();
@@ -127,6 +127,63 @@ export default function StageTwoDocumentReview({
         } finally {
             setIsReporting(false);
         }
+    }
+
+    const approveDocument = async (documentId: string) => {
+        if (!documentId) return;
+
+        try {
+            setLoadingDocId(documentId);
+            Defaults.LOGIN_STATUS();
+
+            const res = await fetch(`${Defaults.API_BASE_URL}/admin/sender/document/approve`, {
+                method: 'POST',
+                headers: {
+                    ...Defaults.HEADERS,
+                    'x-rojifi-handshake': sd.client.publicKey,
+                    'x-rojifi-deviceid': sd.deviceid,
+                    Authorization: `Bearer ${sd.authorization}`,
+                },
+                body: JSON.stringify({
+                    senderId: selectedSender?._id,
+                    documentId
+                })
+            });
+            const data: IResponse = await res.json();
+            if (data.status === Status.ERROR) throw new Error(data.message || data.error);
+            if (data.status === Status.SUCCESS) {
+                toast({
+                    title: 'Success',
+                    description: 'Document approved successfully',
+                    duration: 5000,
+                    variant: "default"
+                });
+            }
+        } catch (e) {
+            console.error(e);
+            toast({
+                title: 'Error',
+                description: (e as Error).message || 'Failed to approve document',
+                duration: 5000,
+                variant: "destructive"
+            });
+        } finally {
+            setLoadingDocId(null);
+        }
+    }
+
+    // Approve confirmation modal state
+    const [approveDialogOpen, setApproveDialogOpen] = React.useState(false);
+    const [approveTargetId, setApproveTargetId] = React.useState<string | null>(null);
+
+    const openApproveDialog = (documentId: string) => {
+        setApproveTargetId(documentId);
+        setApproveDialogOpen(true);
+    }
+
+    const closeApproveDialog = () => {
+        setApproveDialogOpen(false);
+        setApproveTargetId(null);
     }
 
     const documentTitle = (which: WhichDocument) => {
@@ -158,8 +215,8 @@ export default function StageTwoDocumentReview({
                         selectedSender.documents.map((doc: ISenderDocument, index: number) => {
                             const smileStatus = doc.smileIdStatus; // 'verified' | 'rejected' | 'pending'
                             return (
-                                <div key={index} className="p-4 border rounded-lg space-y-3 bg-white">
-                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                <div key={index} className={`p-4 border rounded-lg space-y-3 bg-white ${doc.issue ? 'border-red-400 bg-red-50' : 'border-gray-200'}`}>
+                                    <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3`}>
                                         <div className="flex items-start gap-3">
                                             <div className="h-10 w-10 rounded-md bg-muted flex items-center justify-center">
                                                 <FileText className="h-5 w-5 text-primary" />
@@ -188,35 +245,70 @@ export default function StageTwoDocumentReview({
                                             <Button variant="outline" size="sm" onClick={() => viewDocument(doc)}>
                                                 <Eye className="h-4 w-4 mr-1" /> View
                                             </Button>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                disabled={smileStatus === 'verified' || loadingDocId === doc._id}
-                                                onClick={async () => await submitToSmileID(selectedSender?._id as string, doc._id)}
-                                                className={smileStatus === 'verified' ? 'bg-green-600 hover:bg-green-700 text-white' : ''}
-                                            >
-                                                {loadingDocId === doc._id ? (
-                                                    <>
-                                                        <svg className="animate-spin h-4 w-4 mr-1" viewBox="0 0 24 24">
-                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 11-8 8z"></path>
-                                                        </svg>
-                                                        Submitting...
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Send className="h-4 w-4 mr-1" /> {smileStatus === 'verified' ? 'Verified' : 'Submit to Smile ID'}
-                                                    </>
-                                                )}
-                                            </Button>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => openReportDialog(doc._id)}
-                                                className="text-red-600 border-red-300 hover:bg-red-50"
-                                            >
-                                                <AlertTriangle className="h-4 w-4 mr-1" /> Report Issue
-                                            </Button>
+
+                                            {!doc.issue && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    disabled={smileStatus === 'verified' || loadingDocId === doc._id}
+                                                    onClick={async () => await submitToSmileID(selectedSender?._id as string, doc._id)}
+                                                    className={smileStatus === 'verified' ? 'bg-green-600 hover:bg-green-700 text-white' : ''}
+                                                >
+                                                    {loadingDocId === doc._id ? (
+                                                        <>
+                                                            <svg className="animate-spin h-4 w-4 mr-1" viewBox="0 0 24 24">
+                                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 11-8 8z"></path>
+                                                            </svg>
+                                                            Submitting...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Send className="h-4 w-4 mr-1" /> {smileStatus === 'verified' ? 'Verified' : 'Submit to Kyc Provider'}
+                                                        </>
+                                                    )}
+                                                </Button>
+                                            )}
+                                            {doc.kycVerified && (
+                                                <>
+                                                    {!doc.issue && (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => openReportDialog(doc._id)}
+                                                            className="text-red-600 border-red-300 hover:bg-red-50"
+                                                        >
+                                                            <AlertTriangle className="h-4 w-4 mr-1" /> Report Issue
+                                                        </Button>
+                                                    )}
+                                                </>
+                                            )}
+                                            {!doc.kycVerified && (
+                                                <>
+                                                    {!doc.issue && (
+                                                        <Button
+                                                            variant="default"
+                                                            size="sm"
+                                                            disabled={loadingDocId === doc._id}
+                                                            onClick={() => openApproveDialog(doc._id)}
+                                                            className="text-white bg-green-600 border-green-300 hover:bg-green-700"
+                                                        >
+                                                            {loadingDocId === doc._id ? (
+                                                                <>
+                                                                    <svg className="animate-spin h-4 w-4 mr-1" viewBox="0 0 24 24">
+                                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 11-8 8z"></path>
+                                                                    </svg>
+                                                                    Approving...
+                                                                </>
+                                                            ) : (
+                                                                'Approve'
+                                                            )}
+                                                        </Button>
+                                                    )}
+                                                </>
+                                            )}
+
                                         </div>
                                     </div>
                                 </div>
@@ -237,7 +329,7 @@ export default function StageTwoDocumentReview({
                     <DialogHeader>
                         <DialogTitle>Report Document Issue</DialogTitle>
                         <DialogDescription>
-                            Please describe the issue you found with this document. Our team will review your report.
+                            Please describe the issue you found with this document.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
@@ -278,6 +370,44 @@ export default function StageTwoDocumentReview({
                                 </>
                             ) : (
                                 'Report Issue'
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Approve Confirmation Dialog */}
+            <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Confirm Document Approval</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to approve this document? This action cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <p className="text-sm text-muted-foreground">This will mark the document as approved for the selected sender.</p>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={closeApproveDialog} disabled={loadingDocId !== null}>
+                            Cancel
+                        </Button>
+                        <Button
+                            type="button"
+                            onClick={async () => {
+                                if (!approveTargetId) return;
+                                await approveDocument(approveTargetId);
+                                closeApproveDialog();
+                            }}
+                            disabled={loadingDocId !== null}
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                        >
+                            {loadingDocId ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Approving...
+                                </>
+                            ) : (
+                                'Confirm Approve'
                             )}
                         </Button>
                     </DialogFooter>

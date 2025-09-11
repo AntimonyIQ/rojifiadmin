@@ -24,7 +24,7 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Check, X, Loader2, Eye, FileText, Send, Filter, TrendingUp, BarChart3 } from "lucide-react";
+import { MoreHorizontal, X, Loader2, Eye, FileText, Send, Filter, TrendingUp, BarChart3, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -591,7 +591,7 @@ export default function NewOnboardingPage() {
 
                             {/* 4-Stage Validation Modal */}
                             <Dialog open={isValidationModalOpen} onOpenChange={setIsValidationModalOpen}>
-                                <DialogContent className="max-w-[80%] max-h-[90vh] overflow-y-auto">
+                                <DialogContent className="max-w-[90%] max-h-[90vh] overflow-y-auto">
                                     <DialogHeader>
                                         <DialogTitle className="flex items-center gap-2">
                                             <FileText className="h-5 w-5" />
@@ -652,6 +652,8 @@ export default function NewOnboardingPage() {
                                             <StageFourFinalReview
                                                 selectedSender={selectedSender}
                                                 editableFormData={editableFormData}
+                                                handleFormInputChange={handleFormInputChange}
+                                                viewDocument={viewDocument}
                                             />
                                         )}
                                     </div>
@@ -818,42 +820,37 @@ export default function NewOnboardingPage() {
                                             {selectedDocument?.url && (
                                                 <Button
                                                     variant="outline"
-                                                    onClick={() => {
-                                                        // Copy document URL to clipboard
-                                                        navigator.clipboard.writeText(selectedDocument.url);
-                                                        alert('Document URL copied to clipboard');
+                                                    onClick={async () => {
+                                                        try {
+                                                            // Try to fetch the file and download as a blob
+                                                            const res = await fetch(selectedDocument.url);
+                                                            if (!res.ok) throw new Error('Network response was not ok');
+                                                            const blob = await res.blob();
+                                                            const ext = selectedDocument.fileExtension || selectedDocument.url.split('.').pop() || '';
+                                                            // sanitize filename
+                                                            const safeName = (selectedDocument.type || 'document').replace(/[^a-z0-9\-_\.]/gi, '_');
+                                                            const filename = `${safeName}${ext ? '.' + ext : ''}`;
+
+                                                            const blobUrl = URL.createObjectURL(blob);
+                                                            const a = document.createElement('a');
+                                                            a.href = blobUrl;
+                                                            a.download = filename;
+                                                            document.body.appendChild(a);
+                                                            a.click();
+                                                            a.remove();
+                                                            // revoke after a short delay to ensure download starts
+                                                            setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+                                                        } catch (err) {
+                                                            console.error('Download failed, opening in new tab', err);
+                                                            // Fallback: open original URL
+                                                            window.open(selectedDocument.url, '_blank');
+                                                        }
                                                     }}
                                                 >
-                                                    <Eye className="mr-2 h-4 w-4" />
-                                                    Copy URL
+                                                    <Download className="mr-2 h-4 w-4" />
+                                                    Download
                                                 </Button>
                                             )}
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <Button
-                                                variant="outline"
-                                                onClick={() => {
-                                                    // TODO: Implement reject/flag document
-                                                    console.log('Flagging document as problematic:', selectedDocument);
-                                                    alert('Document flagged for review');
-                                                }}
-                                                className="text-red-600 border-red-300 hover:bg-red-50"
-                                            >
-                                                <X className="mr-2 h-4 w-4" />
-                                                Flag Issue
-                                            </Button>
-                                            <Button
-                                                onClick={() => {
-                                                    // TODO: Implement document verification API call
-                                                    console.log('Marking document as verified:', selectedDocument);
-                                                    alert('Document marked as verified');
-                                                    setDocumentModalOpen(false);
-                                                }}
-                                                className="bg-green-600 hover:bg-green-700"
-                                            >
-                                                <Check className="mr-2 h-4 w-4" />
-                                                Mark as Verified
-                                            </Button>
                                         </div>
                                     </DialogFooter>
                                 </DialogContent>
